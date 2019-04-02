@@ -6,7 +6,7 @@ function parse(input) {
 exports.parse = parse;
 
 function tokenize(inputString) {
-  let tokens = inputString.split(" ");
+  let tokens = inputString.replace("\n", " \n ").split(" ");
   if (tokens[tokens.length - 1] != "EOF") tokens.push("EOF");
 
   return tokens;

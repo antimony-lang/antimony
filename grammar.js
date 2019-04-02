@@ -5,6 +5,10 @@ module.exports = {
       token = tokens.shift();
       expression.push(token);
     } while (!["EOF", "\n"].includes(token));
-    return { type: "let_declaration", name: "x", value: 5 };
+    return {
+      type: "let_declaration",
+      name: expression[1],
+      value: expression[3]
+    };
   }
 };
