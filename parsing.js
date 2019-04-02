@@ -20,6 +20,8 @@ function lex(tokens, tree) {
   if (tokens[0] == "let") {
     let expression = grammar.let_declaration(tokens);
     tree.push(expression);
+  } else {
+    throw new Error(`Unexpected token: ${tokens[0]}`);
   }
 
   return lex(tokens, tree);

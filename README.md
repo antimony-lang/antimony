@@ -1,4 +1,5 @@
 # flex
+
 Toy Programming Language
 
 ## Sample
@@ -22,3 +23,13 @@ for number in numbers {
 	print addTwo number
 }
 ```
+
+# Syntax
+
+### Variable Declaration
+
+```js
+let x = y;
+```
+
+A Variable Declaration starts with the identifier "let", followed by its name. The Value is at the last token of the line (TODO: Needs to be improved)
