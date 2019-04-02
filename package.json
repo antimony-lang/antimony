@@ -1,0 +1,19 @@
+{
+  "name": "flexlang",
+  "version": "0.0.1",
+  "description": "Toy Programming Language",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garritfra/flex.git"
+  },
+  "author": "garritfranke@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/garritfra/flex/issues"
+  },
+  "homepage": "https://github.com/garritfra/flex#readme"
+}
