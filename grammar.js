@@ -1,14 +1,13 @@
 module.exports = {
+  /**
+   * Returns an AST that represents the given let declaration
+   * @param {String[]} tokens
+   */
   let_declaration: function(tokens) {
-    let expression = [tokens.shift()];
-    do {
-      token = tokens.shift();
-      expression.push(token);
-    } while (!["EOF", "\n"].includes(token));
     return {
       type: "let_declaration",
-      name: expression[1],
-      value: expression[3]
+      name: tokens[1],
+      value: tokens[3]
     };
   }
 };

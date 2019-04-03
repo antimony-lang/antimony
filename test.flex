@@ -1,2 +1,2 @@
 let x = 12
-{ let y = 15 }
+let y = 14

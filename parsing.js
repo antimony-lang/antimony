@@ -13,29 +13,25 @@ function tokenize(inputString) {
 }
 
 let layer = 0;
-function lex(tokens, tree) {
-  if (tree[layer] == undefined) {
-    tree[layer] = [];
-  }
-  if (["(", "{"].includes(tokens.shift())) {
-    layer++;
-    if (tree[layer] == undefined) {
-      tree[layer] = [];
-    }
-  } else if ([")", "}"].includes(tokens.shift())) {
-    layer--;
-  }
+function lex(tokens) {
+  let tree = [];
+  let position = 0;
 
-  if (["EOF", undefined].includes(tokens[0])) {
+  if (["EOF", undefined].includes(tokens[position])) {
     return tree;
   }
 
-  if (tokens[0] == "let") {
-    let expression = grammar.let_declaration(tokens);
-    tree[layer].push(expression);
-  } else {
-    throw new Error(`Unexpected token: ${tokens[0]}`);
+  while (![undefined, "EOF"].includes(tokens[position])) {
+    if (tokens[position] == "let") {
+      let exprTokens = [...tokens].splice(
+        position,
+        tokens.findIndex(token => token === "\n")
+      );
+      tree.push(grammar.let_declaration(exprTokens));
+      position += exprTokens.length + 1;
+    } else {
+      throw new Error(`Unexpected token: ${tokens[position]}`);
+    }
   }
-
-  return lex(tokens, tree);
+  return tree;
 }
