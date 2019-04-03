@@ -22,16 +22,12 @@ function lex(tokens) {
   }
 
   while (![undefined, "EOF"].includes(tokens[position])) {
-    if (tokens[position] == "let") {
-      let exprTokens = [...tokens].splice(
-        position,
-        tokens.findIndex(token => token === "\n")
-      );
-      tree.push(grammar.let_declaration(exprTokens));
-      position += exprTokens.length + 1;
-    } else {
-      throw new Error(`Unexpected token: ${tokens[position]}`);
-    }
+    let exprTokens = [...tokens].splice(
+      position,
+      tokens.findIndex(token => token === "\n")
+    );
+    tree.push(grammar.expr(exprTokens));
+    position += exprTokens.length + 1;
   }
   return tree;
 }
