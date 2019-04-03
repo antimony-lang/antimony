@@ -12,14 +12,27 @@ function tokenize(inputString) {
   return tokens;
 }
 
+let layer = 0;
 function lex(tokens, tree) {
+  if (tree[layer] == undefined) {
+    tree[layer] = [];
+  }
+  if (["(", "{"].includes(tokens.shift())) {
+    layer++;
+    if (tree[layer] == undefined) {
+      tree[layer] = [];
+    }
+  } else if ([")", "}"].includes(tokens.shift())) {
+    layer--;
+  }
+
   if (["EOF", undefined].includes(tokens[0])) {
     return tree;
   }
 
   if (tokens[0] == "let") {
     let expression = grammar.let_declaration(tokens);
-    tree.push(expression);
+    tree[layer].push(expression);
   } else {
     throw new Error(`Unexpected token: ${tokens[0]}`);
   }
