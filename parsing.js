@@ -6,7 +6,13 @@ function parse(input) {
 exports.parse = parse;
 
 function tokenize(inputString) {
-  let tokens = inputString.replace("\n", " \n ").split(" ");
+  let tokens = inputString
+    .split("")
+    .map(token => (token == ";" ? " ; " : token))
+    .join("")
+    .replace("\n", " ")
+    .split(" ")
+    .filter(token => token != "");
   if (tokens[tokens.length - 1] != "EOF") tokens.push("EOF");
 
   return tokens;
@@ -21,10 +27,14 @@ function lex(tokens) {
   }
 
   while (![undefined, "EOF"].includes(tokens[position])) {
-    let exprTokens = [...tokens].splice(
-      position,
-      tokens.findIndex(token => [";".includes(token)]) + position
-    );
+    let exprTokens = [...tokens]
+      .splice(
+        position,
+        [...tokens]
+          .splice(position, tokens.length - 1)
+          .findIndex(token => token === ";") + position
+      )
+      .filter(token => !["EOF", ";"].includes(token));
     if (exprTokens.length > 0) {
       tree.push(grammar.expr(exprTokens));
     }
