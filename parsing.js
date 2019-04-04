@@ -12,7 +12,6 @@ function tokenize(inputString) {
   return tokens;
 }
 
-let layer = 0;
 function lex(tokens) {
   let tree = [];
   let position = 0;
@@ -24,9 +23,11 @@ function lex(tokens) {
   while (![undefined, "EOF"].includes(tokens[position])) {
     let exprTokens = [...tokens].splice(
       position,
-      tokens.findIndex(token => token === "\n")
+      tokens.findIndex(token => [";".includes(token)]) + position
     );
-    tree.push(grammar.expr(exprTokens));
+    if (exprTokens.length > 0) {
+      tree.push(grammar.expr(exprTokens));
+    }
     position += exprTokens.length + 1;
   }
   return tree;
