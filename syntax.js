@@ -3,11 +3,7 @@ module.exports = {
     constructor(id, value) {
       this.id = id;
       this.value =
-        value.length > 1
-          ? require("./grammar").operation(
-              [...value].splice(2, value.length - 1)
-            )
-          : value;
+        value.length > 1 ? require("./grammar").operation(value) : value;
     }
   },
   Operation: class {
