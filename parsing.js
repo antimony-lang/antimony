@@ -9,8 +9,12 @@ function tokenize(inputString) {
   let tokens = inputString
     .split("")
     .map(token => (token == ";" ? " ; " : token))
+    .map(token => (token == "(" ? " ( " : token))
+    .map(token => (token == ")" ? " ) " : token))
+    .map(token => (token == "{" ? " { " : token))
+    .map(token => (token == "}" ? " } " : token))
+    .filter(token => token != "\n")
     .join("")
-    .replace("\n", " ")
     .split(" ")
     .filter(token => token != "");
   if (tokens[tokens.length - 1] != "EOF") tokens.push("EOF");
