@@ -26,6 +26,8 @@ for number in numbers {
 
 # Syntax
 
+Refer to the [wiki]("https://github.com/garritfra/flex/wiki") for more information.
+
 ### Variable Declaration
 
 ```js

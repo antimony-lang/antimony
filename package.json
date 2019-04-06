@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node index.js"
   },
+  "bin": {
+    "flex": "cli/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/garritfra/flex.git"
