@@ -1,4 +1,12 @@
-import { Token, TokenType, EOL } from "./tokens";
+import {
+  Token,
+  TokenType,
+  EOL,
+  Keyword,
+  Variable,
+  Whitespace,
+  Number as Num
+} from "./tokens";
 
 export default class Tokenizer {
   code: string;
@@ -37,13 +45,13 @@ export default class Tokenizer {
 
     switch (character) {
       case "+":
-        return new Token(TokenType.Plus, character);
+        return new Token(TokenType.plus, character);
       case "-":
-        return new Token(TokenType.Minus, character);
+        return new Token(TokenType.minus, character);
       case "*":
-        return new Token(TokenType.Multiply, character);
+        return new Token(TokenType.multiply, character);
       case "/":
-        return new Token(TokenType.Divide, character);
+        return new Token(TokenType.divide, character);
       default:
         break;
     }
@@ -53,15 +61,25 @@ export default class Tokenizer {
       while (Number(this.peek())) {
         token += this.take();
       }
-      return new Token(TokenType.Number, token);
+      return new Num(token);
     }
 
     if (this.isWhitespace(character)) {
-      return new Token(TokenType.Whitespace, character);
+      return new Whitespace(character);
     }
 
     if (character == ";") {
       return new EOL(character);
+    }
+
+    if (this.isLetter(character)) {
+      let token = character;
+      while (this.isLetter(this.peek())) {
+        token += this.take();
+      }
+
+      if (new Keyword(token).type) return new Keyword(token);
+      else return new Variable(token);
     }
 
     throw new Error("Could not resolve token: " + character);
@@ -69,5 +87,12 @@ export default class Tokenizer {
 
   private isWhitespace(character: string): boolean {
     return character == " " || character == "\n" || character == "\t";
+  }
+
+  private isLetter(str: string) {
+    if (!str) {
+      return false;
+    }
+    return str.length === 1 && str.match(/[a-zA-Z_]/i);
   }
 }

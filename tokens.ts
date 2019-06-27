@@ -1,21 +1,21 @@
 export enum TokenType {
-  Nop = "Nop",
-  Variable = "Variable",
-  Number = "Number",
-  Whitespace = " ",
-  Let = "let",
-  Assignment = "=",
-  Plus = "+",
-  Minus = "-",
-  Multiply = "*",
-  Divide = "/",
-  True = "true",
-  False = "false",
-  If = "if",
-  Curly_left = "{",
-  Curly_right = "}",
-  Semicolon = ";",
-  Linebreak = "\n"
+  nop = "Nop",
+  variable = "Variable",
+  number = "Number",
+  whitespace = " ",
+  let = "let",
+  assignment = "=",
+  plus = "+",
+  minus = "-",
+  multiply = "*",
+  divide = "/",
+  true = "true",
+  false = "false",
+  if = "if",
+  curly_left = "{",
+  curly_right = "}",
+  semicolon = ";",
+  linebreak = "\n"
 }
 
 export class Token {
@@ -28,9 +28,15 @@ export class Token {
   }
 }
 
+export class Number extends Token {
+  constructor(value: string) {
+    super(TokenType.number, value);
+  }
+}
+
 export class Variable extends Token {
   constructor(value: string) {
-    super(TokenType.Variable, value);
+    super(TokenType.variable, value);
   }
 }
 
@@ -43,6 +49,12 @@ export class Keyword extends Token {
 
 export class EOL extends Token {
   constructor(value: string) {
-    super(TokenType.Semicolon, value);
+    super(TokenType.semicolon, value);
+  }
+}
+
+export class Whitespace extends Token {
+  constructor(value: string) {
+    super(TokenType.whitespace, value);
   }
 }
