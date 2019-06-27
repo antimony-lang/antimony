@@ -1,7 +1,7 @@
 export enum TokenType {
-  Nop = 0,
-  Variable,
-  Number,
+  Nop = "Nop",
+  Variable = "Variable",
+  Number = "Number",
   Whitespace = " ",
   Let = "let",
   Assignment = "=",
@@ -38,5 +38,11 @@ export class Keyword extends Token {
   constructor(value: string) {
     let type: TokenType = TokenType[value];
     super(type, value);
+  }
+}
+
+export class EOL extends Token {
+  constructor(value: string) {
+    super(TokenType.Semicolon, value);
   }
 }

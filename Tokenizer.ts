@@ -1,4 +1,4 @@
-import { Token, TokenType } from "./tokens";
+import { Token, TokenType, EOL } from "./tokens";
 
 export default class Tokenizer {
   code: string;
@@ -59,7 +59,12 @@ export default class Tokenizer {
     if (this.isWhitespace(character)) {
       return new Token(TokenType.Whitespace, character);
     }
-    return new Token(TokenType.Nop, "Nop");
+
+    if (character == ";") {
+      return new EOL(character);
+    }
+
+    throw new Error("Could not resolve token: " + character);
   }
 
   private isWhitespace(character: string): boolean {
