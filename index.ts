@@ -1,7 +1,11 @@
 const { parse } = require("./parsing");
-const fs = require("fs");
+import fs from "fs";
+import Tokenizer from "./Tokenizer";
+import { TokenType } from "./tokens";
 
 let fileString = fs.readFileSync("./test.flex").toString();
 
-let ast = parse(fileString);
-console.log(ast);
+let tokenizer = new Tokenizer(fileString);
+
+let ast = tokenizer.run();
+ast.forEach(token => console.log(TokenType[token.type], token.value));

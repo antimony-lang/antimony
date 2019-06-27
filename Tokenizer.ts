@@ -2,24 +2,38 @@ import { Token, TokenType } from "./tokens";
 
 export default class Tokenizer {
   code: string;
-  current: Token;
+  current: Token | undefined;
   index: number;
-
-  get hasMore(): boolean {
-    return false;
-  }
 
   constructor(code: string) {
     this.code = code;
-    this.index = 0;
+    this.index = -1;
   }
 
-  advance() {
-    this.current = this.takeNext();
+  get hasMore(): boolean {
+    return this.peek() != undefined;
+  }
+
+  peek(): string {
+    return this.code[this.index + 1];
+  }
+
+  run(): Token[] {
+    let tokens: Token[] = [];
+    while (this.hasMore) {
+      tokens.push(this.takeNext());
+    }
+
+    return tokens;
+  }
+
+  take(): string {
+    this.index++;
+    return this.code[this.index];
   }
 
   takeNext(): Token {
-    let character = this.code[this.index];
+    let character = this.take();
 
     switch (character) {
       case "+":
@@ -35,12 +49,17 @@ export default class Tokenizer {
     }
 
     if (Number(character)) {
-      return new Token(TokenType.Number, character);
+      let token = character;
+      while (Number(this.peek())) {
+        token += this.take();
+      }
+      return new Token(TokenType.Number, token);
     }
 
     if (this.isWhitespace(character)) {
       return new Token(TokenType.Whitespace, character);
     }
+    return new Token(TokenType.Nop, "Nop");
   }
 
   private isWhitespace(character: string): boolean {
