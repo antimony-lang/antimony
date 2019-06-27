@@ -9,6 +9,8 @@ export enum TokenType {
   Minus = "-",
   Multiply = "*",
   Divide = "/",
+  True = "true",
+  False = "false",
   If = "if",
   Curly_left = "{",
   Curly_right = "}",
