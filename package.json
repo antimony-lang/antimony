@@ -4,7 +4,8 @@
   "description": "Toy Programming Language",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "tsc"
   },
   "bin": {
     "flex": "cli/index.js"
@@ -18,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/garritfra/flex/issues"
   },
-  "homepage": "https://github.com/garritfra/flex#readme"
+  "homepage": "https://github.com/garritfra/flex#readme",
+  "dependencies": {
+    "typescript": "^3.5.2"
+  }
 }
