@@ -1,4 +1,6 @@
 export enum TokenType {
+  prog_begin,
+  prog_end,
   nop = "Nop",
   variable = "Variable",
   number = "Number",
@@ -25,6 +27,18 @@ export class Token {
   constructor(type: TokenType, value: string) {
     this.type = type;
     this.value = value;
+  }
+}
+
+export class Begin extends Token {
+  constructor(value: string) {
+    super(TokenType.prog_begin, value);
+  }
+}
+
+export class End extends Token {
+  constructor(value: string) {
+    super(TokenType.prog_end, value);
   }
 }
 

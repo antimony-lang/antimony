@@ -1,10 +1,10 @@
-const { parse } = require("./parsing");
 import fs from "fs";
 import Tokenizer from "./Tokenizer";
+import { Parser } from "./Parser";
 
 let fileString = fs.readFileSync("./test.flex").toString();
 
-let tokenizer = new Tokenizer(fileString);
-
-let ast = tokenizer.run();
+let tokens = new Tokenizer(fileString).run();
+let parser = new Parser(tokens);
+let ast = parser.parse();
 console.log(ast);

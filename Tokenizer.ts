@@ -52,6 +52,8 @@ export default class Tokenizer {
         return new Token(TokenType.multiply, character);
       case "/":
         return new Token(TokenType.divide, character);
+      case "=":
+        return new Token(TokenType.assignment, character);
       default:
         break;
     }
