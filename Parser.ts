@@ -41,9 +41,18 @@ export class Parser {
     let statement = [
       this.match(Token.TokenType.let),
       this.match(Token.TokenType.variable),
-      this.match(Token.TokenType.assignment),
-      this.match(Token.TokenType.number)
+      this.match(Token.TokenType.assignment)
     ];
+
+    while (this.current instanceof Token.Whitespace) {
+      this.advance();
+    }
+
+    if (this.current instanceof Token.Number) {
+      statement.push(this.match(Token.TokenType.number));
+    } else if (this.current instanceof Token.Str) {
+      statement.push(this.match(Token.TokenType.string));
+    }
     return statement;
   }
 

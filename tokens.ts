@@ -1,9 +1,10 @@
 export enum TokenType {
   prog_begin,
-  prog_end,
+  prog_end = "EOF",
   nop = "Nop",
   variable = "Variable",
   number = "Number",
+  string = "String",
   whitespace = " ",
   let = "let",
   assignment = "=",
@@ -70,5 +71,11 @@ export class EOL extends Token {
 export class Whitespace extends Token {
   constructor(value: string) {
     super(TokenType.whitespace, value);
+  }
+}
+
+export class Str extends Token {
+  constructor(value: string) {
+    super(TokenType.string, value);
   }
 }

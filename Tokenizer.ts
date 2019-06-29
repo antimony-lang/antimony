@@ -5,7 +5,8 @@ import {
   Keyword,
   Variable,
   Whitespace,
-  Number as Num
+  Number as Num,
+  Str
 } from "./tokens";
 
 export default class Tokenizer {
@@ -13,8 +14,34 @@ export default class Tokenizer {
   current: Token | undefined;
   index: number;
 
+  visitor = {
+    number: (character: string): Num => {
+      let token = character;
+      while (Number(this.peek())) {
+        token += this.take();
+      }
+      return new Num(token);
+    },
+
+    string: (character: string): Token => {
+      let token = character;
+      while (this.peek() != '"') {
+        if (["\n", "EOF"].includes(this.peek())) {
+          throw new Error("Expected '\"' but found " + "\\n");
+        }
+        token += this.take();
+      }
+      // Append right quote
+      token += this.take();
+
+      return new Str(token);
+    }
+  };
+
   constructor(code: string) {
     this.code = code;
+    // Mark end of file
+    this.code += " EOF";
     this.index = -1;
   }
 
@@ -54,16 +81,14 @@ export default class Tokenizer {
         return new Token(TokenType.divide, character);
       case "=":
         return new Token(TokenType.assignment, character);
+      case '"':
+        return this.visitor.string(character);
       default:
         break;
     }
 
     if (Number(character)) {
-      let token = character;
-      while (Number(this.peek())) {
-        token += this.take();
-      }
-      return new Num(token);
+      return this.visitor.number(character);
     }
 
     if (this.isWhitespace(character)) {
