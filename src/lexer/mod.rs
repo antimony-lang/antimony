@@ -59,6 +59,10 @@ pub enum TokenKind {
     SquareBraceOpen,
     /// "]"
     SquareBraceClose,
+    /// "{"
+    CurlyBracesOpen,
+    /// "}"
+    CurlyBracesClose,
     /// "\t"
     Tab,
     /// "\n"
@@ -159,6 +163,8 @@ impl Cursor<'_> {
             ')' => BraceClose,
             '[' => SquareBraceOpen,
             ']' => SquareBraceClose,
+            '{' => CurlyBracesOpen,
+            '}' => CurlyBracesClose,
             c if is_id_start(c) => {
                 let kind = self.identifier(c);
 
