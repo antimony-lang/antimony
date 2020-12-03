@@ -1,8 +1,9 @@
 fn main() {
-    print(fib(10))
+    let num = 10
+    print(fib(num))
 }
 
-fn fib(n: int): int { 
+fn fib(n int) int { 
     if (n <= 1) {
         return n
     }
