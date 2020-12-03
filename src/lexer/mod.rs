@@ -6,7 +6,7 @@ use cursor::Cursor;
 #[cfg(test)]
 mod tests;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Token {
     pub kind: TokenKind,
     pub len: usize,
@@ -167,8 +167,13 @@ impl Cursor<'_> {
             '}' => CurlyBracesClose,
             c if is_id_start(c) => {
                 let kind = self.identifier(c);
-
-                Identifier { kind }
+                if kind == IdentifierKind::Unknown {
+                    Literal {
+                        kind: LiteralKind::Str,
+                    }
+                } else {
+                    Identifier { kind }
+                }
             }
             '\n' => CarriageReturn,
             '\t' => Tab,

@@ -13,10 +13,8 @@ fn main() -> std::io::Result<()> {
     let tokens = lexer::tokenize(&contents);
     // let ast = parser::parse(tokens.into_iter());
 
-    for token in tokens {
-        if token.kind != TokenKind::Whitespace && token.kind != TokenKind::CarriageReturn {
-            println!("{:?}", token);
-        }
-    }
+    let program = parser::parse(tokens);
+
+    println!("{:?}", program);
     Ok(())
 }
