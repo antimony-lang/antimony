@@ -1,5 +1,5 @@
 use crate::lexer::Keyword;
-use crate::lexer::{Token, TokenKind};
+use crate::lexer::{Token, TokenKind, Value};
 use crate::parser::node_type::*;
 use std::iter::Peekable;
 use std::vec::IntoIter;
@@ -87,10 +87,6 @@ impl Parser {
 
     fn match_keyword(&mut self, keyword: Keyword) -> Result<(), String> {
         let token = self.next_token();
-        println!(
-            "match_identifier_kind: Token: {:?}, identifier_kind: {:?}",
-            token, keyword
-        );
 
         match token.kind {
             TokenKind::Keyword(_) => Ok(()),
@@ -128,13 +124,47 @@ impl Parser {
         self.match_token(TokenKind::BraceOpen)?;
         self.match_token(TokenKind::BraceClose)?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
+
+        let mut statements = vec![];
+
+        while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
+            let statement = self.parse_statement()?;
+            println!("{:?}", statement);
+            statements.push(statement);
+        }
+
         self.match_token(TokenKind::CurlyBracesClose)?;
 
         Ok(Function {
             name: name,
             arguments: Vec::new(),
-            statements: Vec::new(),
+            statements: statements,
         })
+    }
+
+    fn parse_statement(&mut self) -> Result<Statement, String> {
+        let token = self.next_token();
+        println!("parse_statement: {:?}", token);
+        match token.kind {
+            TokenKind::Keyword(Keyword::Return) => {
+                let state = Statement::Return(self.parse_expression()?);
+                self.match_token(TokenKind::SemiColon)?;
+
+                Ok(state)
+            }
+            other => Err(format!("Expected Statement, found {:?}", other)),
+        }
+    }
+
+    fn parse_expression(&mut self) -> Result<Expression, String> {
+        let token = self.next_token();
+        match token.kind {
+            TokenKind::Literal(Value::Int) => {
+                let state = Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?);
+                Ok(state)
+            }
+            other => Err(format!("Expected Expression, found {:?}", other)),
+        }
     }
 }
 

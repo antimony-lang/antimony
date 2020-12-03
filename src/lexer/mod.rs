@@ -81,6 +81,7 @@ pub enum Keyword {
     Let,
     If,
     Else,
+    Return,
     Function,
     Boolean,
     Unknown,
@@ -161,7 +162,6 @@ impl Cursor<'_> {
             '}' => CurlyBracesClose,
             c if is_id_start(c) => {
                 let kind = self.identifier(c);
-                println!("Identifier Type: {:?}", kind);
                 if kind == Keyword::Unknown {
                     let mut ch: String = original_chars.collect();
                     ch.truncate(self.len_consumed());
@@ -229,6 +229,7 @@ impl Cursor<'_> {
             c if c == "fn" => Keyword::Function,
             c if c == "true" || c == "false" => Keyword::Boolean,
             c if c == "let" => Keyword::Let,
+            c if c == "return" => Keyword::Return,
             _ => Keyword::Unknown,
         }
     }
