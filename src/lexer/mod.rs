@@ -20,17 +20,14 @@ impl Token {
 }
 
 /// Enum representing common lexeme types.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TokenKind {
     /// Any whitespace characters sequence.
     Whitespace,
-    Literal {
-        kind: LiteralKind,
-    },
+    Identifier(String),
+    Literal(Value),
     /// Keywords such as 'if' or 'else'
-    Identifier {
-        kind: IdentifierKind,
-    },
+    Keyword(Keyword),
     /// // Lorem Ipsum
     Comment,
     /// "+"
@@ -43,6 +40,8 @@ pub enum TokenKind {
     Slash,
     /// ":"
     Colon,
+    /// ";"
+    SemiColon,
     /// "="
     Equals,
     /// "=="
@@ -72,13 +71,13 @@ pub enum TokenKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum LiteralKind {
+pub enum Value {
     Int,
     Str,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum IdentifierKind {
+pub enum Keyword {
     Let,
     If,
     Else,
@@ -132,19 +131,13 @@ impl Cursor<'_> {
     fn advance_token(&mut self) -> Token {
         // Original chars used to identify the token later on
         let original_chars = self.chars();
+        // FIXME: Identical value, since it will be used twice and is not clonable later
+        let original_chars2 = self.chars();
         let first_char = self.bump().unwrap();
         let token_kind = match first_char {
             c if is_whitespace(c) => self.whitespace(),
-            '0'..='9' => {
-                let kind = self.number();
-
-                TokenKind::Literal { kind }
-            }
-            '"' | '\'' => {
-                let kind = self.string();
-
-                TokenKind::Literal { kind }
-            }
+            '0'..='9' => self.number(),
+            '"' | '\'' => self.string(),
             '+' => Plus,
             '-' => Minus,
             '*' => Star,
@@ -157,6 +150,7 @@ impl Cursor<'_> {
                 _ => Equals,
             },
             ':' => Colon,
+            ';' => SemiColon,
             '<' => SmallerThen,
             '>' => LargerThen,
             '(' => BraceOpen,
@@ -167,12 +161,13 @@ impl Cursor<'_> {
             '}' => CurlyBracesClose,
             c if is_id_start(c) => {
                 let kind = self.identifier(c);
-                if kind == IdentifierKind::Unknown {
-                    Literal {
-                        kind: LiteralKind::Str,
-                    }
+                println!("Identifier Type: {:?}", kind);
+                if kind == Keyword::Unknown {
+                    let mut ch: String = original_chars.collect();
+                    ch.truncate(self.len_consumed());
+                    TokenKind::Identifier(ch)
                 } else {
-                    Identifier { kind }
+                    TokenKind::Keyword(kind)
                 }
             }
             '\n' => CarriageReturn,
@@ -181,7 +176,7 @@ impl Cursor<'_> {
         };
 
         let len = self.len_consumed();
-        let mut raw = original_chars.collect::<String>();
+        let mut raw = original_chars2.collect::<String>();
         // Cut the original tokens to the length of the token
         raw.truncate(len);
         Token::new(token_kind, len, raw)
@@ -208,18 +203,18 @@ impl Cursor<'_> {
         Whitespace
     }
 
-    fn number(&mut self) -> LiteralKind {
+    fn number(&mut self) -> TokenKind {
         self.eat_digits();
-        LiteralKind::Int
+        TokenKind::Literal(Value::Int)
     }
 
-    fn string(&mut self) -> LiteralKind {
+    fn string(&mut self) -> TokenKind {
         self.eat_string();
 
-        LiteralKind::Str
+        TokenKind::Literal(Value::Str)
     }
 
-    fn identifier(&mut self, first_char: char) -> IdentifierKind {
+    fn identifier(&mut self, first_char: char) -> Keyword {
         let mut original: String = self.chars().collect::<String>();
         let len = self.eat_while(is_id_continue);
 
@@ -229,12 +224,12 @@ impl Cursor<'_> {
         original = format!("{}{}", first_char, original);
 
         match original {
-            c if c == "if" => IdentifierKind::If,
-            c if c == "else" => IdentifierKind::Else,
-            c if c == "fn" => IdentifierKind::Function,
-            c if c == "true" || c == "false" => IdentifierKind::Boolean,
-            c if c == "let" => IdentifierKind::Let,
-            _ => IdentifierKind::Unknown,
+            c if c == "if" => Keyword::If,
+            c if c == "else" => Keyword::Else,
+            c if c == "fn" => Keyword::Function,
+            c if c == "true" || c == "false" => Keyword::Boolean,
+            c if c == "let" => Keyword::Let,
+            _ => Keyword::Unknown,
         }
     }
 

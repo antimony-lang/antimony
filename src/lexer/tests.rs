@@ -101,7 +101,7 @@ mod tests {
             Token {
                 len: 4,
                 kind: TokenKind::Identifier {
-                    kind: IdentifierKind::Boolean
+                    kind: Keyword::Boolean
                 },
                 raw: "true".to_owned()
             }
@@ -112,7 +112,7 @@ mod tests {
             Token {
                 len: 5,
                 kind: TokenKind::Identifier {
-                    kind: IdentifierKind::Boolean
+                    kind: Keyword::Boolean
                 },
                 raw: "false".to_owned()
             }
@@ -128,7 +128,7 @@ mod tests {
             Token {
                 len: 2,
                 kind: TokenKind::Identifier {
-                    kind: IdentifierKind::Function
+                    kind: Keyword::Function
                 },
                 raw: "fn".to_owned()
             }
@@ -164,7 +164,7 @@ mod tests {
             Token {
                 len: 2,
                 kind: TokenKind::Identifier {
-                    kind: IdentifierKind::Function
+                    kind: Keyword::Function
                 },
                 raw: "fn".to_owned(),
             }

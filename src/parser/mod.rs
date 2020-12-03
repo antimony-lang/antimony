@@ -1,5 +1,5 @@
-use crate::lexer::IdentifierKind;
-use crate::lexer::{LiteralKind, Token, TokenKind};
+use crate::lexer::Keyword;
+use crate::lexer::{Token, TokenKind};
 use crate::parser::node_type::*;
 use std::iter::Peekable;
 use std::vec::IntoIter;
@@ -85,44 +85,22 @@ impl Parser {
         }
     }
 
-    fn match_identifier_kind(&mut self, identifier_kind: IdentifierKind) -> Result<(), String> {
+    fn match_keyword(&mut self, keyword: Keyword) -> Result<(), String> {
         let token = self.next_token();
         println!(
             "match_identifier_kind: Token: {:?}, identifier_kind: {:?}",
-            token, identifier_kind
+            token, keyword
         );
 
         match token.kind {
-            TokenKind::Identifier {
-                kind: identifier_kind,
-            } => Ok(()),
+            TokenKind::Keyword(_) => Ok(()),
             other => Err(format!("Expected SemiColon, found {:?}", other)),
         }
     }
 
     fn match_identifier(&mut self) -> Result<String, String> {
-        let token = self.next_token();
-
-        // TODO: Match any IdentifierKind. This can definetely be prettier, but I couldn't figure it out in a hurry
-        match &token.kind {
-            TokenKind::Identifier {
-                kind: IdentifierKind::Boolean,
-            }
-            | TokenKind::Identifier {
-                kind: IdentifierKind::Else,
-            }
-            | TokenKind::Identifier {
-                kind: IdentifierKind::Function,
-            }
-            | TokenKind::Identifier {
-                kind: IdentifierKind::If,
-            }
-            | TokenKind::Identifier {
-                kind: IdentifierKind::Let,
-            }
-            | TokenKind::Identifier {
-                kind: IdentifierKind::Unknown,
-            } => Ok(token.raw),
+        match self.next_token().kind {
+            TokenKind::Identifier(n) => Ok(n),
             other => Err(format!("Expected Identifier, found {:?}", other)),
         }
     }
@@ -144,12 +122,8 @@ impl Parser {
     }
 
     fn parse_function(&mut self) -> Result<Function, String> {
-        self.match_identifier_kind(IdentifierKind::Function)?;
-        let name = self
-            .match_token(TokenKind::Literal {
-                kind: LiteralKind::Str,
-            })?
-            .raw;
+        self.match_keyword(Keyword::Function)?;
+        let name = self.match_identifier()?;
 
         self.match_token(TokenKind::BraceOpen)?;
         self.match_token(TokenKind::BraceClose)?;

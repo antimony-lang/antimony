@@ -1,12 +1,12 @@
 fn main() {
-    let num = 10
-    print(fib(num))
+    let num = 10;
+    print(fib(num));
 }
 
 fn fib(n int) int { 
     if (n <= 1) {
-        return n
+        return n;
     }
 
-    return fib(n-1) + fib(n-2)
+    return fib(n-1) + fib(n-2);
 } 

@@ -1,4 +1,3 @@
-use lexer::TokenKind;
 use std::fs::File;
 use std::io::Read;
 
