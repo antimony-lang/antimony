@@ -108,7 +108,7 @@ pub fn first_token(input: &str) -> Token {
 
 pub fn is_whitespace(c: char) -> bool {
     match c {
-        ' ' => true,
+        ' ' | '\n' | '\r' | '\t' => true,
         _ => false,
     }
 }

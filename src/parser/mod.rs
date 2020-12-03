@@ -13,8 +13,13 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Parser {
+        // FIXME: Fiter without collecting?
+        let tokens_without_whitespace: Vec<Token> = tokens
+            .into_iter()
+            .filter(|token| token.kind != TokenKind::Whitespace)
+            .collect();
         Parser {
-            tokens: tokens.into_iter().peekable(),
+            tokens: tokens_without_whitespace.into_iter().peekable(),
             peeked: vec![],
         }
     }
@@ -61,14 +66,6 @@ impl Parser {
     }
 
     fn match_token(&mut self, token_kind: TokenKind) -> Result<Token, String> {
-        loop {
-            match self.peek().expect("Failed to peek token").kind {
-                TokenKind::Whitespace | TokenKind::Tab | TokenKind::CarriageReturn => {
-                    self.next_token();
-                }
-                _ => break,
-            }
-        }
         match self.next() {
             Some(token) if token.kind == token_kind => Ok(token),
             other => Err(format!(
@@ -90,6 +87,10 @@ impl Parser {
 
     fn match_identifier_kind(&mut self, identifier_kind: IdentifierKind) -> Result<(), String> {
         let token = self.next_token();
+        println!(
+            "match_identifier_kind: Token: {:?}, identifier_kind: {:?}",
+            token, identifier_kind
+        );
 
         match token.kind {
             TokenKind::Identifier {
@@ -133,10 +134,7 @@ impl Parser {
         let globals = Vec::new();
 
         while self.has_more() {
-            match self.next_token() {
-                t if t.kind == TokenKind::Whitespace => continue,
-                _ => functions.push(self.parse_function().expect("Failed to parse function")),
-            }
+            functions.push(self.parse_function().expect("Failed to parse function"))
         }
 
         Ok(Program {
@@ -146,17 +144,17 @@ impl Parser {
     }
 
     fn parse_function(&mut self) -> Result<Function, String> {
-        self.match_identifier_kind(IdentifierKind::Function);
+        self.match_identifier_kind(IdentifierKind::Function)?;
         let name = self
             .match_token(TokenKind::Literal {
                 kind: LiteralKind::Str,
             })?
             .raw;
 
-        self.match_token(TokenKind::BraceOpen);
-        self.match_token(TokenKind::BraceClose);
-        self.match_token(TokenKind::CurlyBracesOpen);
-        self.match_token(TokenKind::CurlyBracesClose);
+        self.match_token(TokenKind::BraceOpen)?;
+        self.match_token(TokenKind::BraceClose)?;
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+        self.match_token(TokenKind::CurlyBracesClose)?;
 
         Ok(Function {
             name: name,
