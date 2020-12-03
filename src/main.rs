@@ -12,8 +12,8 @@ fn main() -> std::io::Result<()> {
     let tokens = lexer::tokenize(&contents);
     // let ast = parser::parse(tokens.into_iter());
 
-    let program = parser::parse(tokens);
+    let program = parser::parse(tokens).unwrap();
 
-    println!("{:?}", program);
+    println!("{:#?}", program);
     Ok(())
 }
