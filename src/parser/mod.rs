@@ -89,7 +89,7 @@ impl Parser {
         let token = self.next_token();
 
         match token.kind {
-            TokenKind::Keyword(_) => Ok(()),
+            TokenKind::Keyword(k) if k == keyword => Ok(()),
             other => Err(format!("Expected SemiColon, found {:?}", other)),
         }
     }
