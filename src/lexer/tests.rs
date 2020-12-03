@@ -141,7 +141,7 @@ mod tests {
             Token {
                 len: 6,
                 kind: TokenKind::Comment,
-                raw: "-- foo".to_owned(),
+                raw: "// foo".to_owned(),
             }
         );
 

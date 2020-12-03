@@ -16,7 +16,7 @@ impl Parser {
         // FIXME: Fiter without collecting?
         let tokens_without_whitespace: Vec<Token> = tokens
             .into_iter()
-            .filter(|token| token.kind != TokenKind::Whitespace)
+            .filter(|token| token.kind != TokenKind::Whitespace && token.kind != TokenKind::Comment)
             .collect();
         Parser {
             tokens: tokens_without_whitespace.into_iter().peekable(),
