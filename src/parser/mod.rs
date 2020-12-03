@@ -146,6 +146,12 @@ impl Parser {
         let token = self.next_token();
         println!("parse_statement: {:?}", token);
         match token.kind {
+            TokenKind::Keyword(Keyword::Let) => {
+                let state = self.parse_declare();
+                self.match_token(TokenKind::SemiColon)?;
+
+                state
+            }
             TokenKind::Keyword(Keyword::Return) => {
                 let state = Statement::Return(self.parse_expression()?);
                 self.match_token(TokenKind::SemiColon)?;
@@ -164,6 +170,23 @@ impl Parser {
                 Ok(state)
             }
             other => Err(format!("Expected Expression, found {:?}", other)),
+        }
+    }
+
+    fn parse_declare(&mut self) -> Result<Statement, String> {
+        match (
+            self.next_token().kind,
+            self.peek().ok_or("Expected ; or =")?.kind,
+        ) {
+            (TokenKind::Identifier(name), TokenKind::SemiColon) => {
+                Ok(Statement::Declare(Variable { name }, None))
+            }
+            (TokenKind::Identifier(name), TokenKind::Assign) => {
+                self.drop(1);
+                let exp = self.parse_expression().ok();
+                Ok(Statement::Declare(Variable { name }, exp))
+            }
+            other => Err(format!("Expected identifier, found {:?}", other)),
         }
     }
 }

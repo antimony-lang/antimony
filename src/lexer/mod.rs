@@ -43,9 +43,9 @@ pub enum TokenKind {
     /// ";"
     SemiColon,
     /// "="
-    Equals,
+    Assign,
     /// "=="
-    DeepEquals,
+    Equals,
     /// "<"
     SmallerThen,
     /// ">"
@@ -147,8 +147,8 @@ impl Cursor<'_> {
                 _ => Slash,
             },
             '=' => match self.first() {
-                '=' => DeepEquals,
-                _ => Equals,
+                '=' => Equals,
+                _ => Assign,
             },
             ':' => Colon,
             ';' => SemiColon,

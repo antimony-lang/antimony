@@ -28,7 +28,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 1,
-                kind: TokenKind::Equals,
+                kind: TokenKind::Assign,
                 raw: "=".to_owned()
             }
         );
@@ -69,7 +69,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 1,
-                kind: TokenKind::Equals,
+                kind: TokenKind::Assign,
                 raw: "=".to_owned()
             }
         );
