@@ -2,8 +2,7 @@
 
 fn main() {
     let x = 2;
-    let y;
-    return 1;
+    return x;
 }
 
 fn fib() {}

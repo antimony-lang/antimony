@@ -169,6 +169,10 @@ impl Parser {
                 let state = Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?);
                 Ok(state)
             }
+            TokenKind::Identifier(val) => {
+                let state = Expression::Variable(val);
+                Ok(state)
+            }
             other => Err(format!("Expected Expression, found {:?}", other)),
         }
     }
