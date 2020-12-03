@@ -10,9 +10,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 1,
-                kind: TokenKind::Literal {
-                    kind: LiteralKind::Int
-                },
+                kind: TokenKind::Literal(Value::Int),
                 raw: "1".to_owned()
             }
         );
@@ -48,9 +46,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 1,
-                kind: TokenKind::Literal {
-                    kind: LiteralKind::Int
-                },
+                kind: TokenKind::Literal(Value::Int),
                 raw: "2".to_owned()
             }
         );
@@ -64,9 +60,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 1,
-                kind: TokenKind::Literal {
-                    kind: LiteralKind::Int
-                },
+                kind: TokenKind::Literal(Value::Int),
                 raw: "1".to_owned()
             }
         );
@@ -84,9 +78,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 1,
-                kind: TokenKind::Literal {
-                    kind: LiteralKind::Int
-                },
+                kind: TokenKind::Literal(Value::Int),
                 raw: "2".to_owned()
             }
         );
@@ -100,9 +92,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 4,
-                kind: TokenKind::Identifier {
-                    kind: Keyword::Boolean
-                },
+                kind: TokenKind::Keyword(Keyword::Boolean),
                 raw: "true".to_owned()
             }
         );
@@ -111,9 +101,7 @@ mod tests {
             tokens.nth(1).unwrap(),
             Token {
                 len: 5,
-                kind: TokenKind::Identifier {
-                    kind: Keyword::Boolean
-                },
+                kind: TokenKind::Keyword(Keyword::Boolean),
                 raw: "false".to_owned()
             }
         );
@@ -121,15 +109,13 @@ mod tests {
 
     #[test]
     fn test_functions() {
-        let mut tokens = tokenize("fn fib n:").into_iter();
+        let mut tokens = tokenize("fn fib() {}").into_iter();
 
         assert_eq!(
             tokens.nth(0).unwrap(),
             Token {
                 len: 2,
-                kind: TokenKind::Identifier {
-                    kind: Keyword::Function
-                },
+                kind: TokenKind::Keyword(Keyword::Function),
                 raw: "fn".to_owned()
             }
         );
@@ -139,8 +125,8 @@ mod tests {
     fn test_comments() {
         let mut tokens = tokenize(
             "
-        -- foo
-        fn fib n:
+        // foo
+        fn fib() {}
         ",
         )
         .into_iter()
@@ -163,9 +149,7 @@ mod tests {
             tokens.nth(0).unwrap(),
             Token {
                 len: 2,
-                kind: TokenKind::Identifier {
-                    kind: Keyword::Function
-                },
+                kind: TokenKind::Keyword(Keyword::Function),
                 raw: "fn".to_owned(),
             }
         );
