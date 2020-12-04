@@ -43,6 +43,24 @@ fn test_parse_no_function_context() {
 }
 
 #[test]
+fn test_parse_multiple_functions() {
+    let raw = "
+    fn foo() {
+        let x = 2;
+        return x;
+    }
+
+    fn bar() {
+        let y = 5;
+        return y;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens);
+    assert!(tree.is_ok())
+}
+
+#[test]
 fn test_parse_variable_declaration() {
     let raw = "
     fn main() {
