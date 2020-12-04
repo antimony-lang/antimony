@@ -6,6 +6,9 @@ use std::vec::IntoIter;
 
 mod node_type;
 
+#[cfg(test)]
+mod tests;
+
 pub struct Parser {
     tokens: Peekable<IntoIter<Token>>,
     peeked: Vec<Token>,
@@ -108,7 +111,7 @@ impl Parser {
         let globals = Vec::new();
 
         while self.has_more() {
-            functions.push(self.parse_function().expect("Failed to parse function"))
+            functions.push(self.parse_function()?)
         }
 
         Ok(Program {
