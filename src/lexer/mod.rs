@@ -11,11 +11,17 @@ pub struct Token {
     pub kind: TokenKind,
     pub len: usize,
     pub raw: String,
+    pub pos: usize,
 }
 
 impl Token {
-    fn new(kind: TokenKind, len: usize, raw: String) -> Token {
-        Token { kind, len, raw }
+    fn new(kind: TokenKind, len: usize, raw: String, pos: usize) -> Token {
+        Token {
+            kind,
+            len,
+            raw,
+            pos,
+        }
     }
 }
 
@@ -89,11 +95,12 @@ pub enum Keyword {
 
 /// Creates an iterator that produces tokens from the input string.
 pub fn tokenize(mut input: &str) -> Vec<Token> {
+    let mut initial_length = input.len();
     std::iter::from_fn(move || {
         if input.is_empty() {
             return None;
         }
-        let token = first_token(input);
+        let token = first_token(input, initial_length);
         input = &input[token.len..];
         Some(token)
     })
@@ -101,9 +108,9 @@ pub fn tokenize(mut input: &str) -> Vec<Token> {
 }
 
 /// Parses the first token from the provided input string.
-pub fn first_token(input: &str) -> Token {
+pub fn first_token(input: &str, initial_len: usize) -> Token {
     debug_assert!(!input.is_empty());
-    Cursor::new(input).advance_token()
+    Cursor::new(input, initial_len).advance_token()
 }
 
 pub fn is_whitespace(c: char) -> bool {
@@ -179,7 +186,7 @@ impl Cursor<'_> {
         let mut raw = original_chars2.collect::<String>();
         // Cut the original tokens to the length of the token
         raw.truncate(len);
-        Token::new(token_kind, len, raw)
+        Token::new(token_kind, len, raw, self.pos())
     }
 
     /// Eats symbols while predicate returns true or until the end of file is reached.

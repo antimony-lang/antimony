@@ -4,14 +4,16 @@ mod tests {
 
     #[test]
     fn test_basic_tokenizing() {
-        let mut tokens = tokenize("1 = 2").into_iter();
+        let raw = tokenize("1 = 2");
+        let mut tokens = raw.into_iter();
 
         assert_eq!(
             tokens.nth(0).unwrap(),
             Token {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
-                raw: "1".to_owned()
+                raw: "1".to_owned(),
+                pos: 0
             }
         );
 
@@ -20,7 +22,8 @@ mod tests {
             Token {
                 len: 1,
                 kind: TokenKind::Whitespace,
-                raw: " ".to_owned()
+                raw: " ".to_owned(),
+                pos: 1
             }
         );
 
@@ -29,7 +32,8 @@ mod tests {
             Token {
                 len: 1,
                 kind: TokenKind::Assign,
-                raw: "=".to_owned()
+                raw: "=".to_owned(),
+                pos: 2
             }
         );
 
@@ -38,7 +42,8 @@ mod tests {
             Token {
                 len: 1,
                 kind: TokenKind::Whitespace,
-                raw: " ".to_owned()
+                raw: " ".to_owned(),
+                pos: 3
             }
         );
 
@@ -47,7 +52,8 @@ mod tests {
             Token {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
-                raw: "2".to_owned()
+                raw: "2".to_owned(),
+                pos: 4
             }
         );
     }
@@ -61,7 +67,8 @@ mod tests {
             Token {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
-                raw: "1".to_owned()
+                raw: "1".to_owned(),
+                pos: 0
             }
         );
 
@@ -70,7 +77,8 @@ mod tests {
             Token {
                 len: 1,
                 kind: TokenKind::Assign,
-                raw: "=".to_owned()
+                raw: "=".to_owned(),
+                pos: 1
             }
         );
 
@@ -79,7 +87,8 @@ mod tests {
             Token {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
-                raw: "2".to_owned()
+                raw: "2".to_owned(),
+                pos: 2
             }
         );
     }
@@ -93,7 +102,8 @@ mod tests {
             Token {
                 len: 4,
                 kind: TokenKind::Keyword(Keyword::Boolean),
-                raw: "true".to_owned()
+                raw: "true".to_owned(),
+                pos: 0
             }
         );
 
@@ -102,7 +112,8 @@ mod tests {
             Token {
                 len: 5,
                 kind: TokenKind::Keyword(Keyword::Boolean),
-                raw: "false".to_owned()
+                raw: "false".to_owned(),
+                pos: 5
             }
         );
     }
@@ -116,7 +127,8 @@ mod tests {
             Token {
                 len: 2,
                 kind: TokenKind::Keyword(Keyword::Function),
-                raw: "fn".to_owned()
+                raw: "fn".to_owned(),
+                pos: 0
             }
         );
     }
@@ -125,8 +137,8 @@ mod tests {
     fn test_comments() {
         let mut tokens = tokenize(
             "
-        // foo
-        fn fib() {}
+// foo
+fn fib() {}
         ",
         )
         .into_iter()
@@ -142,6 +154,7 @@ mod tests {
                 len: 6,
                 kind: TokenKind::Comment,
                 raw: "// foo".to_owned(),
+                pos: 1
             }
         );
 
@@ -151,6 +164,7 @@ mod tests {
                 len: 2,
                 kind: TokenKind::Keyword(Keyword::Function),
                 raw: "fn".to_owned(),
+                pos: 8
             }
         );
     }

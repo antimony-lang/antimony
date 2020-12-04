@@ -5,7 +5,8 @@ use std::str::Chars;
 /// Next characters can be peeked via `nth_char` method,
 /// and position can be shifted forward via `bump` method.
 pub(crate) struct Cursor<'a> {
-    initial_len: usize,
+    initial_length: usize,
+    len: usize,
     chars: Chars<'a>,
     prev: char,
 }
@@ -13,9 +14,10 @@ pub(crate) struct Cursor<'a> {
 pub(crate) const EOF_CHAR: char = '\0';
 
 impl<'a> Cursor<'a> {
-    pub(crate) fn new(input: &'a str) -> Cursor<'a> {
+    pub(crate) fn new(input: &'a str, initial_len: usize) -> Cursor<'a> {
         Cursor {
-            initial_len: input.len(),
+            initial_length: initial_len,
+            len: input.len(),
             chars: input.chars(),
             #[cfg(debug_assertions)]
             prev: EOF_CHAR,
@@ -56,12 +58,16 @@ impl<'a> Cursor<'a> {
 
     /// Returns amount of already consumed symbols.
     pub(crate) fn len_consumed(&self) -> usize {
-        self.initial_len - self.chars.as_str().len()
+        self.len - self.chars.as_str().len()
     }
 
     /// Returns a `Chars` iterator over the remaining characters.
     pub(crate) fn chars(&self) -> Chars<'a> {
         self.chars.clone()
+    }
+
+    pub(crate) fn pos(&self) -> usize {
+        self.initial_length - self.len
     }
 
     /// Moves to the next character.
