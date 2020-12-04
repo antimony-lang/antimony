@@ -5,7 +5,7 @@ mod lexer;
 mod parser;
 
 fn main() -> std::io::Result<()> {
-    let mut file = File::open("examples/hello_world.fx")?;
+    let mut file = File::open("examples/hello_world.sb")?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
 
