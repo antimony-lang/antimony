@@ -1,6 +1,7 @@
 use crate::lexer::Keyword;
 use crate::lexer::{Token, TokenKind, Value};
 use crate::parser::node_type::*;
+use crate::util::string_util::highlight_position_in_file;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
@@ -12,10 +13,11 @@ mod tests;
 pub struct Parser {
     tokens: Peekable<IntoIter<Token>>,
     peeked: Vec<Token>,
+    raw: Option<String>,
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Parser {
+    pub fn new(tokens: Vec<Token>, raw: Option<String>) -> Parser {
         // FIXME: Fiter without collecting?
         let tokens_without_whitespace: Vec<Token> = tokens
             .into_iter()
@@ -24,6 +26,7 @@ impl Parser {
         Parser {
             tokens: tokens_without_whitespace.into_iter().peekable(),
             peeked: vec![],
+            raw: raw,
         }
     }
 
@@ -71,10 +74,8 @@ impl Parser {
     fn match_token(&mut self, token_kind: TokenKind) -> Result<Token, String> {
         match self.next() {
             Some(token) if token.kind == token_kind => Ok(token),
-            other => Err(format!(
-                "Token {:?} not found, found {:?}",
-                token_kind, other
-            )),
+            Some(other) => Err(self.make_error(token_kind, other)),
+            None => Err("Token expected".to_string()),
         }
     }
 
@@ -91,9 +92,9 @@ impl Parser {
     fn match_keyword(&mut self, keyword: Keyword) -> Result<(), String> {
         let token = self.next_token();
 
-        match token.kind {
-            TokenKind::Keyword(k) if k == keyword => Ok(()),
-            other => Err(format!("Expected SemiColon, found {:?}", other)),
+        match &token.kind {
+            TokenKind::Keyword(ref k) if k == &keyword => Ok(()),
+            _ => Err(self.make_error(TokenKind::SemiColon, token)),
         }
     }
 
@@ -101,6 +102,18 @@ impl Parser {
         match self.next_token().kind {
             TokenKind::Identifier(n) => Ok(n),
             other => Err(format!("Expected Identifier, found {:?}", other)),
+        }
+    }
+
+    fn make_error(&mut self, token_kind: TokenKind, other: Token) -> String {
+        match &self.raw {
+            Some(raw_file) => format!(
+                "Token {:?} not found, found {:?}\n{:?}",
+                token_kind,
+                other,
+                highlight_position_in_file(raw_file.to_string(), other.to_owned().pos)
+            ),
+            None => format!("Token {:?} not found, found {:?}", token_kind, other),
         }
     }
 }
@@ -148,7 +161,7 @@ impl Parser {
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.next_token();
         dbg!(&token);
-        match token.kind {
+        match &token.kind {
             TokenKind::Keyword(Keyword::Let) => {
                 let state = self.parse_declare();
                 self.match_token(TokenKind::SemiColon)?;
@@ -161,7 +174,7 @@ impl Parser {
 
                 Ok(state)
             }
-            other => Err(format!("Expected Statement, found {:?}", other)),
+            _ => Err(self.make_error(TokenKind::Unknown, token)),
         }
     }
 
@@ -202,8 +215,8 @@ impl Parser {
     }
 }
 
-pub fn parse(tokens: Vec<Token>) -> Result<node_type::Program, String> {
-    let mut parser = Parser::new(tokens);
+pub fn parse(tokens: Vec<Token>, raw: Option<String>) -> Result<node_type::Program, String> {
+    let mut parser = Parser::new(tokens, raw);
 
     parser.parse()
 }

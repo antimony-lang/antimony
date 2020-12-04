@@ -3,8 +3,9 @@ use crate::parser::*;
 
 #[test]
 fn test_parse_empty_function() {
-    let tokens = tokenize("fn main() {}");
-    let tree = parse(tokens);
+    let raw = "fn main() {}";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -16,7 +17,7 @@ fn test_parse_function_with_return() {
     }
     ";
     let tokens = tokenize(raw);
-    let tree = parse(tokens);
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -28,7 +29,7 @@ fn test_parse_missing_semicolon() {
     }
     ";
     let tokens = tokenize(raw);
-    let tree = parse(tokens);
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_err())
 }
 
@@ -38,7 +39,7 @@ fn test_parse_no_function_context() {
     let x = 1;
     ";
     let tokens = tokenize(raw);
-    let tree = parse(tokens);
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_err())
 }
 
@@ -56,7 +57,7 @@ fn test_parse_multiple_functions() {
     }
     ";
     let tokens = tokenize(raw);
-    let tree = parse(tokens);
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -69,6 +70,6 @@ fn test_parse_variable_declaration() {
     }
     ";
     let tokens = tokenize(raw);
-    let tree = parse(tokens);
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }

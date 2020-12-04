@@ -3,6 +3,7 @@ use std::io::Read;
 
 mod lexer;
 mod parser;
+mod util;
 
 fn main() -> std::io::Result<()> {
     let mut file = File::open("examples/hello_world.sb")?;
@@ -12,7 +13,7 @@ fn main() -> std::io::Result<()> {
     let tokens = lexer::tokenize(&contents);
     // let ast = parser::parse(tokens.into_iter());
 
-    let program = parser::parse(tokens).unwrap();
+    let program = parser::parse(tokens, Some(contents));
 
     println!("{:#?}", program);
     Ok(())

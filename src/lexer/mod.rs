@@ -11,11 +11,11 @@ pub struct Token {
     pub kind: TokenKind,
     pub len: usize,
     pub raw: String,
-    pub pos: usize,
+    pub pos: Position,
 }
 
 impl Token {
-    fn new(kind: TokenKind, len: usize, raw: String, pos: usize) -> Token {
+    fn new(kind: TokenKind, len: usize, raw: String, pos: Position) -> Token {
         Token {
             kind,
             len,
@@ -23,6 +23,13 @@ impl Token {
             pos,
         }
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct Position {
+    pub line: usize,
+    pub offset: usize,
+    pub raw: usize,
 }
 
 /// Enum representing common lexeme types.
@@ -95,12 +102,17 @@ pub enum Keyword {
 
 /// Creates an iterator that produces tokens from the input string.
 pub fn tokenize(mut input: &str) -> Vec<Token> {
-    let mut initial_length = input.len();
+    let initial_length = input.len();
+    let mut pos = Position {
+        raw: usize::MAX,
+        line: 1,
+        offset: 0,
+    };
     std::iter::from_fn(move || {
         if input.is_empty() {
             return None;
         }
-        let token = first_token(input, initial_length);
+        let token = first_token(input, initial_length, &mut pos);
         input = &input[token.len..];
         Some(token)
     })
@@ -108,9 +120,9 @@ pub fn tokenize(mut input: &str) -> Vec<Token> {
 }
 
 /// Parses the first token from the provided input string.
-pub fn first_token(input: &str, initial_len: usize) -> Token {
+pub fn first_token(input: &str, initial_len: usize, pos: &mut Position) -> Token {
     debug_assert!(!input.is_empty());
-    Cursor::new(input, initial_len).advance_token()
+    Cursor::new(input, initial_len, pos).advance_token()
 }
 
 pub fn is_whitespace(c: char) -> bool {
@@ -186,7 +198,11 @@ impl Cursor<'_> {
         let mut raw = original_chars2.collect::<String>();
         // Cut the original tokens to the length of the token
         raw.truncate(len);
-        Token::new(token_kind, len, raw, self.pos())
+        let position = self.pos();
+        let token = Token::new(token_kind, len, raw, position);
+
+        dbg!(&token);
+        token
     }
 
     /// Eats symbols while predicate returns true or until the end of file is reached.

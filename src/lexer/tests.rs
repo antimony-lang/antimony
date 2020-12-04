@@ -13,7 +13,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
                 raw: "1".to_owned(),
-                pos: 0
+                pos: Position {
+                    raw: 0,
+                    line: 1,
+                    offset: 0
+                }
             }
         );
 
@@ -23,7 +27,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Whitespace,
                 raw: " ".to_owned(),
-                pos: 1
+                pos: Position {
+                    raw: 1,
+                    line: 1,
+                    offset: 1
+                }
             }
         );
 
@@ -33,7 +41,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Assign,
                 raw: "=".to_owned(),
-                pos: 2
+                pos: Position {
+                    raw: 2,
+                    line: 1,
+                    offset: 2
+                }
             }
         );
 
@@ -43,7 +55,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Whitespace,
                 raw: " ".to_owned(),
-                pos: 3
+                pos: Position {
+                    raw: 3,
+                    line: 1,
+                    offset: 3
+                }
             }
         );
 
@@ -53,7 +69,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
                 raw: "2".to_owned(),
-                pos: 4
+                pos: Position {
+                    raw: 4,
+                    line: 1,
+                    offset: 4
+                }
             }
         );
     }
@@ -68,7 +88,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
                 raw: "1".to_owned(),
-                pos: 0
+                pos: Position {
+                    raw: 0,
+                    line: 1,
+                    offset: 0
+                }
             }
         );
 
@@ -78,7 +102,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Assign,
                 raw: "=".to_owned(),
-                pos: 1
+                pos: Position {
+                    raw: 1,
+                    line: 1,
+                    offset: 1
+                }
             }
         );
 
@@ -88,7 +116,11 @@ mod tests {
                 len: 1,
                 kind: TokenKind::Literal(Value::Int),
                 raw: "2".to_owned(),
-                pos: 2
+                pos: Position {
+                    raw: 2,
+                    line: 1,
+                    offset: 2
+                }
             }
         );
     }
@@ -103,7 +135,11 @@ mod tests {
                 len: 4,
                 kind: TokenKind::Keyword(Keyword::Boolean),
                 raw: "true".to_owned(),
-                pos: 0
+                pos: Position {
+                    raw: 3,
+                    line: 1,
+                    offset: 3
+                }
             }
         );
 
@@ -113,7 +149,11 @@ mod tests {
                 len: 5,
                 kind: TokenKind::Keyword(Keyword::Boolean),
                 raw: "false".to_owned(),
-                pos: 5
+                pos: Position {
+                    raw: 9,
+                    line: 1,
+                    offset: 9
+                }
             }
         );
     }
@@ -128,7 +168,11 @@ mod tests {
                 len: 2,
                 kind: TokenKind::Keyword(Keyword::Function),
                 raw: "fn".to_owned(),
-                pos: 0
+                pos: Position {
+                    raw: 1,
+                    line: 1,
+                    offset: 1
+                }
             }
         );
     }
@@ -136,8 +180,7 @@ mod tests {
     #[test]
     fn test_comments() {
         let mut tokens = tokenize(
-            "
-// foo
+            "// foo
 fn fib() {}
         ",
         )
@@ -154,7 +197,11 @@ fn fib() {}
                 len: 6,
                 kind: TokenKind::Comment,
                 raw: "// foo".to_owned(),
-                pos: 1
+                pos: Position {
+                    raw: 5,
+                    line: 1,
+                    offset: 5
+                }
             }
         );
 
@@ -164,7 +211,11 @@ fn fib() {}
                 len: 2,
                 kind: TokenKind::Keyword(Keyword::Function),
                 raw: "fn".to_owned(),
-                pos: 8
+                pos: Position {
+                    raw: 8,
+                    line: 2,
+                    offset: 2
+                }
             }
         );
     }

@@ -1,3 +1,4 @@
+use crate::lexer::Position;
 use std::str::Chars;
 
 /// Peekable iterator over a char sequence.
@@ -6,6 +7,7 @@ use std::str::Chars;
 /// and position can be shifted forward via `bump` method.
 pub(crate) struct Cursor<'a> {
     initial_length: usize,
+    pos: &'a mut Position,
     len: usize,
     chars: Chars<'a>,
     prev: char,
@@ -14,13 +16,18 @@ pub(crate) struct Cursor<'a> {
 pub(crate) const EOF_CHAR: char = '\0';
 
 impl<'a> Cursor<'a> {
-    pub(crate) fn new(input: &'a str, initial_len: usize) -> Cursor<'a> {
+    pub(crate) fn new(
+        input: &'a str,
+        initial_len: usize,
+        position: &'a mut Position,
+    ) -> Cursor<'a> {
         Cursor {
             initial_length: initial_len,
             len: input.len(),
             chars: input.chars(),
             #[cfg(debug_assertions)]
             prev: EOF_CHAR,
+            pos: position,
         }
     }
 
@@ -66,13 +73,27 @@ impl<'a> Cursor<'a> {
         self.chars.clone()
     }
 
-    pub(crate) fn pos(&self) -> usize {
-        self.initial_length - self.len
+    pub(crate) fn pos(&self) -> Position {
+        let mut p = self.pos.clone();
+        p
     }
 
     /// Moves to the next character.
     pub(crate) fn bump(&mut self) -> Option<char> {
         let c = self.chars.next()?;
+        // If first token, the position should be set to 0
+        match self.pos.raw {
+            usize::MAX => self.pos.raw = 0,
+            _ => {
+                self.pos.raw += 1;
+                self.pos.offset += 1;
+            }
+        }
+
+        if c == '\n' {
+            self.pos.line += 1;
+            self.pos.offset = 0;
+        }
 
         #[cfg(debug_assertions)]
         {
