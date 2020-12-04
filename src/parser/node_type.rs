@@ -29,6 +29,7 @@ pub enum Statement {
 #[derive(Debug, Eq, PartialEq)]
 pub enum Expression {
     Int(u32),
+    Str(String),
     Char(u8),
     FunctionCall(String, Vec<Expression>),
     Variable(String),

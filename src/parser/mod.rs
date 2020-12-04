@@ -129,7 +129,7 @@ impl Parser {
 
         while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
             let statement = self.parse_statement()?;
-            println!("{:?}", statement);
+            dbg!("{:?}", &statement);
             statements.push(statement);
         }
 
@@ -144,7 +144,7 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.next_token();
-        println!("parse_statement: {:?}", token);
+        dbg!(&token);
         match token.kind {
             TokenKind::Keyword(Keyword::Let) => {
                 let state = self.parse_declare();
@@ -167,6 +167,10 @@ impl Parser {
         match token.kind {
             TokenKind::Literal(Value::Int) => {
                 let state = Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?);
+                Ok(state)
+            }
+            TokenKind::Literal(Value::Str) => {
+                let state = Expression::Str(token.raw);
                 Ok(state)
             }
             TokenKind::Identifier(val) => {

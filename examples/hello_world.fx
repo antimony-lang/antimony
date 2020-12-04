@@ -1,7 +1,7 @@
 // This is a comment
 
 fn main() {
-    let x = 2;
+    let x = "Hello World";
     return x;
 }
 
