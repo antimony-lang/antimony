@@ -11,7 +11,8 @@ impl Generator for JsGenerator {
             .map(|f| generate_function(f))
             .collect();
 
-        code += "main()";
+        // Until we have a stdlib, it should suffice to print the result of main to stdout
+        code += "console.log(main())";
 
         return code;
     }
