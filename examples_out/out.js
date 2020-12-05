@@ -1,5 +1,5 @@
-function main() {
-return "Hello World"
+function main(message,) {
+return message
 }
 function fib() {
 }

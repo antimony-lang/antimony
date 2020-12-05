@@ -138,6 +138,14 @@ impl Parser {
         let name = self.match_identifier()?;
 
         self.match_token(TokenKind::BraceOpen)?;
+
+        let arguments: Vec<Variable> = match self.peek() {
+            Some(t) if t.kind == TokenKind::BraceClose => Vec::new(),
+            _ => self
+                .parse_arguments()
+                .expect("Failed to parse function arguments"),
+        };
+
         self.match_token(TokenKind::BraceClose)?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
 
@@ -153,9 +161,22 @@ impl Parser {
 
         Ok(Function {
             name: name,
-            arguments: Vec::new(),
+            arguments: arguments,
             statements: statements,
         })
+    }
+
+    fn parse_arguments(&mut self) -> Result<Vec<Variable>, String> {
+        let mut args = Vec::new();
+        while let Err(_) = self.peek_token(TokenKind::BraceClose) {
+            let next = self.next().ok_or_else(|| "Expected identifier")?;
+            match next.kind {
+                TokenKind::Identifier(name) => args.push(Variable { name: name }),
+                _ => return Err(self.make_error(TokenKind::Identifier("".into()), next)),
+            }
+        }
+
+        Ok(args)
     }
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
