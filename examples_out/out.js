@@ -1,6 +1,7 @@
-function main(message,) {
-return message
+function main() {
+foo(2)
 }
-function fib() {
+function foo(x) {
+return x
 }
 console.log(main())

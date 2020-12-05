@@ -55,6 +55,8 @@ pub enum TokenKind {
     Colon,
     /// ";"
     SemiColon,
+    /// ","
+    Comma,
     /// "="
     Assign,
     /// "=="
@@ -200,7 +202,6 @@ impl Cursor<'_> {
         let position = self.pos();
         let token = Token::new(token_kind, len, raw, position);
 
-        dbg!(&token);
         token
     }
 

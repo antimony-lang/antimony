@@ -22,8 +22,9 @@ fn generate_function(func: Function) -> String {
     let arguments: String = func
         .arguments
         .into_iter()
-        .map(|arg: Variable| format!("{},", arg.name))
-        .collect();
+        .map(|var| var.name)
+        .collect::<Vec<String>>()
+        .join(", ");
     let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
 
     raw += " {\n";
@@ -53,9 +54,24 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Int(val) => val.to_string(),
         Expression::Variable(val) | Expression::Str(val) => val,
         Expression::Char(_) => todo!(),
-        Expression::FunctionCall(_, _) => todo!(),
+        Expression::FunctionCall(name, e) => generate_function_call(name, e),
         Expression::Assign(_, _) => todo!(),
     }
+}
+
+fn generate_function_call(func: String, args: Vec<Expression>) -> String {
+    let formatted_args = args
+        .into_iter()
+        .map(|arg| match arg {
+            Expression::Char(c) => c.to_string(),
+            Expression::Int(i) => i.to_string(),
+            Expression::FunctionCall(n, a) => generate_function_call(n, a),
+            Expression::Str(s) | Expression::Variable(s) => s,
+            Expression::Assign(_, _) => todo!(),
+        })
+        .collect::<Vec<String>>()
+        .join(",");
+    format!("{N}({A})\n", N = func, A = formatted_args)
 }
 
 fn generate_return(ret: Option<Expression>) -> String {

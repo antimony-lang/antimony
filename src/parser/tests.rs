@@ -73,3 +73,65 @@ fn test_parse_variable_declaration() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_parse_function_with_args() {
+    let raw = "
+    fn main(foo) {
+        return foo;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_function_call() {
+    let raw = "
+    fn main(foo) {
+        foo();
+    }
+
+    fn foo() {
+        foo(2);
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+#[ignore]
+fn test_parse_return_function_call() {
+    let raw = "
+    fn main() {
+        return fib();
+    }
+
+    fn fib() {
+        return fib(2);
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+#[ignore]
+fn test_parse_function_call_multiple_arguments() {
+    let raw = "
+    fn main() {
+        fib(1, 2, 3);
+    }
+
+    fn fib() {
+        return 2;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

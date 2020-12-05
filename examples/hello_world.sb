@@ -1,5 +1,7 @@
-fn main(message) {
-    return message;
+fn main() {
+    foo(2);
 }
 
-fn fib() {}
+fn foo(x) {
+    return x;
+}

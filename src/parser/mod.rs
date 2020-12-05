@@ -13,6 +13,8 @@ mod tests;
 pub struct Parser {
     tokens: Peekable<IntoIter<Token>>,
     peeked: Vec<Token>,
+    current: Option<Token>,
+    prev: Option<Token>,
     raw: Option<String>,
 }
 
@@ -26,6 +28,8 @@ impl Parser {
         Parser {
             tokens: tokens_without_whitespace.into_iter().peekable(),
             peeked: vec![],
+            current: None,
+            prev: None,
             raw: raw,
         }
     }
@@ -35,11 +39,15 @@ impl Parser {
     }
 
     fn next(&mut self) -> Option<Token> {
-        if self.peeked.is_empty() {
+        self.prev = self.current.to_owned();
+        let item = if self.peeked.is_empty() {
             self.tokens.next()
         } else {
             self.peeked.pop()
-        }
+        };
+
+        self.current = item.to_owned();
+        item
     }
 
     fn peek(&mut self) -> Option<Token> {
@@ -116,6 +124,10 @@ impl Parser {
             None => format!("Token {:?} not found, found {:?}", token_kind, other),
         }
     }
+
+    fn prev(&mut self) -> Option<Token> {
+        self.prev.clone()
+    }
 }
 
 impl Parser {
@@ -172,7 +184,7 @@ impl Parser {
             let next = self.next().ok_or_else(|| "Expected identifier")?;
             match next.kind {
                 TokenKind::Identifier(name) => args.push(Variable { name: name }),
-                _ => return Err(self.make_error(TokenKind::Identifier("".into()), next)),
+                _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
             }
         }
 
@@ -181,7 +193,6 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.next_token();
-        dbg!(&token);
         match &token.kind {
             TokenKind::Keyword(Keyword::Let) => {
                 let state = self.parse_declare();
@@ -195,8 +206,53 @@ impl Parser {
 
                 Ok(state)
             }
-            _ => Err(self.make_error(TokenKind::Unknown, token)),
+            TokenKind::Identifier(name) => {
+                if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
+                    let state = self.parse_function_call()?;
+                    self.match_token(TokenKind::SemiColon)?;
+                    Ok(state)
+                } else {
+                    let state = Statement::Exp(Expression::Variable(name.into()));
+                    Ok(state)
+                }
+            }
+
+            _ => return Err(self.make_error(TokenKind::Unknown, token)),
         }
+    }
+
+    /// Parses a function call from tokens.
+    /// The name of the function needs to be passed here, because we have already passed it with our cursor.
+    fn parse_function_call(&mut self) -> Result<Statement, String> {
+        let ident_token = self.prev().ok_or_else(|| "Expected function identifier")?;
+        let name = match &ident_token.kind {
+            TokenKind::Identifier(name) => name,
+            _ => {
+                panic!(self.make_error(TokenKind::Identifier("Function name".into()), ident_token))
+            }
+        }
+        .to_string();
+
+        self.match_token(TokenKind::BraceOpen)?;
+
+        let mut args = Vec::new();
+
+        loop {
+            let next = self.peek().ok_or_else(|| "Can not peek token")?;
+            match &next.kind {
+                TokenKind::BraceClose => break,
+                TokenKind::Comma => continue,
+                TokenKind::Identifier(_) | TokenKind::Literal(_) => {
+                    args.push(self.parse_expression()?)
+                }
+                _ => {
+                    return Err(self.make_error(TokenKind::BraceClose, next));
+                }
+            };
+        }
+
+        self.match_token(TokenKind::BraceClose)?;
+        Ok(Statement::Exp(Expression::FunctionCall(name, args)))
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {

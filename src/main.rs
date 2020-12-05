@@ -19,6 +19,8 @@ fn main() -> Result<(), String> {
 
     let program = parser::parse(tokens, Some(contents))?;
 
+    dbg!(":#?", &program);
+
     let output = generator::js::JsGenerator::generate(program);
     let mut file = std::fs::File::create("examples_out/out.js").expect("create failed");
     file.write_all(output.as_bytes()).expect("write failed");
