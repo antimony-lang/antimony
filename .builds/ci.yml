@@ -1,0 +1,10 @@
+image: archlinux
+packages:
+  - rust
+sources:
+  - https://git.sr.ht/~garritfra/sabre
+tasks:
+  - build: |
+      cd sabre
+      cargo build
+      cargo test
