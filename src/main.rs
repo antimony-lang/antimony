@@ -19,8 +19,8 @@ fn main() -> Result<(), String> {
 
     let program = parser::parse(tokens, Some(contents))?;
 
-    let output = generator::x86::X86Generator::generate(program);
-    let mut file = std::fs::File::create("examples_out/out.asm").expect("create failed");
+    let output = generator::js::JsGenerator::generate(program);
+    let mut file = std::fs::File::create("examples_out/out.js").expect("create failed");
     file.write_all(output.as_bytes()).expect("write failed");
     file.flush().expect("Could not flush file");
     Ok(())
