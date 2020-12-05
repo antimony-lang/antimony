@@ -1,6 +1,6 @@
 function main() {
-return;
+return "Hello World"
 }
 function fib() {
 }
-main()
+console.log(main())

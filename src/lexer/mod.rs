@@ -288,6 +288,11 @@ impl Cursor<'_> {
         loop {
             match self.first() {
                 '"' | '\'' => break,
+                '\n' => panic!(
+                    "String does not end on same line. At {}:{}",
+                    self.pos().line,
+                    self.pos().offset
+                ),
                 _ => self.bump(),
             };
         }
