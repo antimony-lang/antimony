@@ -1,4 +1,4 @@
-use crate::parser::node_type::Program;
+use crate::parser::node_type::*;
 
 pub mod js;
 pub mod x86;
