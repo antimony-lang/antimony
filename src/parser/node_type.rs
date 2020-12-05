@@ -19,7 +19,7 @@ pub struct Variable {
 #[derive(Debug, Eq, PartialEq)]
 pub enum Statement {
     Declare(Variable, Option<Expression>),
-    Return(Expression),
+    Return(Option<Expression>),
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
     Exp(Expression),

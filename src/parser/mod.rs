@@ -169,12 +169,21 @@ impl Parser {
                 state
             }
             TokenKind::Keyword(Keyword::Return) => {
-                let state = Statement::Return(self.parse_expression()?);
+                let state = self.parse_return()?;
                 self.match_token(TokenKind::SemiColon)?;
 
                 Ok(state)
             }
             _ => Err(self.make_error(TokenKind::Unknown, token)),
+        }
+    }
+
+    fn parse_return(&mut self) -> Result<Statement, String> {
+        // TODO: Replace unwrap with make_error
+        let peeked = self.peek().unwrap();
+        match peeked.kind {
+            TokenKind::SemiColon => Ok(Statement::Return(None)),
+            _ => Ok(Statement::Return(Some(self.parse_expression()?))),
         }
     }
 

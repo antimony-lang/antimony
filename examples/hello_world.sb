@@ -1,6 +1,6 @@
 fn main() {
     let x = "Hello World";
-    return x;
+    return;
 }
 
 fn fib() {}
