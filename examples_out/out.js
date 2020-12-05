@@ -1,3 +1,6 @@
-function main() {}
-function fib() {}
+function main() {
+return;
+}
+function fib() {
+}
 main()

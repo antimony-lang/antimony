@@ -33,8 +33,5 @@ pub enum Expression {
     Char(u8),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
-    VariableRef(String),
     Assign(String, Box<Expression>),
-    AssignPostfix(String, Box<Expression>),
-    Ternary(Box<Expression>, Box<Expression>, Box<Expression>),
 }

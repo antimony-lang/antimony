@@ -1,5 +1,4 @@
 fn main() {
-    let x = "Hello World";
     return;
 }
 
