@@ -6,7 +6,6 @@ use std::str::Chars;
 /// Next characters can be peeked via `nth_char` method,
 /// and position can be shifted forward via `bump` method.
 pub(crate) struct Cursor<'a> {
-    initial_length: usize,
     pos: &'a mut Position,
     len: usize,
     chars: Chars<'a>,
@@ -16,13 +15,8 @@ pub(crate) struct Cursor<'a> {
 pub(crate) const EOF_CHAR: char = '\0';
 
 impl<'a> Cursor<'a> {
-    pub(crate) fn new(
-        input: &'a str,
-        initial_len: usize,
-        position: &'a mut Position,
-    ) -> Cursor<'a> {
+    pub(crate) fn new(input: &'a str, position: &'a mut Position) -> Cursor<'a> {
         Cursor {
-            initial_length: initial_len,
             len: input.len(),
             chars: input.chars(),
             #[cfg(debug_assertions)]
@@ -74,7 +68,7 @@ impl<'a> Cursor<'a> {
     }
 
     pub(crate) fn pos(&self) -> Position {
-        let mut p = self.pos.clone();
+        let p = self.pos.clone();
         p
     }
 

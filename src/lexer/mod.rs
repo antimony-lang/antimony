@@ -102,7 +102,6 @@ pub enum Keyword {
 
 /// Creates an iterator that produces tokens from the input string.
 pub fn tokenize(mut input: &str) -> Vec<Token> {
-    let initial_length = input.len();
     let mut pos = Position {
         raw: usize::MAX,
         line: 1,
@@ -112,7 +111,7 @@ pub fn tokenize(mut input: &str) -> Vec<Token> {
         if input.is_empty() {
             return None;
         }
-        let token = first_token(input, initial_length, &mut pos);
+        let token = first_token(input, &mut pos);
         input = &input[token.len..];
         Some(token)
     })
@@ -120,9 +119,9 @@ pub fn tokenize(mut input: &str) -> Vec<Token> {
 }
 
 /// Parses the first token from the provided input string.
-pub fn first_token(input: &str, initial_len: usize, pos: &mut Position) -> Token {
+pub fn first_token(input: &str, pos: &mut Position) -> Token {
     debug_assert!(!input.is_empty());
-    Cursor::new(input, initial_len, pos).advance_token()
+    Cursor::new(input, pos).advance_token()
 }
 
 pub fn is_whitespace(c: char) -> bool {
