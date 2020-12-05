@@ -5,7 +5,7 @@ use crate::util::string_util::highlight_position_in_file;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
-mod node_type;
+pub mod node_type;
 
 #[cfg(test)]
 mod tests;

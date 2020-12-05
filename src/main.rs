@@ -1,6 +1,8 @@
+use crate::generator::Generator;
 use std::fs::File;
 use std::io::Read;
 
+mod generator;
 mod lexer;
 mod parser;
 mod util;
@@ -15,6 +17,10 @@ fn main() -> std::io::Result<()> {
 
     let program = parser::parse(tokens, Some(contents));
 
-    println!("{:#?}", program);
+    match program {
+        Ok(p) => println!("{}", generator::x86::X86Generator::generate(p)),
+        Err(e) => panic!(e),
+    }
+
     Ok(())
 }
