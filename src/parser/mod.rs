@@ -241,7 +241,10 @@ impl Parser {
             let next = self.peek().ok_or_else(|| "Can not peek token")?;
             match &next.kind {
                 TokenKind::BraceClose => break,
-                TokenKind::Comma => continue,
+                TokenKind::Comma => {
+                    self.next();
+                    continue;
+                }
                 TokenKind::Identifier(_) | TokenKind::Literal(_) => {
                     args.push(self.parse_expression()?)
                 }

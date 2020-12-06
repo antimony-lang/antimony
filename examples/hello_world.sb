@@ -1,5 +1,5 @@
 fn main() {
-    foo(2);
+    foo(2, 1);
 }
 
 fn foo(x) {

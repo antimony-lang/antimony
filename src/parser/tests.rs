@@ -120,7 +120,6 @@ fn test_parse_return_function_call() {
 }
 
 #[test]
-#[ignore]
 fn test_parse_function_call_multiple_arguments() {
     let raw = "
     fn main() {

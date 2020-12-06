@@ -172,6 +172,7 @@ impl Cursor<'_> {
             },
             ':' => Colon,
             ';' => SemiColon,
+            ',' => Comma,
             '<' => SmallerThen,
             '>' => LargerThen,
             '(' => BraceOpen,
