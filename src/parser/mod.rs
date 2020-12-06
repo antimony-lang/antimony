@@ -1,5 +1,6 @@
 use crate::lexer::Keyword;
 use crate::lexer::{Token, TokenKind, Value};
+use crate::parser::node_type::Statement;
 use crate::parser::node_type::*;
 use crate::util::string_util::highlight_position_in_file;
 use std::iter::Peekable;
@@ -210,7 +211,7 @@ impl Parser {
                 if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
                     let state = self.parse_function_call()?;
                     self.match_token(TokenKind::SemiColon)?;
-                    Ok(state)
+                    Ok(Statement::Exp(state))
                 } else {
                     let state = Statement::Exp(Expression::Variable(name.into()));
                     Ok(state)
@@ -223,7 +224,7 @@ impl Parser {
 
     /// Parses a function call from tokens.
     /// The name of the function needs to be passed here, because we have already passed it with our cursor.
-    fn parse_function_call(&mut self) -> Result<Statement, String> {
+    fn parse_function_call(&mut self) -> Result<Expression, String> {
         let ident_token = self.prev().ok_or_else(|| "Expected function identifier")?;
         let name = match &ident_token.kind {
             TokenKind::Identifier(name) => name,
@@ -255,7 +256,7 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        Ok(Statement::Exp(Expression::FunctionCall(name, args)))
+        Ok(Expression::FunctionCall(name, args))
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {
@@ -279,7 +280,11 @@ impl Parser {
                 Ok(state)
             }
             TokenKind::Identifier(val) => {
-                let state = Expression::Variable(val);
+                let next = self.peek().ok_or_else(|| "Token expected")?;
+                let state = match &next.kind {
+                    TokenKind::BraceOpen => self.parse_function_call()?,
+                    _ => Expression::Variable(val),
+                };
                 Ok(state)
             }
             other => Err(format!("Expected Expression, found {:?}", other)),

@@ -103,11 +103,10 @@ fn test_parse_function_call() {
 }
 
 #[test]
-#[ignore]
 fn test_parse_return_function_call() {
     let raw = "
     fn main() {
-        return fib();
+        return fib(2);
     }
 
     fn fib() {
@@ -127,6 +126,22 @@ fn test_parse_function_call_multiple_arguments() {
     }
 
     fn fib() {
+        return 2;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_nexted_function_call() {
+    let raw = "
+    fn main() {
+        fib(fib(2), 2);
+    }
+
+    fn fib(n) {
         return 2;
     }
     ";
