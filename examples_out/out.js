@@ -1,4 +1,3 @@
-function main() {
-return 2 * 5 / 3
-}
+function main(n) {
+n * 2}
 console.log(main())

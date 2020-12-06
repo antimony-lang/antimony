@@ -202,7 +202,7 @@ impl Parser {
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
                 if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
-                    let state = self.parse_function_call()?;
+                    let state = self.parse_function_call(Some(ident))?;
                     Ok(Statement::Exp(state))
                 } else {
                     let state = Statement::Exp(Expression::Variable(ident.into()));
@@ -218,15 +218,16 @@ impl Parser {
 
     /// Parses a function call from tokens.
     /// The name of the function needs to be passed here, because we have already passed it with our cursor.
-    fn parse_function_call(&mut self) -> Result<Expression, String> {
-        let ident_token = self.prev().ok_or_else(|| "Expected function identifier")?;
-        let name = match &ident_token.kind {
-            TokenKind::Identifier(name) => name,
-            _ => {
-                panic!(self.make_error(TokenKind::Identifier("Function name".into()), ident_token))
+    /// If no function name is provided, the next token will be fetched
+    fn parse_function_call(&mut self, func_name: Option<String>) -> Result<Expression, String> {
+        let name = match func_name {
+            Some(name) => name,
+            None => {
+                self.next()
+                    .ok_or_else(|| "Expected function identifier")?
+                    .raw
             }
-        }
-        .to_string();
+        };
 
         self.match_token(TokenKind::BraceOpen)?;
 
@@ -284,7 +285,7 @@ impl Parser {
                 let next = self.peek().ok_or_else(|| "Token expected")?;
                 let state = match &next.kind {
                     TokenKind::BraceOpen => {
-                        let func_call = self.parse_function_call()?;
+                        let func_call = self.parse_function_call(Some(val))?;
                         match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
                             Ok(_) => self.parse_bin_op(Some(func_call))?,
                             Err(_) => func_call,
@@ -292,7 +293,7 @@ impl Parser {
                     }
                     _ => match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
                         Ok(_) => self.parse_bin_op(None)?,
-                        Err(_) => Expression::Str(val),
+                        Err(_) => Expression::Variable(val),
                     },
                 };
                 Ok(state)
