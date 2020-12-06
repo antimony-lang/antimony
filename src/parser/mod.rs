@@ -275,14 +275,14 @@ impl Parser {
         match token.kind {
             TokenKind::Literal(Value::Int) => {
                 let state = match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
-                    Ok(_) => self.parse_bin_op()?,
+                    Ok(_) => self.parse_bin_op(None)?,
                     Err(_) => Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?),
                 };
                 Ok(state)
             }
             TokenKind::Literal(Value::Str) => {
                 let state = match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
-                    Ok(_) => self.parse_bin_op()?,
+                    Ok(_) => self.parse_bin_op(None)?,
                     Err(_) => Expression::Str(token.raw),
                 };
                 Ok(state)
@@ -290,9 +290,15 @@ impl Parser {
             TokenKind::Identifier(val) => {
                 let next = self.peek().ok_or_else(|| "Token expected")?;
                 let state = match &next.kind {
-                    TokenKind::BraceOpen => self.parse_function_call()?,
+                    TokenKind::BraceOpen => {
+                        let func_call = self.parse_function_call()?;
+                        match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
+                            Ok(_) => self.parse_bin_op(Some(func_call))?,
+                            Err(_) => func_call,
+                        }
+                    }
                     _ => match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
-                        Ok(_) => self.parse_bin_op()?,
+                        Ok(_) => self.parse_bin_op(None)?,
                         Err(_) => Expression::Str(val),
                     },
                 };
@@ -302,27 +308,33 @@ impl Parser {
         }
     }
 
-    fn parse_bin_op(&mut self) -> Result<Expression, String> {
-        let left = self.prev().ok_or_else(|| "Expected Token")?;
-        match &left.kind {
-            TokenKind::Identifier(_) | TokenKind::Literal(_) => {
-                let op = self.match_operator()?;
-                let right = self.peek().ok_or_else(|| "Expected token")?;
-                match &right.kind {
-                    TokenKind::Identifier(_) | TokenKind::Literal(_) => Ok(Expression::BinOp(
-                        Box::from(Expression::try_from(left)?),
-                        op,
-                        Box::from(self.parse_expression()?),
-                    )),
-                    _ => Ok(Expression::BinOp(
-                        Box::from(Expression::try_from(left)?),
-                        op,
-                        Box::from(self.parse_expression()?),
-                    )),
-                }
+    /// In some occurences a complex expression has been evaluated before a binary operation is encountered.
+    /// The following expression is one such example:
+    /// ```
+    /// foo(1) * 2
+    /// ```
+    /// In this case, the function call has already been evaluated, and needs to be passed to this function.
+    fn parse_bin_op(&mut self, lhs: Option<Expression>) -> Result<Expression, String> {
+        let left = match lhs {
+            Some(lhs) => lhs,
+            None => {
+                let prev = self.prev().ok_or_else(|| "Expected Token")?;
+                match &prev.kind {
+                    TokenKind::Identifier(_) | TokenKind::Literal(_) => {
+                        Ok(Expression::try_from(prev)?)
+                    }
+                    _ => Err(self.make_error(TokenKind::Unknown, prev)),
+                }?
             }
-            _ => Err(self.make_error(TokenKind::Unknown, left)),
-        }
+        };
+
+        let op = self.match_operator()?;
+
+        Ok(Expression::BinOp(
+            Box::from(Expression::try_from(left).map_err(|e| e.to_string())?),
+            op,
+            Box::from(self.parse_expression()?),
+        ))
     }
 
     fn parse_declare(&mut self) -> Result<Statement, String> {
