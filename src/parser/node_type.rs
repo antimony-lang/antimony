@@ -23,7 +23,6 @@ pub enum Statement {
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
     Exp(Expression),
-    Compound(Vec<Statement>),
 }
 
 #[derive(Debug, Eq, PartialEq)]

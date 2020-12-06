@@ -1,7 +1,8 @@
+// out.js
 function main() {
-foo(2,1)
+  return foo(2);
 }
 function foo(x) {
-return x
+  return x;
 }
-console.log(main())
+console.log(main());

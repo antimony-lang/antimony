@@ -43,7 +43,6 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Return(ret) => generate_return(ret),
         Statement::Declare(_, _) => todo!(),
         Statement::Exp(val) => generate_expression(val),
-        Statement::Compound(_) => todo!(),
         Statement::If(_, _, _) => todo!(),
         Statement::While(_, _) => todo!(),
     }
