@@ -195,33 +195,25 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
-        let token = self.next_token();
-        match &token.kind {
-            TokenKind::Keyword(Keyword::Let) => {
-                let state = self.parse_declare();
-                self.match_token(TokenKind::SemiColon)?;
-
-                state
-            }
-            TokenKind::Keyword(Keyword::Return) => {
-                let state = self.parse_return()?;
-                self.match_token(TokenKind::SemiColon)?;
-
-                Ok(state)
-            }
-            TokenKind::Identifier(name) => {
+        let token = self.peek().ok_or_else(|| "Expected token")?;
+        let state = match &token.kind {
+            TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
+            TokenKind::Keyword(Keyword::Return) => self.parse_return(),
+            TokenKind::Identifier(_) => {
+                let ident = self.match_identifier()?;
                 if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
                     let state = self.parse_function_call()?;
-                    self.match_token(TokenKind::SemiColon)?;
                     Ok(Statement::Exp(state))
                 } else {
-                    let state = Statement::Exp(Expression::Variable(name.into()));
+                    let state = Statement::Exp(Expression::Variable(ident.into()));
                     Ok(state)
                 }
             }
-
+            TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
             _ => return Err(self.make_error(TokenKind::Unknown, token)),
-        }
+        };
+        self.match_token(TokenKind::SemiColon)?;
+        state
     }
 
     /// Parses a function call from tokens.
@@ -262,6 +254,7 @@ impl Parser {
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::Return)?;
         // TODO: Replace unwrap with make_error
         let peeked = self.peek().unwrap();
         match peeked.kind {
@@ -338,6 +331,7 @@ impl Parser {
     }
 
     fn parse_declare(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::Let)?;
         match (
             self.next_token().kind,
             self.peek().ok_or("Expected ; or =")?.kind,

@@ -163,7 +163,6 @@ fn test_parse_basic_ops() {
 }
 
 #[test]
-#[ignore]
 fn test_parse_compound_ops() {
     let raw = "
     fn main() {
