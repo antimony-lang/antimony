@@ -55,6 +55,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Char(_) => todo!(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
         Expression::Assign(_, _) => todo!(),
+        Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
     }
 }
 
@@ -67,6 +68,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
             Expression::Assign(_, _) => todo!(),
+            Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         })
         .collect::<Vec<String>>()
         .join(",");
@@ -78,4 +80,28 @@ fn generate_return(ret: Option<Expression>) -> String {
         Some(expr) => format!("return {}\n", generate_expression(expr)),
         None => "return;\n".to_string(),
     }
+}
+
+fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
+    let op_str = match op {
+        BinOp::Addition => "+",
+        BinOp::And => "&&",
+        BinOp::Division => "/",
+        BinOp::Equal => "===",
+        BinOp::GreaterThan => ">",
+        BinOp::GreaterThanOrEqual => ">=",
+        BinOp::LessThan => "<",
+        BinOp::LessThanOrEqual => "<=",
+        BinOp::Modulus => "%",
+        BinOp::Multiplication => "*",
+        BinOp::NotEqual => "!==",
+        BinOp::Or => "||",
+        BinOp::Subtraction => "-",
+    };
+    format!(
+        "{l} {op} {r}",
+        l = generate_expression(left),
+        op = op_str,
+        r = generate_expression(right)
+    )
 }

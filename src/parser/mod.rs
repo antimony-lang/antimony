@@ -3,6 +3,7 @@ use crate::lexer::{Token, TokenKind, Value};
 use crate::parser::node_type::Statement;
 use crate::parser::node_type::*;
 use crate::util::string_util::highlight_position_in_file;
+use std::convert::TryFrom;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
@@ -97,16 +98,17 @@ impl Parser {
             )),
         }
     }
-
     fn match_keyword(&mut self, keyword: Keyword) -> Result<(), String> {
         let token = self.next_token();
-
         match &token.kind {
             TokenKind::Keyword(ref k) if k == &keyword => Ok(()),
             _ => Err(self.make_error(TokenKind::SemiColon, token)),
         }
     }
-
+    fn match_operator(&mut self) -> Result<BinOp, String> {
+        let token = self.next_token();
+        BinOp::try_from(token.kind)
+    }
     fn match_identifier(&mut self) -> Result<String, String> {
         match self.next_token().kind {
             TokenKind::Identifier(n) => Ok(n),
@@ -272,22 +274,54 @@ impl Parser {
         let token = self.next_token();
         match token.kind {
             TokenKind::Literal(Value::Int) => {
-                let state = Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?);
+                let state = match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
+                    Ok(_) => self.parse_bin_op()?,
+                    Err(_) => Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?),
+                };
                 Ok(state)
             }
             TokenKind::Literal(Value::Str) => {
-                let state = Expression::Str(token.raw);
+                let state = match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
+                    Ok(_) => self.parse_bin_op()?,
+                    Err(_) => Expression::Str(token.raw),
+                };
                 Ok(state)
             }
             TokenKind::Identifier(val) => {
                 let next = self.peek().ok_or_else(|| "Token expected")?;
                 let state = match &next.kind {
                     TokenKind::BraceOpen => self.parse_function_call()?,
-                    _ => Expression::Variable(val),
+                    _ => match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
+                        Ok(_) => self.parse_bin_op()?,
+                        Err(_) => Expression::Str(val),
+                    },
                 };
                 Ok(state)
             }
             other => Err(format!("Expected Expression, found {:?}", other)),
+        }
+    }
+
+    fn parse_bin_op(&mut self) -> Result<Expression, String> {
+        let left = self.prev().ok_or_else(|| "Expected Token")?;
+        match &left.kind {
+            TokenKind::Identifier(_) | TokenKind::Literal(_) => {
+                let op = self.match_operator()?;
+                let right = self.peek().ok_or_else(|| "Expected token")?;
+                match &right.kind {
+                    TokenKind::Identifier(_) | TokenKind::Literal(_) => Ok(Expression::BinOp(
+                        Box::from(Expression::try_from(left)?),
+                        op,
+                        Box::from(self.parse_expression()?),
+                    )),
+                    _ => Ok(Expression::BinOp(
+                        Box::from(Expression::try_from(left)?),
+                        op,
+                        Box::from(self.parse_expression()?),
+                    )),
+                }
+            }
+            _ => Err(self.make_error(TokenKind::Unknown, left)),
         }
     }
 

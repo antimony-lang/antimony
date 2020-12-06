@@ -1,9 +1,7 @@
-// main.sb
 fn main() {
-    return foo(2);
+    return 2 * fib(1);
 }
 
-fn foo(x) {
-    return x;
+fn fib(n) {
+    return 2 + 1;
 }
-

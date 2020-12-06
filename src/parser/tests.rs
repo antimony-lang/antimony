@@ -149,3 +149,68 @@ fn test_parse_nexted_function_call() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_parse_basic_ops() {
+    let raw = "
+    fn main() {
+        return 2 * 5;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_compound_ops() {
+    let raw = "
+    fn main() {
+        return 2 * 5 / 3;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+#[ignore]
+fn test_parse_compound_ops_with_function_call() {
+    let raw = "
+    fn main() {
+        return 2 * fib(1) / 3;
+    }
+
+    fn fib(n) {
+        return n + 1;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_compound_ops_with_strings() {
+    let raw = "
+    fn main() {
+        return 2 * \"Hello\";
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_compound_ops_with_identifier() {
+    let raw = "
+    fn main(n) {
+        return 2 * n;
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

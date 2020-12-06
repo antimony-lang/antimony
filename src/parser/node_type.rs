@@ -1,3 +1,6 @@
+use crate::parser::{Token, TokenKind, Value};
+use core::convert::TryFrom;
+
 #[derive(Debug)]
 pub struct Program {
     pub func: Vec<Function>,
@@ -33,4 +36,62 @@ pub enum Expression {
     FunctionCall(String, Vec<Expression>),
     Variable(String),
     Assign(String, Box<Expression>),
+    BinOp(Box<Expression>, BinOp, Box<Expression>),
+}
+
+impl TryFrom<Token> for Expression {
+    type Error = String;
+
+    fn try_from(token: Token) -> std::result::Result<Self, String> {
+        let kind = token.kind;
+        match kind {
+            TokenKind::Identifier(val) => Ok(Expression::Variable(val)),
+            TokenKind::Literal(Value::Int) => Ok(Expression::Int(
+                token
+                    .raw
+                    .parse()
+                    .map_err(|_| "Int value could not be parsed")?,
+            )),
+            TokenKind::Literal(Value::Str) => Ok(Expression::Str(token.raw)),
+            other => panic!("Value could not be parsed"),
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum BinOp {
+    Addition,
+    Subtraction,
+    Multiplication,
+    Division,
+    Modulus,
+    LessThan,
+    LessThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+    Equal,
+    NotEqual,
+    And,
+    Or,
+}
+
+impl TryFrom<TokenKind> for BinOp {
+    type Error = String;
+    fn try_from(token: TokenKind) -> Result<BinOp, String> {
+        match token {
+            TokenKind::Star => Ok(BinOp::Multiplication),
+            TokenKind::Slash => Ok(BinOp::Division),
+            TokenKind::Plus => Ok(BinOp::Addition),
+            TokenKind::Minus => Ok(BinOp::Subtraction),
+            TokenKind::LessThan => Ok(BinOp::LessThan),
+            TokenKind::GreaterThan => Ok(BinOp::GreaterThan),
+            TokenKind::Equals => Ok(BinOp::Equal),
+            // TokenKind::LessThanOrEqual => BinOp::LessThanOrEqual,
+            // TokenKind::GreaterThanOrEqual => BinOp::GreaterThanOrEqual,
+            // TokenKind::NotEquals => BinOp::NotEqual,
+            // TokenKind::And => BinOp::And,
+            // TokenKind::Or => BinOp::Or,
+            other => Err(format!("Token {:?} cannot be converted into a BinOp", other).into()),
+        }
+    }
 }

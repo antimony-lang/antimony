@@ -1,8 +1,8 @@
-// out.js
 function main() {
-  return foo(2);
+return 2 * fib(1)
+
 }
-function foo(x) {
-  return x;
+function fib(n) {
+return 2 + 1
 }
-console.log(main());
+console.log(main())

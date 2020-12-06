@@ -62,9 +62,9 @@ pub enum TokenKind {
     /// "=="
     Equals,
     /// "<"
-    SmallerThen,
+    LessThan,
     /// ">"
-    LargerThen,
+    GreaterThan,
     /// "("
     BraceOpen,
     /// ")"
@@ -173,8 +173,8 @@ impl Cursor<'_> {
             ':' => Colon,
             ';' => SemiColon,
             ',' => Comma,
-            '<' => SmallerThen,
-            '>' => LargerThen,
+            '<' => LessThan,
+            '>' => GreaterThan,
             '(' => BraceOpen,
             ')' => BraceClose,
             '[' => SquareBraceOpen,
