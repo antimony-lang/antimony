@@ -1,9 +1,9 @@
-fn main() {
+main :: () {
     let num = 10;
     print(fib(num));
 }
 
-fn fib(n int) int { 
+fib :: (n) { 
     if (n <= 1) {
         return n;
     }
