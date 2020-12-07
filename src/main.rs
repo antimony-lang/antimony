@@ -9,7 +9,7 @@ mod parser;
 mod util;
 
 fn main() -> Result<(), String> {
-    let mut file = File::open("examples/hello_world.sb").expect("Could not open file");
+    let mut file = File::open("examples/playground.sb").expect("Could not open file");
     let mut contents = String::new();
     file.read_to_string(&mut contents)
         .expect("Could not read file");

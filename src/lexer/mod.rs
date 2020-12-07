@@ -165,11 +165,17 @@ impl Cursor<'_> {
             '-' => Minus,
             '*' => Star,
             '/' => match self.first() {
-                '/' => self.comment(),
+                '/' => {
+                    self.bump();
+                    self.comment()
+                }
                 _ => Slash,
             },
             '=' => match self.first() {
-                '=' => Equals,
+                '=' => {
+                    self.bump();
+                    Equals
+                }
                 _ => Assign,
             },
             ':' => match self.first() {

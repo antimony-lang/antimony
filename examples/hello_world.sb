@@ -1,4 +1,4 @@
-main :: (n) {
-    return 2 * n;
+main :: () {
+    return "Hello World";
 }
 

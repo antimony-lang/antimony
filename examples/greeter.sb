@@ -1,0 +1,7 @@
+main :: () {
+    return greet("Garrit");
+}
+
+greet :: (name) {
+    return "Hello " + name;
+}
