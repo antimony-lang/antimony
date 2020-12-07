@@ -1,3 +1,4 @@
-fn main(n) {
-    n * 2;
+main :: (n) {
+    return 2 * n;
 }
+

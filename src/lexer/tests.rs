@@ -160,18 +160,46 @@ mod tests {
 
     #[test]
     fn test_functions() {
-        let mut tokens = tokenize("fn fib() {}").into_iter();
+        let mut tokens = tokenize("fib :: () {}").into_iter();
+
+        assert_eq!(
+            tokens.nth(0).unwrap(),
+            Token {
+                len: 3,
+                kind: TokenKind::Identifier("fib".into()),
+                raw: "fib".to_owned(),
+                pos: Position {
+                    raw: 2,
+                    line: 1,
+                    offset: 2
+                }
+            }
+        );
+
+        assert_eq!(
+            tokens.nth(0).unwrap(),
+            Token {
+                len: 1,
+                kind: TokenKind::Whitespace,
+                raw: " ".to_owned(),
+                pos: Position {
+                    raw: 3,
+                    line: 1,
+                    offset: 3
+                }
+            }
+        );
 
         assert_eq!(
             tokens.nth(0).unwrap(),
             Token {
                 len: 2,
-                kind: TokenKind::Keyword(Keyword::Function),
-                raw: "fn".to_owned(),
+                kind: TokenKind::DoubleColon,
+                raw: "::".to_owned(),
                 pos: Position {
-                    raw: 1,
+                    raw: 5,
                     line: 1,
-                    offset: 1
+                    offset: 5
                 }
             }
         );
@@ -181,7 +209,7 @@ mod tests {
     fn test_comments() {
         let mut tokens = tokenize(
             "// foo
-fn fib() {}
+fib :: () {}
         ",
         )
         .into_iter()
@@ -208,13 +236,27 @@ fn fib() {}
         assert_eq!(
             tokens.nth(0).unwrap(),
             Token {
-                len: 2,
-                kind: TokenKind::Keyword(Keyword::Function),
-                raw: "fn".to_owned(),
+                len: 3,
+                kind: TokenKind::Identifier("fib".into()),
+                raw: "fib".to_owned(),
                 pos: Position {
-                    raw: 8,
+                    raw: 9,
                     line: 2,
-                    offset: 2
+                    offset: 3
+                }
+            }
+        );
+
+        assert_eq!(
+            tokens.nth(0).unwrap(),
+            Token {
+                len: 2,
+                kind: TokenKind::DoubleColon,
+                raw: "::".to_owned(),
+                pos: Position {
+                    raw: 12,
+                    line: 2,
+                    offset: 6
                 }
             }
         );

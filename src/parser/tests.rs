@@ -3,7 +3,7 @@ use crate::parser::*;
 
 #[test]
 fn test_parse_empty_function() {
-    let raw = "fn main() {}";
+    let raw = "main :: () {}";
     let tokens = tokenize(raw);
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
@@ -12,7 +12,7 @@ fn test_parse_empty_function() {
 #[test]
 fn test_parse_function_with_return() {
     let raw = "
-    fn main() {
+    main :: () {
         return 1;
     }
     ";
@@ -24,7 +24,7 @@ fn test_parse_function_with_return() {
 #[test]
 fn test_parse_missing_semicolon() {
     let raw = "
-    fn main() {
+    main :: () {
         return 1
     }
     ";
@@ -46,12 +46,12 @@ fn test_parse_no_function_context() {
 #[test]
 fn test_parse_multiple_functions() {
     let raw = "
-    fn foo() {
+    foo :: () {
         let x = 2;
         return x;
     }
 
-    fn bar() {
+    bar :: () {
         let y = 5;
         return y;
     }
@@ -64,7 +64,7 @@ fn test_parse_multiple_functions() {
 #[test]
 fn test_parse_variable_declaration() {
     let raw = "
-    fn main() {
+    main :: () {
         let x = 1;
         return x;
     }
@@ -77,7 +77,7 @@ fn test_parse_variable_declaration() {
 #[test]
 fn test_parse_function_with_args() {
     let raw = "
-    fn main(foo) {
+    main :: (foo) {
         return foo;
     }
     ";
@@ -89,11 +89,11 @@ fn test_parse_function_with_args() {
 #[test]
 fn test_parse_function_call() {
     let raw = "
-    fn main(foo) {
+    main :: (foo) {
         foo();
     }
 
-    fn foo() {
+    foo :: () {
         foo(2);
     }
     ";
@@ -105,11 +105,11 @@ fn test_parse_function_call() {
 #[test]
 fn test_parse_return_function_call() {
     let raw = "
-    fn main() {
+    main :: () {
         return fib(2);
     }
 
-    fn fib() {
+    fib :: () {
         return fib(2);
     }
     ";
@@ -121,11 +121,11 @@ fn test_parse_return_function_call() {
 #[test]
 fn test_parse_function_call_multiple_arguments() {
     let raw = "
-    fn main() {
+    main :: () {
         fib(1, 2, 3);
     }
 
-    fn fib() {
+    fib :: () {
         return 2;
     }
     ";
@@ -137,11 +137,11 @@ fn test_parse_function_call_multiple_arguments() {
 #[test]
 fn test_parse_nexted_function_call() {
     let raw = "
-    fn main() {
+    main :: () {
         fib(fib(2), 2);
     }
 
-    fn fib(n) {
+    fib :: (n) {
         return 2;
     }
     ";
@@ -153,7 +153,7 @@ fn test_parse_nexted_function_call() {
 #[test]
 fn test_parse_basic_ops() {
     let raw = "
-    fn main() {
+    main :: () {
         return 2 * 5;
     }
     ";
@@ -165,7 +165,7 @@ fn test_parse_basic_ops() {
 #[test]
 fn test_parse_compound_ops() {
     let raw = "
-    fn main() {
+    main :: () {
         2 * 5 / 3;
     }
     ";
@@ -177,7 +177,7 @@ fn test_parse_compound_ops() {
 #[test]
 fn test_parse_compound_ops_with_function_call() {
     let raw = "
-    fn main() {
+    main :: () {
         return 2 * fib(1) / 3;
     }
     ";
@@ -189,7 +189,7 @@ fn test_parse_compound_ops_with_function_call() {
 #[test]
 fn test_parse_compound_ops_with_strings() {
     let raw = "
-    fn main() {
+    main :: () {
         return 2 * \"Hello\";
     }
     ";
@@ -201,7 +201,7 @@ fn test_parse_compound_ops_with_strings() {
 #[test]
 fn test_parse_compound_ops_with_identifier() {
     let raw = "
-    fn main(n) {
+    main :: (n) {
         return 2 * n;
     }
     ";
@@ -214,7 +214,7 @@ fn test_parse_compound_ops_with_identifier() {
 #[ignore]
 fn test_parse_compound_ops_with_identifier_first() {
     let raw = "
-    fn main(n) {
+    main :: (n) {
         return n * 2;
     }
     ";
@@ -226,7 +226,7 @@ fn test_parse_compound_ops_with_identifier_first() {
 #[test]
 fn test_parse_compound_ops_return() {
     let raw = "
-    fn main(n) {
+    main :: (n) {
         return 2 * n;
     }
     ";
