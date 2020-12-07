@@ -57,6 +57,8 @@ pub enum TokenKind {
     DoubleColon,
     /// ";"
     SemiColon,
+    /// "!"
+    Exclamation,
     /// ","
     Comma,
     /// "="
@@ -65,8 +67,14 @@ pub enum TokenKind {
     Equals,
     /// "<"
     LessThan,
+    /// "<="
+    LessThanOrEqual,
     /// ">"
     GreaterThan,
+    /// ">="
+    GreaterThanOrEqual,
+    /// "!="
+    NotEqual,
     /// "("
     BraceOpen,
     /// ")"
@@ -99,7 +107,6 @@ pub enum Keyword {
     If,
     Else,
     Return,
-    FunctionDecl,
     Boolean,
     Unknown,
 }
@@ -187,8 +194,27 @@ impl Cursor<'_> {
             },
             ';' => SemiColon,
             ',' => Comma,
-            '<' => LessThan,
-            '>' => GreaterThan,
+            '<' => match self.first() {
+                '=' => {
+                    self.bump();
+                    LessThanOrEqual
+                }
+                _ => LessThan,
+            },
+            '>' => match self.first() {
+                '=' => {
+                    self.bump();
+                    GreaterThanOrEqual
+                }
+                _ => GreaterThan,
+            },
+            '!' => match self.first() {
+                '=' => {
+                    self.bump();
+                    NotEqual
+                }
+                _ => Exclamation,
+            },
             '(' => BraceOpen,
             ')' => BraceClose,
             '[' => SquareBraceOpen,
