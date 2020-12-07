@@ -1,3 +1,11 @@
 main :: () {
-    
+    return fib(3) + fib()
 }
+
+fib :: (n) { 
+    if n {
+        return n
+    }
+
+    return 1
+} 

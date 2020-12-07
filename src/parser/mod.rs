@@ -200,6 +200,7 @@ impl Parser {
         let state = match &token.kind {
             TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
+            TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
                 if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
@@ -213,7 +214,6 @@ impl Parser {
             TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
             _ => return Err(self.make_error(TokenKind::Unknown, token)),
         };
-        self.match_token(TokenKind::SemiColon)?;
         state
     }
 
@@ -301,6 +301,16 @@ impl Parser {
             }
             other => Err(format!("Expected Expression, found {:?}", other)),
         }
+    }
+
+    fn parse_conditional_statement(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::If)?;
+        let condition = self.parse_expression()?;
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+        let state = self.parse_statement()?;
+        self.match_token(TokenKind::CurlyBracesClose)?;
+
+        Ok(Statement::If(condition, Box::new(state), None))
     }
 
     /// In some occurences a complex expression has been evaluated before a binary operation is encountered.

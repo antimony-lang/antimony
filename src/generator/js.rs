@@ -43,7 +43,9 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Return(ret) => generate_return(ret),
         Statement::Declare(_, _) => todo!(),
         Statement::Exp(val) => generate_expression(val),
-        Statement::If(_, _, _) => todo!(),
+        Statement::If(expr, if_state, else_state) => {
+            generate_conditional(expr, *if_state, else_state.map(|x| *x))
+        }
         Statement::While(_, _) => todo!(),
     }
 }
@@ -57,6 +59,22 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Assign(_, _) => todo!(),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
     }
+}
+
+fn generate_conditional(
+    expr: Expression,
+    if_state: Statement,
+    else_state: Option<Statement>,
+) -> String {
+    let expr_str = generate_expression(expr);
+    let if_str = generate_statement(if_state);
+
+    let mut outcome = format!("if ({})", expr_str);
+
+    outcome += "{\n";
+    outcome += &if_str;
+    outcome += "}";
+    outcome
 }
 
 fn generate_function_call(func: String, args: Vec<Expression>) -> String {
