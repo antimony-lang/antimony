@@ -4,7 +4,8 @@ main :: () {
 
 fib :: (n) { 
     if n {
-        return n
+        let x = 1 + n
+        return x
     }
 
     return 1

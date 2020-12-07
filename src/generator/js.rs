@@ -41,7 +41,7 @@ fn generate_function(func: Function) -> String {
 fn generate_statement(statement: Statement) -> String {
     match statement {
         Statement::Return(ret) => generate_return(ret),
-        Statement::Declare(_, _) => todo!(),
+        Statement::Declare(name, val) => generate_declare(name.name, val),
         Statement::Exp(val) => generate_expression(val),
         Statement::If(expr, if_state, else_state) => {
             generate_conditional(expr, if_state, else_state.map(|x| *x))
@@ -76,6 +76,15 @@ fn generate_conditional(
     }
     outcome += "}";
     outcome
+}
+
+fn generate_declare(name: String, val: Option<Expression>) -> String {
+    // var is used here to not collide with scopes.
+    // TODO: Can let be used instead?
+    match val {
+        Some(expr) => format!("var {} = {};", name, generate_expression(expr)),
+        None => format!("var {};", name),
+    }
 }
 
 fn generate_function_call(func: String, args: Vec<Expression>) -> String {
