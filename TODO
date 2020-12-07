@@ -2,13 +2,14 @@
 - Fix `parser::tests::test_parse_compound_ops_with_identifier_first` test
 
 
-# Cleanups
-- Generalize function/if/loop bodies into a "Block" node to remove redundancy
-
-
 # Features 
+- Add CLI
 - Add else/if else branch to conditionals
 - Add while loop
 - Add for loop
 - Add type system
-- Write stdlib with intrinsic functions
+- Write stdlib with builtin functions
+
+
+# Cleanups
+- Generalize function/if/loop bodies into a "Block" node to remove redundancy
