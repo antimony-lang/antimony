@@ -1,5 +1,7 @@
 # The Sabre Programming language
 
+[![builds.sr.ht status](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml.svg)](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml?)
+
 Sabre is a bullshit-free (©) programming language that gets out of your way.
 It is meant to "just work", without adding unnecessary and bloated language features.
 
