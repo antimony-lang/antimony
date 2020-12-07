@@ -1,0 +1,1 @@
+- Generalize function/if/loop bodies into a "Block" node to remove redundancy
