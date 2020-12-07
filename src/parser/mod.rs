@@ -307,10 +307,17 @@ impl Parser {
         self.match_keyword(Keyword::If)?;
         let condition = self.parse_expression()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
-        let state = self.parse_statement()?;
+
+        let mut statements = Vec::new();
+        while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
+            let statement = self.parse_statement()?;
+            dbg!("{:?}", &statement);
+            statements.push(statement);
+        }
+
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::If(condition, Box::new(state), None))
+        Ok(Statement::If(condition, statements, None))
     }
 
     /// In some occurences a complex expression has been evaluated before a binary operation is encountered.

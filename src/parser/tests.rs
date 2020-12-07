@@ -234,3 +234,32 @@ fn test_parse_compound_ops_return() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_parse_basic_conditional() {
+    let raw = "
+    main :: (n) {
+        if n {
+            return n
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_basic_conditional_with_multiple_statements() {
+    let raw = "
+    main :: (n) {
+        if n {
+            let x = 2 * n
+            return x
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

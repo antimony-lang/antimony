@@ -23,7 +23,7 @@ pub struct Variable {
 pub enum Statement {
     Declare(Variable, Option<Expression>),
     Return(Option<Expression>),
-    If(Expression, Box<Statement>, Option<Box<Statement>>),
+    If(Expression, Vec<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
     Exp(Expression),
 }
