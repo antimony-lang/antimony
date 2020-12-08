@@ -262,3 +262,39 @@ fn test_parse_basic_conditional_with_multiple_statements() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_parse_conditional_else_if_branch() {
+    let raw = "
+    fn main(n) {
+        if n > 10 {
+            let x = 2 * n
+            return x
+        } else if n <= 10 {
+            return n
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_conditional_multiple_else_if_branch_branches() {
+    let raw = "
+    fn main(n) {
+        if n > 10 {
+            let x = 2 * n
+            return x
+        } else if n < 10 {
+            return n
+        } else if n == 10 {
+            return n + 1
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

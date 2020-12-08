@@ -75,6 +75,11 @@ fn generate_conditional(
         outcome += &generate_statement(statement);
     }
     outcome += "}";
+
+    if let Some(else_state) = else_state {
+        outcome += "else ";
+        outcome += &generate_statement(else_state);
+    }
     outcome
 }
 

@@ -316,7 +316,17 @@ impl Parser {
 
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::If(condition, statements, None))
+        match self.peek() {
+            Some(tok) if tok.kind == TokenKind::Keyword(Keyword::Else) => {
+                self.next_token();
+                Ok(Statement::If(
+                    condition,
+                    statements,
+                    Some(Box::new(self.parse_conditional_statement()?)),
+                ))
+            }
+            _ => Ok(Statement::If(condition, statements, None)),
+        }
     }
 
     /// In some occurences a complex expression has been evaluated before a binary operation is encountered.

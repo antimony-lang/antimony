@@ -1,11 +1,8 @@
 fn main() {
     let num = 10
-    return fib(num)
-}
-
-fn fib(n) { 
-    if 1 >= n {
-        return n
+    if num > 5 {
+        return num
+    } else if num <= 5 {
+        return 1
     }
-    return fib(n-1) + fib(n-2)
-} 
+}
