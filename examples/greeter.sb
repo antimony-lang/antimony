@@ -1,7 +1,7 @@
-main :: () {
-    return greet("Garrit")
+fn main() {
+    return greet("World")
 }
 
-greet :: (name) {
+fn greet(name) {
     return "Hello " + name
 }
