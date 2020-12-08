@@ -9,6 +9,7 @@ pub(crate) struct Cursor<'a> {
     pos: &'a mut Position,
     len: usize,
     chars: Chars<'a>,
+    #[cfg(debug_assertions)]
     prev: char,
 }
 
