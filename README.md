@@ -16,12 +16,12 @@ The Sabre compiler emits JavaScript, until the language has matured sufficiently
 ```rs
 // examples/fib.sb
 
-main :: () {
+fn main() {
     let num = 10
     return fib(num)
 }
 
-fib :: (n) {
+fn fib(n) {
     if n <= 1 {
         return n
     }
