@@ -1,4 +1,3 @@
-main :: () {
-    return "Hello World"
+fn main(n) {
+    n * 2;
 }
-

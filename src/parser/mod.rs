@@ -48,8 +48,6 @@ impl Parser {
             self.peeked.pop()
         };
 
-        dbg!(&item);
-
         self.current = item.to_owned();
         item
     }
@@ -151,8 +149,9 @@ impl Parser {
     }
 
     fn parse_function(&mut self) -> Result<Function, String> {
+        self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
-        self.match_token(TokenKind::DoubleColon)?;
+
         self.match_token(TokenKind::BraceOpen)?;
 
         let arguments: Vec<Variable> = match self.peek() {

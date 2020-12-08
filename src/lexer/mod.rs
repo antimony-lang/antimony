@@ -53,8 +53,6 @@ pub enum TokenKind {
     Slash,
     /// ":"
     Colon,
-    /// "::"
-    DoubleColon,
     /// ";"
     SemiColon,
     /// "!"
@@ -107,6 +105,7 @@ pub enum Keyword {
     If,
     Else,
     Return,
+    Function,
     Boolean,
     Unknown,
 }
@@ -185,13 +184,7 @@ impl Cursor<'_> {
                 }
                 _ => Assign,
             },
-            ':' => match self.first() {
-                ':' => {
-                    self.bump();
-                    DoubleColon
-                }
-                _ => Colon,
-            },
+            ':' => Colon,
             ';' => SemiColon,
             ',' => Comma,
             '<' => match self.first() {
@@ -290,6 +283,7 @@ impl Cursor<'_> {
         match original {
             c if c == "if" => Keyword::If,
             c if c == "else" => Keyword::Else,
+            c if c == "fn" => Keyword::Function,
             c if c == "true" || c == "false" => Keyword::Boolean,
             c if c == "let" => Keyword::Let,
             c if c == "return" => Keyword::Return,
