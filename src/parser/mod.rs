@@ -292,7 +292,7 @@ impl Parser {
                         }
                     }
                     _ => match BinOp::try_from(self.peek().ok_or("Could not peek token")?.kind) {
-                        Ok(_) => self.parse_bin_op(None)?,
+                        Ok(_) => self.parse_bin_op(Some(Expression::Variable(token.raw)))?,
                         Err(_) => Expression::Variable(val),
                     },
                 };

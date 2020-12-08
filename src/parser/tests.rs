@@ -211,7 +211,6 @@ fn test_parse_compound_ops_with_identifier() {
 }
 
 #[test]
-#[ignore]
 fn test_parse_compound_ops_with_identifier_first() {
     let raw = "
     fn main(n) {

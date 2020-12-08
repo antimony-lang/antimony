@@ -1,5 +1,4 @@
 # Bugs
-- Fix `parser::tests::test_parse_compound_ops_with_identifier_first` test
 
 
 # Features 

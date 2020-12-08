@@ -1,12 +1,11 @@
-main :: () {
+fn main() {
     let num = 10
     return fib(num)
 }
 
-fib :: (n) { 
+fn fib(n) { 
     if 1 >= n {
         return n
     }
-
     return fib(n-1) + fib(n-2)
 } 
