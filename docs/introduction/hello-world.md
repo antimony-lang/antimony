@@ -2,8 +2,6 @@
 
 Now that you have installed Sabre, it is time to write our first program. This is a program that will simply print a string to the screen.
 
-> **Note:** Sabre is still at a very early state of development. Currently, the only way to print something to stdout is by returning a value from the `main` function.
-
 # Creating a project directory
 
 Let's begin by setting up our development workspace. Sabre really doesn't care where you store the code, so feel free to choose a different directory, than the one in this example.
@@ -23,7 +21,7 @@ Now open the main.sb file you just created and enter the following code:
 
 ```
 fn main() {
-    return "Hello, world!"
+    print("Hello, world!")
 }
 ```
 
