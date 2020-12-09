@@ -1,0 +1,32 @@
+on:
+    push:
+      branches:
+        - master
+name: Deploy to Github Pages
+jobs:
+deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+
+    - name: Setup mdBook
+    uses: peaceiris/actions-mdbook@v1
+    with:
+        mdbook-version: 'latest'
+    
+    name: setup python
+    uses: actions/setup-python@v2
+    with:
+        python-version: 3.8
+    run: |
+        python build_docs.py
+    
+    - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@master
+        env:
+        ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages
+        FOLDER: book
+        BUILD_SCRIPT: npm ci && npm run build && touch book/.nojekyll
+        CNAME: slashdev.space
