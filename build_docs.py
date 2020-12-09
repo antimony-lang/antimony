@@ -8,5 +8,6 @@ tags = subprocess.run(["git", "tag"], stdout=subprocess.PIPE).stdout.decode('utf
 for tag in tags.split("\n"):
     if tag == "":
         continue
-    os.system("git checkout " + tag)
+    print("Building tag", tag)
+    os.system("git switch " + tag)
     os.system("mdbook build --dest-dir './book/" + tag + "'")
