@@ -3,3 +3,5 @@
 - [Introduction](./introduction/SUMMARY.md)
   - [Installation](./introduction/installation.md)
   - [Hello World!](./introduction/hello-world.md)
+- [Common language concepts](./concepts/SUMMARY.md)
+  - [Variables](./concepts/variables.md)

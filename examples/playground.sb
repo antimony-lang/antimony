@@ -1,8 +1,4 @@
 fn main() {
-    let x = true && false
-    let y = false && true || true
-    let z = x && true
-    while true && x {
-        return x
-    }
+    let x = 10
+    return x + 10
 }
