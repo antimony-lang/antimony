@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-os.system("mdbook build --dest-dir './book")
+os.system("mdbook build --dest-dir './book'")
 os.system("mdbook build --dest-dir './book/latest'")
 tags = subprocess.run(["git", "tag"], stdout=subprocess.PIPE).stdout.decode('utf-8')
 

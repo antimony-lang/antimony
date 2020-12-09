@@ -201,6 +201,9 @@ impl Parser {
                     let value = next.raw.parse::<u32>().map_err(|e| e.to_string())?;
                     elements.push(Expression::Int(value));
                 }
+                TokenKind::Literal(Value::Str) => {
+                    elements.push(Expression::Str(next.raw));
+                }
                 _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
             };
             if self.peek_token(TokenKind::SquareBraceClose).is_ok() {

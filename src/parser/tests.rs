@@ -366,7 +366,6 @@ fn test_int_array() {
 }
 
 #[test]
-#[ignore]
 fn test_string_array() {
     let raw = "
     fn main(n) {
