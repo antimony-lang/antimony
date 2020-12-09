@@ -1,3 +1,4 @@
+use crate::lexer::*;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -13,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::lexer::*;
-use crate::parser::*;
+use crate::parser::parse;
 
 #[test]
 fn test_parse_empty_function() {

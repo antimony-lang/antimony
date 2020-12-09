@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::parser::{Token, TokenKind, Value};
+use crate::lexer::*;
 use core::convert::TryFrom;
 
 #[derive(Debug)]
