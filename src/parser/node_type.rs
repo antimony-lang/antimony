@@ -38,6 +38,7 @@ pub struct Variable {
 pub enum Statement {
     Block(Vec<Statement>),
     Declare(Variable, Option<Expression>),
+    Assign(String, Box<Expression>),
     Return(Option<Expression>),
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
@@ -53,7 +54,6 @@ pub enum Expression {
     Array(Vec<Expression>),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
-    Assign(String, Box<Expression>),
     BinOp(Box<Expression>, BinOp, Box<Expression>),
 }
 

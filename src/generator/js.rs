@@ -72,6 +72,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::If(expr, if_state, else_state) => {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
+        Statement::Assign(name, state) => generate_assign(name, *state),
         Statement::Block(_) => generate_block(statement),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
     }
@@ -84,7 +85,6 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Char(_) => todo!(),
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
-        Expression::Assign(_, _) => todo!(),
         Expression::Array(els) => generate_array(els),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
     }
@@ -161,7 +161,6 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Bool(v) => v.to_string(),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
-            Expression::Assign(_, _) => todo!(),
             Expression::Array(_) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         })
@@ -199,4 +198,8 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         op = op_str,
         r = generate_expression(right)
     )
+}
+
+fn generate_assign(name: String, expr: Expression) -> String {
+    format!("{} = {};\n", name, generate_expression(expr))
 }

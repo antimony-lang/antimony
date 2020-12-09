@@ -90,6 +90,20 @@ fn test_parse_variable_declaration() {
 }
 
 #[test]
+fn test_parse_variable_reassignment() {
+    let raw = "
+    fn main() {
+        let x = 1
+        x = x + 1
+        return x
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
 fn test_parse_variable_declaration_added() {
     let raw = "
     fn main() {

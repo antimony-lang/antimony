@@ -97,9 +97,13 @@ impl Parser {
             TokenKind::Keyword(Keyword::While) => self.parse_while_loop(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
+
                 if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
                     let state = self.parse_function_call(Some(ident))?;
                     Ok(Statement::Exp(state))
+                } else if let Ok(_) = self.peek_token(TokenKind::Assign) {
+                    let state = self.parse_assignent(Some(ident))?;
+                    Ok(state)
                 } else {
                     let state = Statement::Exp(Expression::Variable(ident.into()));
                     Ok(state)
@@ -308,5 +312,18 @@ impl Parser {
             }
             other => Err(format!("Expected identifier, found {:?}", other)),
         }
+    }
+
+    fn parse_assignent(&mut self, name: Option<String>) -> Result<Statement, String> {
+        let name = match name {
+            Some(name) => name,
+            None => self.match_identifier()?,
+        };
+
+        self.match_token(TokenKind::Assign)?;
+
+        let expr = self.parse_expression()?;
+
+        Ok(Statement::Assign(name, Box::new(expr)))
     }
 }
