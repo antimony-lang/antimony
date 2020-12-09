@@ -49,6 +49,7 @@ pub enum Expression {
     Int(u32),
     Str(String),
     Char(u8),
+    Bool(bool),
     Array(Vec<Expression>),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
@@ -69,8 +70,13 @@ impl TryFrom<Token> for Expression {
                     .parse()
                     .map_err(|_| "Int value could not be parsed")?,
             )),
+            TokenKind::Keyword(Keyword::Boolean) => match token.raw.as_ref() {
+                "true" => Ok(Expression::Bool(true)),
+                "false" => Ok(Expression::Bool(false)),
+                _ => Err("Boolean value could not be parsed".into()),
+            },
             TokenKind::Literal(Value::Str) => Ok(Expression::Str(token.raw)),
-            _ => panic!("Value could not be parsed"),
+            _ => Err("Value could not be parsed".into()),
         }
     }
 }

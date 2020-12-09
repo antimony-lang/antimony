@@ -82,6 +82,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Int(val) => val.to_string(),
         Expression::Variable(val) | Expression::Str(val) => val,
         Expression::Char(_) => todo!(),
+        Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
         Expression::Assign(_, _) => todo!(),
         Expression::Array(els) => generate_array(els),
@@ -157,6 +158,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
         .map(|arg| match arg {
             Expression::Char(c) => c.to_string(),
             Expression::Int(i) => i.to_string(),
+            Expression::Bool(v) => v.to_string(),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
             Expression::Assign(_, _) => todo!(),

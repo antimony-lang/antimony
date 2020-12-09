@@ -157,6 +157,15 @@ impl Parser {
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
         match token.kind {
+            TokenKind::Keyword(Keyword::Boolean) => {
+                let state = match BinOp::try_from(self.peek()?.kind) {
+                    Ok(_) => self.parse_bin_op(None)?,
+                    Err(_) => {
+                        Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
+                    }
+                };
+                Ok(state)
+            }
             TokenKind::Literal(Value::Int) => {
                 let state = match BinOp::try_from(self.peek()?.kind) {
                     Ok(_) => self.parse_bin_op(None)?,
@@ -269,7 +278,7 @@ impl Parser {
             None => {
                 let prev = self.prev().ok_or_else(|| "Expected Token")?;
                 match &prev.kind {
-                    TokenKind::Identifier(_) | TokenKind::Literal(_) => {
+                    TokenKind::Identifier(_) | TokenKind::Literal(_) | TokenKind::Keyword(_) => {
                         Ok(Expression::try_from(prev)?)
                     }
                     _ => Err(self.make_error(TokenKind::Unknown, prev)),

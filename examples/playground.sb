@@ -1,6 +1,8 @@
 fn main() {
-    let x = 5 * 2
-    while x > 0 {
+    let x = true && false
+    let y = false && true || true
+    let z = x && true
+    while true && x {
         return x
     }
 }

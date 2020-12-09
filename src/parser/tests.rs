@@ -391,3 +391,35 @@ fn test_basic_while_loop() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_while_loop_boolean_expression() {
+    let raw = "
+    fn main() {
+        let x = 5 * 2
+        while true && x {
+            return x
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_boolean_arithmetic() {
+    let raw = "
+    fn main() {
+        let x = true && false
+        let y = false && true || true
+        let z = x && true
+        while true && x {
+            return x
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
