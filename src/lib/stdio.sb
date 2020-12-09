@@ -1,0 +1,3 @@
+fn print(msg) {
+    _printf(msg + "\n")
+}

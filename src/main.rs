@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+extern crate rust_embed;
 extern crate structopt;
 
 use crate::generator::Generator;
@@ -23,6 +24,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+mod builtin;
 mod generator;
 mod lexer;
 mod parser;

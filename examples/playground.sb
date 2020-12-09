@@ -1,5 +1,5 @@
 fn main() {
     let x = 10
     x = 5
-    return x
+    _printf("Hello World!\n")
 }
