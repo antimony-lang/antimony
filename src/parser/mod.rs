@@ -320,8 +320,31 @@ impl Parser {
                 };
                 Ok(state)
             }
+            TokenKind::SquareBraceOpen => self.parse_array(),
             other => Err(format!("Expected Expression, found {:?}", other)),
         }
+    }
+
+    fn parse_array(&mut self) -> Result<Expression, String> {
+        let mut elements = Vec::new();
+        loop {
+            let next = self.next().ok_or_else(|| "Expected identifier")?;
+            match next.kind {
+                TokenKind::Literal(Value::Int) => {
+                    let value = next.raw.parse::<u32>().map_err(|e| e.to_string())?;
+                    elements.push(Expression::Int(value));
+                }
+                _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
+            };
+            if self.peek_token(TokenKind::SquareBraceClose).is_ok() {
+                break;
+            }
+            self.match_token(TokenKind::Comma)?;
+        }
+
+        self.match_token(TokenKind::SquareBraceClose)?;
+
+        Ok(Expression::Array(elements))
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {

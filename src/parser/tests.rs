@@ -351,3 +351,29 @@ fn test_parse_conditional_elseif_else_branch() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_int_array() {
+    let raw = "
+    fn main(n) {
+        let arr = [1, 2, 3]
+        return arr
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+#[ignore]
+fn test_string_array() {
+    let raw = "
+    fn main(n) {
+        return [\"Foo\", \"Bar\", \"Baz\"]
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

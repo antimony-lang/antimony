@@ -49,6 +49,7 @@ pub enum Expression {
     Int(u32),
     Str(String),
     Char(u8),
+    Array(Vec<Expression>),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
     Assign(String, Box<Expression>),

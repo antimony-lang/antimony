@@ -84,8 +84,26 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Char(_) => todo!(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
         Expression::Assign(_, _) => todo!(),
+        Expression::Array(els) => generate_array(els),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
     }
+}
+
+fn generate_array(elements: Vec<Expression>) -> String {
+    let mut out_str = String::from("[");
+
+    out_str += &elements
+        .iter()
+        .map(|el| match el {
+            Expression::Int(x) => x.to_string(),
+            Expression::Str(x) => x.to_string(),
+            _ => todo!("Not yet implemented"),
+        })
+        .collect::<Vec<String>>()
+        .join(", ");
+
+    out_str += "]";
+    out_str
 }
 
 fn generate_conditional(
@@ -133,6 +151,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
             Expression::Assign(_, _) => todo!(),
+            Expression::Array(_) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         })
         .collect::<Vec<String>>()

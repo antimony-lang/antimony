@@ -1,17 +1,5 @@
 // There are no nested expressions yet, so we have to hack a little bit
 
 fn main() {
-    let year = 2020
-    
-    let divisibleBy4 = year % 4 == 0
-    let divisibleBy100 = year % 100 != 0
-    let divisibleBy400 = year % 400 == 0
-
-    let ly = divisibleBy4 && divisibleBy100
-
-    if ly || divisibleBy400 {
-        return "Leap year"
-    } else {
-        return "Not a leap year"
-    }
+    let arr = ["Foo", "Bar", "Baz"]
 }
