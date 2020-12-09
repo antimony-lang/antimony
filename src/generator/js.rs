@@ -22,8 +22,8 @@ impl Generator for JsGenerator {
     fn generate(prog: Program) -> String {
         let mut code = String::new();
 
-        let raw_builtins = crate::builtin::Builtins::get("builtin.js")
-            .expect("Could not locate builtin functions");
+        let raw_builtins =
+            crate::Builtins::get("builtin.js").expect("Could not locate builtin functions");
         code += std::str::from_utf8(raw_builtins.as_ref())
             .expect("Unable to interpret builtin functions");
         let funcs: String = prog
@@ -34,8 +34,7 @@ impl Generator for JsGenerator {
 
         code += &funcs;
 
-        // Until we have a stdlib, it should suffice to print the result of main to stdout
-        code += "console.log(main())";
+        code += "main();";
 
         return code;
     }

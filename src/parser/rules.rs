@@ -42,7 +42,6 @@ impl Parser {
 
         while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
             let statement = self.parse_statement()?;
-            dbg!("{:?}", &statement);
             statements.push(statement);
         }
 

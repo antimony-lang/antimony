@@ -24,11 +24,19 @@ use std::io::Write;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-mod builtin;
 mod generator;
 mod lexer;
 mod parser;
 mod util;
+use rust_embed::RustEmbed;
+
+#[derive(RustEmbed)]
+#[folder = "lib/"]
+pub struct Lib;
+
+#[derive(RustEmbed)]
+#[folder = "builtin/"]
+pub struct Builtins;
 
 #[derive(StructOpt, Debug)]
 enum Opt {
@@ -49,19 +57,29 @@ fn main() -> Result<(), String> {
     };
     let mut file = File::open(in_file).expect("Could not open file");
     let mut contents = String::new();
+
+    contents = append_stdlib(contents);
+
     file.read_to_string(&mut contents)
         .expect("Could not read file");
 
     let tokens = lexer::tokenize(&contents);
-    // let ast = parser::parse(tokens.into_iter());
-
     let program = parser::parse(tokens, Some(contents))?;
-
-    dbg!(":#?", &program);
 
     let output = generator::js::JsGenerator::generate(program);
     let mut file = std::fs::File::create(out_file).expect("create failed");
     file.write_all(output.as_bytes()).expect("write failed");
     file.flush().expect("Could not flush file");
     Ok(())
+}
+
+fn append_stdlib(mut buffer: String) -> String {
+    buffer += "// START stdlib\n\n";
+
+    let stdlib = Lib::get("stdio.sb").expect("Standard library not found. This should not occur.");
+    buffer += std::str::from_utf8(&stdlib).expect("Could not interpret standard library.");
+
+    buffer += "\n// END stdlib\n\n";
+
+    buffer
 }
