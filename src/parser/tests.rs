@@ -376,3 +376,18 @@ fn test_string_array() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_basic_while_loop() {
+    let raw = "
+    fn main() {
+        let x = 5 * 2
+        while x > 0 {
+            return x
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

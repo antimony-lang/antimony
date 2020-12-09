@@ -2,8 +2,8 @@
 
 
 # Features 
-- Add CLI
-- Add else/if else branch to conditionals
+- Variable reassignment
+- Array access syntax
 - Add while loop
 - Add for loop
 - Add type system

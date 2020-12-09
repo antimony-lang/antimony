@@ -94,6 +94,7 @@ impl Parser {
             TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
+            TokenKind::Keyword(Keyword::While) => self.parse_while_loop(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
                 if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
@@ -215,6 +216,14 @@ impl Parser {
         self.match_token(TokenKind::SquareBraceClose)?;
 
         Ok(Expression::Array(elements))
+    }
+
+    fn parse_while_loop(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::While)?;
+        let expr = self.parse_expression()?;
+        let body = self.parse_block()?;
+
+        Ok(Statement::While(expr, Box::new(body)))
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {

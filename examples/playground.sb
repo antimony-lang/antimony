@@ -1,5 +1,6 @@
-// There are no nested expressions yet, so we have to hack a little bit
-
 fn main() {
-    let arr = ["Foo", "Bar", "Baz"]
+    let x = 5 * 2
+    while x > 0 {
+        return x
+    }
 }

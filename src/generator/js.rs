@@ -73,7 +73,7 @@ fn generate_statement(statement: Statement) -> String {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
         Statement::Block(_) => generate_block(statement),
-        Statement::While(_, _) => todo!(),
+        Statement::While(expr, body) => generate_while_loop(expr, *body),
     }
 }
 
@@ -87,6 +87,15 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Array(els) => generate_array(els),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
     }
+}
+
+fn generate_while_loop(expr: Expression, body: Statement) -> String {
+    let mut out_str = String::from("while (");
+
+    out_str += &generate_expression(expr);
+    out_str += ") ";
+    out_str += &generate_block(body);
+    out_str
 }
 
 fn generate_array(elements: Vec<Expression>) -> String {
