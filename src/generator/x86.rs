@@ -35,12 +35,6 @@ impl Assembly {
         self.asm.push(string.into())
     }
 
-    fn add_all<S: Into<String>>(&mut self, strings: Vec<S>) {
-        for string in strings {
-            self.asm.push(string.into())
-        }
-    }
-
     fn build(&self) -> String {
         self.asm.join("\n")
     }

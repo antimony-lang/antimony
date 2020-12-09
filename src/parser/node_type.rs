@@ -69,7 +69,7 @@ impl TryFrom<Token> for Expression {
                     .map_err(|_| "Int value could not be parsed")?,
             )),
             TokenKind::Literal(Value::Str) => Ok(Expression::Str(token.raw)),
-            other => panic!("Value could not be parsed"),
+            _ => panic!("Value could not be parsed"),
         }
     }
 }
@@ -106,7 +106,6 @@ impl TryFrom<TokenKind> for BinOp {
             TokenKind::LessThanOrEqual => Ok(BinOp::LessThanOrEqual),
             TokenKind::GreaterThanOrEqual => Ok(BinOp::GreaterThanOrEqual),
             TokenKind::NotEqual => Ok(BinOp::NotEqual),
-            TokenKind::Percent => Ok(BinOp::Modulus),
             TokenKind::And => Ok(BinOp::And),
             TokenKind::Or => Ok(BinOp::Or),
             other => Err(format!("Token {:?} cannot be converted into a BinOp", other).into()),
