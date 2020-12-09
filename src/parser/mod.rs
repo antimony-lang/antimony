@@ -318,10 +318,22 @@ impl Parser {
         match self.peek() {
             Some(tok) if tok.kind == TokenKind::Keyword(Keyword::Else) => {
                 self.next_token();
+
+                let peeked = self.peek().ok_or_else(|| "Token expected")?;
+
+                let has_else = match &peeked.kind {
+                    TokenKind::CurlyBracesOpen => Some(self.parse_block()?),
+                    _ => None,
+                };
+
+                let else_branch = match has_else {
+                    Some(branch) => branch,
+                    None => self.parse_conditional_statement()?,
+                };
                 Ok(Statement::If(
                     condition,
                     Box::new(body),
-                    Some(Box::new(self.parse_conditional_statement()?)),
+                    Some(Box::new(else_branch)),
                 ))
             }
             _ => Ok(Statement::If(condition, Box::new(body), None)),

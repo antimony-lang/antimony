@@ -1,8 +1,10 @@
 fn main() {
-    let num = 10
+    let num = 5
     if num > 5 {
         return num
-    } else if num <= 5 {
+    } else if num < 5 {
         return 1
+    } else {
+        return num + 1
     }
 }
