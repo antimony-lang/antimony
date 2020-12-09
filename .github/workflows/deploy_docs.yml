@@ -21,7 +21,7 @@ deploy:
         python-version: 3.8
     run: |
         python build_docs.py
-
+        
     - name: Deploy
         uses: JamesIves/github-pages-deploy-action@master
         env:
