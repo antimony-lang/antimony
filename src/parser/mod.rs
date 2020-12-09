@@ -148,6 +148,22 @@ impl Parser {
         })
     }
 
+    fn parse_block(&mut self) -> Result<Statement, String> {
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+
+        let mut statements = vec![];
+
+        while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
+            let statement = self.parse_statement()?;
+            dbg!("{:?}", &statement);
+            statements.push(statement);
+        }
+
+        self.match_token(TokenKind::CurlyBracesClose)?;
+
+        Ok(Statement::Block(statements))
+    }
+
     fn parse_function(&mut self) -> Result<Function, String> {
         self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
@@ -162,22 +178,13 @@ impl Parser {
         };
 
         self.match_token(TokenKind::BraceClose)?;
-        self.match_token(TokenKind::CurlyBracesOpen)?;
 
-        let mut statements = vec![];
-
-        while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
-            let statement = self.parse_statement()?;
-            dbg!("{:?}", &statement);
-            statements.push(statement);
-        }
-
-        self.match_token(TokenKind::CurlyBracesClose)?;
+        let body = self.parse_block()?;
 
         Ok(Function {
             name: name,
             arguments: arguments,
-            statements: statements,
+            body: body,
         })
     }
 
@@ -305,27 +312,19 @@ impl Parser {
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {
         self.match_keyword(Keyword::If)?;
         let condition = self.parse_expression()?;
-        self.match_token(TokenKind::CurlyBracesOpen)?;
 
-        let mut statements = Vec::new();
-        while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
-            let statement = self.parse_statement()?;
-            dbg!("{:?}", &statement);
-            statements.push(statement);
-        }
-
-        self.match_token(TokenKind::CurlyBracesClose)?;
+        let body = self.parse_block()?;
 
         match self.peek() {
             Some(tok) if tok.kind == TokenKind::Keyword(Keyword::Else) => {
                 self.next_token();
                 Ok(Statement::If(
                     condition,
-                    statements,
+                    Box::new(body),
                     Some(Box::new(self.parse_conditional_statement()?)),
                 ))
             }
-            _ => Ok(Statement::If(condition, statements, None)),
+            _ => Ok(Statement::If(condition, Box::new(body), None)),
         }
     }
 

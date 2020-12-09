@@ -27,15 +27,26 @@ fn generate_function(func: Function) -> String {
         .join(", ");
     let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
 
-    raw += " {\n";
-
-    for statement in func.statements {
-        raw += &generate_statement(statement);
-    }
-
-    raw += "}\n";
+    raw += &generate_block(func.body);
 
     raw
+}
+
+fn generate_block(block: Statement) -> String {
+    let mut generated = String::from("{\n");
+
+    let statements = match block {
+        Statement::Block(blk) => blk,
+        _ => panic!("Block body should be of type Statement::Block"),
+    };
+
+    for statement in statements {
+        generated += &generate_statement(statement);
+    }
+
+    generated += "}\n";
+
+    generated
 }
 
 fn generate_statement(statement: Statement) -> String {
@@ -44,8 +55,9 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Declare(name, val) => generate_declare(name.name, val),
         Statement::Exp(val) => generate_expression(val),
         Statement::If(expr, if_state, else_state) => {
-            generate_conditional(expr, if_state, else_state.map(|x| *x))
+            generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
+        Statement::Block(_) => generate_block(statement),
         Statement::While(_, _) => todo!(),
     }
 }
@@ -63,15 +75,20 @@ fn generate_expression(expr: Expression) -> String {
 
 fn generate_conditional(
     expr: Expression,
-    if_state: Vec<Statement>,
+    if_state: Statement,
     else_state: Option<Statement>,
 ) -> String {
     let expr_str = generate_expression(expr);
 
+    let body = match if_state {
+        Statement::Block(blk) => blk,
+        _ => panic!("Conditional body should be of type block"),
+    };
+
     let mut outcome = format!("if ({})", expr_str);
 
     outcome += "{\n";
-    for statement in if_state {
+    for statement in body {
         outcome += &generate_statement(statement);
     }
     outcome += "}";

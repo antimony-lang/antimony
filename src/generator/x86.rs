@@ -67,13 +67,16 @@ impl X86Generator {
     fn gen_function(&mut self, func: Function) -> Assembly {
         let mut asm = Assembly::new();
 
-        let has_return: bool = func.statements.iter().any(|s| {
-            if let Statement::Return(_) = *s {
-                true
-            } else {
-                false
-            }
-        });
+        let has_return: bool = match &func.body {
+            Statement::Block(statements) => statements.iter().any(|s| {
+                if let Statement::Return(_) = *s {
+                    true
+                } else {
+                    false
+                }
+            }),
+            _ => panic!("Function body should be of type Block"),
+        };
 
         asm.add(format!(".globl _{}", func.name));
         asm.add(format!("_{}:", func.name));

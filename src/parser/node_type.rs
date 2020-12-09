@@ -11,7 +11,7 @@ pub struct Program {
 pub struct Function {
     pub name: String,
     pub arguments: Vec<Variable>,
-    pub statements: Vec<Statement>,
+    pub body: Statement,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -21,9 +21,10 @@ pub struct Variable {
 
 #[derive(Debug, Eq, PartialEq)]
 pub enum Statement {
+    Block(Vec<Statement>),
     Declare(Variable, Option<Expression>),
     Return(Option<Expression>),
-    If(Expression, Vec<Statement>, Option<Box<Statement>>),
+    If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
     Exp(Expression),
 }
