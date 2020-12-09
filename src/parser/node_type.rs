@@ -1,3 +1,18 @@
+/**
+ * Copyright 2020 Garrit Franke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 use crate::parser::{Token, TokenKind, Value};
 use core::convert::TryFrom;
 
@@ -84,14 +99,16 @@ impl TryFrom<TokenKind> for BinOp {
             TokenKind::Slash => Ok(BinOp::Division),
             TokenKind::Plus => Ok(BinOp::Addition),
             TokenKind::Minus => Ok(BinOp::Subtraction),
+            TokenKind::Percent => Ok(BinOp::Modulus),
             TokenKind::LessThan => Ok(BinOp::LessThan),
             TokenKind::GreaterThan => Ok(BinOp::GreaterThan),
             TokenKind::Equals => Ok(BinOp::Equal),
             TokenKind::LessThanOrEqual => Ok(BinOp::LessThanOrEqual),
             TokenKind::GreaterThanOrEqual => Ok(BinOp::GreaterThanOrEqual),
             TokenKind::NotEqual => Ok(BinOp::NotEqual),
-            // TokenKind::And => BinOp::And,
-            // TokenKind::Or => BinOp::Or,
+            TokenKind::Percent => Ok(BinOp::Modulus),
+            TokenKind::And => Ok(BinOp::And),
+            TokenKind::Or => Ok(BinOp::Or),
             other => Err(format!("Token {:?} cannot be converted into a BinOp", other).into()),
         }
     }
