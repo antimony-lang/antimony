@@ -1,3 +1,10 @@
+// Raw wrapper around _printf builtin function.
+// Writes the given content to stdout
 fn print(msg) {
-    _printf(msg + "\n")
+    _printf(msg)
+}
+
+// Like print(), but with an extra newline ('\n') character
+fn println(msg) {
+    print(msg + "\n")
 }
