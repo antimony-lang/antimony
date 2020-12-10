@@ -10,8 +10,8 @@ fn main() {
     let ly = divisibleBy4 && divisibleBy100
 
     if ly || divisibleBy400 {
-        print("Leap year")
+        println("Leap year")
     } else {
-        print("Not a leap year")
+        println("Not a leap year")
     }
 }

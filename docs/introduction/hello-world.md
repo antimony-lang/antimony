@@ -21,7 +21,7 @@ Now open the main.sb file you just created and enter the following code:
 
 ```
 fn main() {
-    print("Hello, world!")
+    println("Hello, world!")
 }
 ```
 

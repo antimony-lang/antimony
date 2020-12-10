@@ -5,3 +5,4 @@
   - [Hello World!](./introduction/hello-world.md)
 - [Common language concepts](./concepts/SUMMARY.md)
   - [Variables](./concepts/variables.md)
+  - [Data Types](./concepts/datatypes.md)

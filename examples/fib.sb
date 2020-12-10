@@ -1,6 +1,6 @@
 fn main() {
     let num = 10
-    print(fib(num))
+    println(fib(num))
 }
 
 fn fib(n) { 

@@ -1,5 +1,5 @@
 fn main() {
-    print(greet("World"))
+    println(greet("World"))
 }
 
 fn greet(name) {

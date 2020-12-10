@@ -19,7 +19,7 @@ The Sabre compiler emits JavaScript, until the language has matured sufficiently
 
 fn main() {
     let num = 10
-    print(fib(num))
+    println(fib(num))
 }
 
 fn fib(n) {
