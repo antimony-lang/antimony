@@ -18,3 +18,21 @@ fn len(arr) {
 
     return c
 }
+
+// Reverses an array
+// TODO: fix me!
+fn rev(arr) {
+
+    let l = len(arr)
+    let new_arr = []
+
+    let i = 0
+    let j = l
+    while i < l {
+        new_arr[i] = arr[j]
+        i = i - 1
+        j = j - 1
+    }
+
+    return new_arr
+}

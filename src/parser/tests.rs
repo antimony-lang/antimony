@@ -554,3 +554,17 @@ fn test_function_multiple_args() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+#[ignore]
+fn test_array_position_assignment() {
+    let raw = "
+    fn main() {
+        new_arr[i] = arr[j]
+    }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

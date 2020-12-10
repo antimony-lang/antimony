@@ -1,5 +1,5 @@
 fn main() {
-    let x = 10
-    x = 5
-    println("Hello World!")
+    let arr = [1, 2, 3, 4, 5]
+
+    println(rev(arr))
 }
