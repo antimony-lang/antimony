@@ -530,3 +530,27 @@ fn test_uninitialized_variables() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_function_call_math() {
+    let raw = "
+    fn main(m) {
+        main(m - 1)
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_function_multiple_args() {
+    let raw = "
+    fn main(m, n) {
+        main(m, n)
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

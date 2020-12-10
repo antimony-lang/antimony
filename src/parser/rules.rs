@@ -79,6 +79,9 @@ impl Parser {
         while let Err(_) = self.peek_token(TokenKind::BraceClose) {
             let next = self.next()?;
             match next.kind {
+                TokenKind::Comma => {
+                    continue;
+                }
                 TokenKind::Identifier(name) => args.push(Variable { name: name }),
                 _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
             }

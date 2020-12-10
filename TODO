@@ -1,5 +1,6 @@
 # Bugs
 - Uninitialized variables don't compile
+- stdlib moves line of file, which makes error reporting impossible
 
 # Features 
 - For loop

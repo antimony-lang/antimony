@@ -1,0 +1,15 @@
+fn main() {
+    let m = 3
+    let n = 3
+    println(ackermann(m, n))
+}
+
+fn ackermann(m, n) {
+    if m == 0 {
+        return n + 1
+    } else if n == 0 {
+        return ackermann(m - 1, 1)
+    } else {
+        return ackermann(m - 1, ackermann(m, n - 1))
+    }
+}
