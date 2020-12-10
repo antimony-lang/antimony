@@ -3,10 +3,9 @@
 
 # Features 
 - Array access syntax
-- Add for loop
-- Add type system
-- Write stdlib with builtin functions
-
+- For loop
+- Type system
+- Nested expressions like (1 + (2 * 2))
 
 # Cleanups
 - Improve error reporting (See ./util/string_util::highlight_position_in_file)
