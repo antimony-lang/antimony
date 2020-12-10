@@ -72,7 +72,7 @@ fn generate_block(block: Statement) -> String {
 }
 
 fn generate_statement(statement: Statement) -> String {
-    match statement {
+    let state = match statement {
         Statement::Return(ret) => generate_return(ret),
         Statement::Declare(name, val) => generate_declare(name.name, val),
         Statement::Exp(val) => generate_expression(val),
@@ -82,7 +82,9 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Assign(name, state) => generate_assign(name, *state),
         Statement::Block(_) => generate_block(statement),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
-    }
+    };
+
+    format!("{};\n", state)
 }
 
 fn generate_expression(expr: Expression) -> String {
@@ -159,8 +161,8 @@ fn generate_declare(name: String, val: Option<Expression>) -> String {
     // var is used here to not collide with scopes.
     // TODO: Can let be used instead?
     match val {
-        Some(expr) => format!("var {} = {};\n", name, generate_expression(expr)),
-        None => format!("var {};\n", name),
+        Some(expr) => format!("var {} = {}", name, generate_expression(expr)),
+        None => format!("var {}", name),
     }
 }
 
@@ -179,13 +181,13 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
         })
         .collect::<Vec<String>>()
         .join(",");
-    format!("{N}({A})\n", N = func, A = formatted_args)
+    format!("{N}({A})", N = func, A = formatted_args)
 }
 
 fn generate_return(ret: Option<Expression>) -> String {
     match ret {
-        Some(expr) => format!("return {}\n", generate_expression(expr)),
-        None => "return;\n".to_string(),
+        Some(expr) => format!("return {}", generate_expression(expr)),
+        None => "return".to_string(),
     }
 }
 
@@ -214,5 +216,5 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
 }
 
 fn generate_assign(name: String, expr: Expression) -> String {
-    format!("{} = {};\n", name, generate_expression(expr))
+    format!("{} = {}", name, generate_expression(expr))
 }
