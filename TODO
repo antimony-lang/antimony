@@ -1,8 +1,7 @@
 # Bugs
-
+- Uninitialized variables don't compile
 
 # Features 
-- Array access syntax
 - For loop
 - Type system
 - Nested expressions like (1 + (2 * 2))

@@ -484,3 +484,49 @@ fn test_array_access_standalone() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_array_access_assignment() {
+    let raw = "
+    fn main() {
+        let arr = [1, 2, 3]
+        let x = arr[0]
+
+        return x
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+#[ignore]
+fn test_array_access_in_if() {
+    let raw = "
+    fn main() {
+        if arr[d] > arr[d+1] {
+            let swap = arr[d]
+            arr[d]   = arr[d+1]
+            arr[d+1] = swap
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+#[ignore]
+fn test_uninitialized_variables() {
+    let raw = "
+    fn main() {
+        let x
+        let y
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
