@@ -451,3 +451,36 @@ fn test_boolean_arithmetic() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
+
+#[test]
+fn test_array_access_in_loop() {
+    let raw = "
+    fn main() {
+        let x = [1, 2, 3, 4, 5]
+    
+        let i = 0
+    
+        while i < 5 {
+          println(x[i])
+          i = i + 1
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_array_access_standalone() {
+    let raw = "
+    fn main() {
+        let x = [1, 2, 3, 4, 5]
+    
+        x[0]
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}

@@ -103,6 +103,9 @@ impl Parser {
                 } else if let Ok(_) = self.peek_token(TokenKind::Assign) {
                     let state = self.parse_assignent(Some(ident))?;
                     Ok(state)
+                } else if let Ok(_) = self.peek_token(TokenKind::SquareBraceOpen) {
+                    let expr = self.parse_array_access(Some(ident))?;
+                    Ok(Statement::Exp(expr))
                 } else {
                     let state = Statement::Exp(Expression::Variable(ident.into()));
                     Ok(state)
@@ -193,6 +196,13 @@ impl Parser {
                             Err(_) => func_call,
                         }
                     }
+                    TokenKind::SquareBraceOpen => {
+                        let arr = self.parse_array_access(Some(val))?;
+                        match BinOp::try_from(self.peek()?.kind) {
+                            Ok(_) => self.parse_bin_op(Some(arr))?,
+                            Err(_) => arr,
+                        }
+                    }
                     _ => match BinOp::try_from(self.peek()?.kind) {
                         Ok(_) => self.parse_bin_op(Some(Expression::Variable(token.raw)))?,
                         Err(_) => Expression::Variable(val),
@@ -228,6 +238,19 @@ impl Parser {
         self.match_token(TokenKind::SquareBraceClose)?;
 
         Ok(Expression::Array(elements))
+    }
+
+    fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {
+        let name = match arr_name {
+            Some(name) => name,
+            None => self.next()?.raw,
+        };
+
+        self.match_token(TokenKind::SquareBraceOpen)?;
+        let expr = self.parse_expression()?;
+        self.match_token(TokenKind::SquareBraceClose)?;
+
+        Ok(Expression::ArrayAccess(name, Box::new(expr)))
     }
 
     fn parse_while_loop(&mut self) -> Result<Statement, String> {

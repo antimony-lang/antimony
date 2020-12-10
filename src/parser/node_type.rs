@@ -54,6 +54,8 @@ pub enum Expression {
     Array(Vec<Expression>),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
+    /// (name, index)
+    ArrayAccess(String, Box<Expression>),
     BinOp(Box<Expression>, BinOp, Box<Expression>),
 }
 
