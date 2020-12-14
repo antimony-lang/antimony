@@ -79,7 +79,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::If(expr, if_state, else_state) => {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
-        Statement::Assign(name, state) => generate_assign(name, *state),
+        Statement::Assign(name, state) => generate_assign(*name, *state),
         Statement::Block(_) => generate_block(statement),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
     };
@@ -215,6 +215,10 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
     )
 }
 
-fn generate_assign(name: String, expr: Expression) -> String {
-    format!("{} = {}", name, generate_expression(expr))
+fn generate_assign(name: Expression, expr: Expression) -> String {
+    format!(
+        "{} = {}",
+        generate_expression(name),
+        generate_expression(expr)
+    )
 }

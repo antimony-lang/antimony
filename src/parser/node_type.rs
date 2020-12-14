@@ -38,7 +38,7 @@ pub struct Variable {
 pub enum Statement {
     Block(Vec<Statement>),
     Declare(Variable, Option<Expression>),
-    Assign(String, Box<Expression>),
+    Assign(Box<Expression>, Box<Expression>),
     Return(Option<Expression>),
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
@@ -49,7 +49,6 @@ pub enum Statement {
 pub enum Expression {
     Int(u32),
     Str(String),
-    Char(u8),
     Bool(bool),
     Array(Vec<Expression>),
     FunctionCall(String, Vec<Expression>),

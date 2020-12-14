@@ -556,12 +556,10 @@ fn test_function_multiple_args() {
 }
 
 #[test]
-#[ignore]
 fn test_array_position_assignment() {
     let raw = "
     fn main() {
-        new_arr[i] = arr[j]
-    }
+        new_arr[i] = 1
     }
     ";
     let tokens = tokenize(raw);

@@ -104,11 +104,16 @@ impl Parser {
                     let state = self.parse_function_call(Some(ident))?;
                     Ok(Statement::Exp(state))
                 } else if let Ok(_) = self.peek_token(TokenKind::Assign) {
-                    let state = self.parse_assignent(Some(ident))?;
+                    let state = self.parse_assignent(Some(Expression::Variable(ident)))?;
                     Ok(state)
                 } else if let Ok(_) = self.peek_token(TokenKind::SquareBraceOpen) {
                     let expr = self.parse_array_access(Some(ident))?;
-                    Ok(Statement::Exp(expr))
+
+                    let next = self.peek()?;
+                    match next.kind {
+                        TokenKind::Assign => self.parse_assignent(Some(expr)),
+                        _ => Ok(Statement::Exp(expr)),
+                    }
                 } else {
                     let state = Statement::Exp(Expression::Variable(ident.into()));
                     Ok(state)
@@ -339,16 +344,16 @@ impl Parser {
         }
     }
 
-    fn parse_assignent(&mut self, name: Option<String>) -> Result<Statement, String> {
+    fn parse_assignent(&mut self, name: Option<Expression>) -> Result<Statement, String> {
         let name = match name {
             Some(name) => name,
-            None => self.match_identifier()?,
+            None => Expression::Variable(self.match_identifier()?),
         };
 
         self.match_token(TokenKind::Assign)?;
 
         let expr = self.parse_expression()?;
 
-        Ok(Statement::Assign(name, Box::new(expr)))
+        Ok(Statement::Assign(Box::new(name), Box::new(expr)))
     }
 }
