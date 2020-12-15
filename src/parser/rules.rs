@@ -58,9 +58,7 @@ impl Parser {
 
         let arguments: Vec<Variable> = match self.peek()? {
             t if t.kind == TokenKind::BraceClose => Vec::new(),
-            _ => self
-                .parse_arguments()
-                .expect("Failed to parse function arguments"),
+            _ => self.parse_arguments()?,
         };
 
         self.match_token(TokenKind::BraceClose)?;
@@ -82,12 +80,30 @@ impl Parser {
                 TokenKind::Comma => {
                     continue;
                 }
-                TokenKind::Identifier(name) => args.push(Variable { name: name }),
+                TokenKind::Identifier(name) => args.push(Variable {
+                    name: name,
+                    ty: Some(self.parse_type()?),
+                }),
                 _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
             }
         }
 
         Ok(args)
+    }
+
+    fn parse_type(&mut self) -> Result<Type, String> {
+        let next = self.next()?;
+        let typ = match next.kind {
+            TokenKind::Identifier(t) => Type::try_from(t),
+            _ => Err("Expected type".into()),
+        }?;
+        if let Ok(_) = self.peek_token(TokenKind::SquareBraceOpen) {
+            self.drop(1);
+            self.match_token(TokenKind::SquareBraceClose)?;
+            Ok(Type::Array(Box::new(typ)))
+        } else {
+            Ok(typ)
+        }
     }
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
@@ -333,12 +349,12 @@ impl Parser {
         self.match_keyword(Keyword::Let)?;
         match (self.next()?.kind, self.peek()?.kind) {
             (TokenKind::Identifier(name), TokenKind::SemiColon) => {
-                Ok(Statement::Declare(Variable { name }, None))
+                Ok(Statement::Declare(Variable { name, ty: None }, None))
             }
             (TokenKind::Identifier(name), TokenKind::Assign) => {
                 self.drop(1);
                 let exp = self.parse_expression().ok();
-                Ok(Statement::Declare(Variable { name }, exp))
+                Ok(Statement::Declare(Variable { name, ty: None }, exp))
             }
             other => Err(format!("Expected identifier, found {:?}", other)),
         }

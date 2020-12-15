@@ -3,7 +3,7 @@ fn main() {
     println(fib(num))
 }
 
-fn fib(n) { 
+fn fib(n int) { 
     if 1 >= n {
         return n
     }

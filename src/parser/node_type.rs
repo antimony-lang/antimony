@@ -32,6 +32,27 @@ pub struct Function {
 #[derive(Debug, Eq, PartialEq)]
 pub struct Variable {
     pub name: String,
+    pub ty: Option<Type>,
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub enum Type {
+    Int,
+    Str,
+    Bool,
+    Array(Box<Type>),
+}
+
+impl TryFrom<String> for Type {
+    type Error = String;
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.as_ref() {
+            "int" => Ok(Self::Int),
+            "string" => Ok(Self::Str),
+            "bool" => Ok(Self::Bool),
+            _ => Err("Expected Type".into()),
+        }
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
