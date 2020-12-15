@@ -1,6 +1,7 @@
 image: archlinux
 packages:
   - rust
+  - node
 sources:
   - https://git.sr.ht/~garritfra/sabre
 tasks:
