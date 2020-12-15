@@ -501,7 +501,6 @@ fn test_array_access_assignment() {
 }
 
 #[test]
-#[ignore]
 fn test_array_access_in_if() {
     let raw = "
     fn main() {
