@@ -27,6 +27,8 @@ use structopt::StructOpt;
 mod generator;
 mod lexer;
 mod parser;
+#[cfg(test)]
+mod tests;
 mod util;
 use rust_embed::RustEmbed;
 
