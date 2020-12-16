@@ -15,9 +15,24 @@
  */
 use crate::parser::node_type::*;
 
+pub mod c;
 pub mod js;
+#[cfg(test)]
+mod tests;
 pub mod x86;
 
 pub trait Generator {
     fn generate(prog: Program) -> String;
+}
+
+pub fn generate(prog: Program) -> String {
+    #[cfg(feature = "backend_c")]
+    {
+        c::CGenerator::generate(prog)
+    }
+
+    #[cfg(feature = "backend_js")]
+    {
+        js::JsGenerator::generate(prog)
+    }
 }

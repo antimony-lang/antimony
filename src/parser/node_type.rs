@@ -30,13 +30,13 @@ pub struct Function {
     pub ret_type: Option<Type>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Variable {
     pub name: String,
     pub ty: Option<Type>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Type {
     Int,
     Str,

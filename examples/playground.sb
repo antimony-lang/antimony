@@ -1,5 +1,2 @@
 fn main(n: int) {
-    if n {
-        return n
-    }
 }

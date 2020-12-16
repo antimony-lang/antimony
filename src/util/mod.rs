@@ -14,3 +14,9 @@
  * limitations under the License.
  */
 pub mod string_util;
+
+/// Datatype that holds one of two types
+pub enum Either<L, R> {
+    Left(L),
+    Right(R),
+}

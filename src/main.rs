@@ -16,7 +16,6 @@
 extern crate rust_embed;
 extern crate structopt;
 
-use crate::generator::Generator;
 use crate::Opt::Build;
 use std::fs::File;
 use std::io::Read;
@@ -68,7 +67,7 @@ fn main() -> Result<(), String> {
     let tokens = lexer::tokenize(&contents);
     let program = parser::parse(tokens, Some(contents))?;
 
-    let output = generator::js::JsGenerator::generate(program);
+    let output = generator::generate(program);
     let mut file = std::fs::File::create(out_file).expect("create failed");
     file.write_all(output.as_bytes()).expect("write failed");
     file.flush().expect("Could not flush file");
