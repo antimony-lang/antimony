@@ -4,7 +4,6 @@
 
 # Features 
 - For loop
-- Type system
 - Nested expressions like (1 + (2 * 2))
 
 # Cleanups
