@@ -120,7 +120,7 @@ fn test_parse_variable_declaration_added() {
 #[test]
 fn test_parse_function_with_args() {
     let raw = "
-    fn main(foo int) {
+    fn main(foo: int) {
         return foo
     }
     ";
@@ -132,7 +132,7 @@ fn test_parse_function_with_args() {
 #[test]
 fn test_parse_function_call() {
     let raw = "
-    fn main(foo int) {
+    fn main(foo: int) {
         foo()
     }
 
@@ -184,7 +184,7 @@ fn test_parse_nexted_function_call() {
         fib(fib(2), 2)
     }
 
-    fn fib(n int) {
+    fn fib(n: int) {
         return 2
     }
     ";
@@ -244,7 +244,7 @@ fn test_parse_compound_ops_with_strings() {
 #[test]
 fn test_parse_compound_ops_with_identifier() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         return 2 * n
     }
     ";
@@ -256,7 +256,7 @@ fn test_parse_compound_ops_with_identifier() {
 #[test]
 fn test_parse_compound_ops_with_identifier_first() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         return n * 2
     }
     ";
@@ -268,7 +268,7 @@ fn test_parse_compound_ops_with_identifier_first() {
 #[test]
 fn test_parse_compound_ops_return() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         return 2 * n
     }
     ";
@@ -280,7 +280,7 @@ fn test_parse_compound_ops_return() {
 #[test]
 fn test_parse_basic_conditional() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         if n {
             return n
         }
@@ -294,7 +294,7 @@ fn test_parse_basic_conditional() {
 #[test]
 fn test_parse_basic_conditional_with_multiple_statements() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         if n {
             let x = 2 * n
             return x
@@ -309,7 +309,7 @@ fn test_parse_basic_conditional_with_multiple_statements() {
 #[test]
 fn test_parse_conditional_else_if_branch() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         if n > 10 {
             let x = 2 * n
             return x
@@ -326,7 +326,7 @@ fn test_parse_conditional_else_if_branch() {
 #[test]
 fn test_parse_conditional_multiple_else_if_branch_branches() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         if n > 10 {
             let x = 2 * n
             return x
@@ -345,7 +345,7 @@ fn test_parse_conditional_multiple_else_if_branch_branches() {
 #[test]
 fn test_parse_conditional_else_branch() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         if n > 10 {
             let x = 2 * n
             return x
@@ -362,7 +362,7 @@ fn test_parse_conditional_else_branch() {
 #[test]
 fn test_parse_conditional_elseif_else_branch() {
     let raw = "
-    fn main(n int) {
+    fn main(n: int) {
         if n > 10 {
             let x = 2 * n
             return x
@@ -383,7 +383,7 @@ fn test_parse_conditional_elseif_else_branch() {
 #[test]
 fn test_int_array() {
     let raw = "
-    fn main(n int) {
+    fn main() {
         let arr = [1, 2, 3]
         return arr
     }
@@ -396,7 +396,7 @@ fn test_int_array() {
 #[test]
 fn test_string_array() {
     let raw = "
-    fn main(n int) {
+    fn main(n:int) {
         return [\"Foo\", \"Bar\", \"Baz\"]
     }
     ";
@@ -533,7 +533,7 @@ fn test_uninitialized_variables() {
 #[test]
 fn test_function_call_math() {
     let raw = "
-    fn main(m int) {
+    fn main(m: int) {
         main(m - 1)
     }
     ";
@@ -545,7 +545,7 @@ fn test_function_call_math() {
 #[test]
 fn test_function_multiple_args() {
     let raw = "
-    fn main(m int, n int) {
+    fn main(m: int, n: int) {
         main(m, n)
     }
     ";
@@ -564,4 +564,30 @@ fn test_array_position_assignment() {
     let tokens = tokenize(raw);
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
+}
+
+#[test]
+fn test_typed_declare() {
+    let raw = "
+    fn main() {
+        let x = 5
+        let y: int = 1
+        let z: bool = false
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_no_function_args_without_type() {
+    let raw = "
+    fn main(x) {
+        return n
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_err())
 }

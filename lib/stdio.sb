@@ -1,16 +1,16 @@
 // Raw wrapper around _printf builtin function.
 // Writes the given content to stdout
-fn print(msg string) {
-    _printf(msg)
+fn print(arg: string) {
+    _printf(arg)
 }
 
 // Like print(), but with an extra newline ('\n') character
-fn println(msg string) {
+fn println(msg: string) {
     print(msg + "\n")
 }
 
 // Prints the size of an array
-fn len(arr int[]) {
+fn len(arr: int[]) {
     let c = 0
     while arr[c] {
         c = c + 1
@@ -21,7 +21,7 @@ fn len(arr int[]) {
 
 // Reverses an array
 // TODO: fix me!
-fn rev(arr int[]) {
+fn rev(arr: int[]) {
 
     let l = len(arr)
     let new_arr = []

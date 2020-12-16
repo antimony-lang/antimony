@@ -161,6 +161,10 @@ pub fn first_token(input: &str, pos: &mut Position) -> Token {
 pub fn is_whitespace(c: char) -> bool {
     match c {
         ' ' | '\n' | '\r' | '\t' => true,
+        '\u{00A0}' => {
+            dbg!("Non-standard unicode character found: '\u{00A0}'");
+            true
+        }
         _ => false,
     }
 }

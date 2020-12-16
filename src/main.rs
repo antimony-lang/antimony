@@ -67,7 +67,6 @@ fn main() -> Result<(), String> {
 
     let tokens = lexer::tokenize(&contents);
     let program = parser::parse(tokens, Some(contents))?;
-    dbg!(&program);
 
     let output = generator::js::JsGenerator::generate(program);
     let mut file = std::fs::File::create(out_file).expect("create failed");

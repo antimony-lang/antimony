@@ -80,10 +80,12 @@ impl Parser {
                 TokenKind::Comma => {
                     continue;
                 }
-                TokenKind::Identifier(name) => args.push(Variable {
-                    name: name,
-                    ty: Some(self.parse_type()?),
-                }),
+                TokenKind::Identifier(name) => {
+                    args.push(Variable {
+                        name: name,
+                        ty: Some(self.parse_type()?),
+                    });
+                }
                 _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
             }
         }
@@ -92,13 +94,14 @@ impl Parser {
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
-        let next = self.next()?;
+        self.match_token(TokenKind::Colon)?;
+        let next = self.peek()?;
         let typ = match next.kind {
-            TokenKind::Identifier(t) => Type::try_from(t),
+            TokenKind::Identifier(_) => Type::try_from(self.next()?.raw),
             _ => Err("Expected type".into()),
         }?;
         if let Ok(_) = self.peek_token(TokenKind::SquareBraceOpen) {
-            self.drop(1);
+            self.match_token(TokenKind::SquareBraceOpen)?;
             self.match_token(TokenKind::SquareBraceClose)?;
             Ok(Type::Array(Box::new(typ)))
         } else {
@@ -242,16 +245,20 @@ impl Parser {
     fn parse_array(&mut self) -> Result<Expression, String> {
         let mut elements = Vec::new();
         loop {
-            let next = self.next()?;
+            let next = self.peek()?;
             match next.kind {
+                TokenKind::SquareBraceClose => {}
                 TokenKind::Literal(Value::Int) => {
-                    let value = next.raw.parse::<u32>().map_err(|e| e.to_string())?;
+                    let value = self.next()?.raw.parse::<u32>().map_err(|e| e.to_string())?;
                     elements.push(Expression::Int(value));
                 }
                 TokenKind::Literal(Value::Str) => {
-                    elements.push(Expression::Str(next.raw));
+                    elements.push(Expression::Str(self.next()?.raw));
                 }
-                _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
+                _ => {
+                    let n = self.next()?;
+                    return Err(self.make_error(TokenKind::Identifier("Argument".into()), n));
+                }
             };
             if self.peek_token(TokenKind::SquareBraceClose).is_ok() {
                 break;
@@ -347,17 +354,14 @@ impl Parser {
 
     fn parse_declare(&mut self) -> Result<Statement, String> {
         self.match_keyword(Keyword::Let)?;
-        match (self.next()?.kind, self.peek()?.kind) {
-            (TokenKind::Identifier(name), TokenKind::SemiColon) => {
-                Ok(Statement::Declare(Variable { name, ty: None }, None))
-            }
-            (TokenKind::Identifier(name), TokenKind::Assign) => {
-                self.drop(1);
-                let exp = self.parse_expression().ok();
-                Ok(Statement::Declare(Variable { name, ty: None }, exp))
-            }
-            other => Err(format!("Expected identifier, found {:?}", other)),
-        }
+        let name = self.match_identifier()?;
+        let ty = match self.peek()?.kind {
+            TokenKind::Colon => Some(self.parse_type()?),
+            _ => None,
+        };
+        self.match_token(TokenKind::Assign)?;
+        let expr = self.parse_expression()?;
+        Ok(Statement::Declare(Variable { name, ty }, Some(expr)))
     }
 
     fn parse_assignent(&mut self, name: Option<Expression>) -> Result<Statement, String> {
