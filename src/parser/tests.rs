@@ -1,4 +1,5 @@
 use crate::lexer::*;
+use crate::parser::node_type::*;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -590,4 +591,17 @@ fn test_no_function_args_without_type() {
     let tokens = tokenize(raw);
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_err())
+}
+
+#[test]
+fn test_function_with_return_type() {
+    let raw = "
+    fn main(x: int): int {
+        return n
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+    assert_eq!(tree.unwrap().func[0].ret_type, Some(Type::Int));
 }

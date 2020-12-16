@@ -27,6 +27,7 @@ pub struct Function {
     pub name: String,
     pub arguments: Vec<Variable>,
     pub body: Statement,
+    pub ret_type: Option<Type>,
 }
 
 #[derive(Debug, Eq, PartialEq)]

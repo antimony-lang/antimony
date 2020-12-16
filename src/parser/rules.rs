@@ -63,12 +63,18 @@ impl Parser {
 
         self.match_token(TokenKind::BraceClose)?;
 
+        let ty = match self.peek()?.kind {
+            TokenKind::Colon => Some(self.parse_type()?),
+            _ => None,
+        };
+
         let body = self.parse_block()?;
 
         Ok(Function {
             name: name,
             arguments: arguments,
             body: body,
+            ret_type: ty,
         })
     }
 
