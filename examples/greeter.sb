@@ -2,6 +2,6 @@ fn main() {
     println(greet("World"))
 }
 
-fn greet(name: string) {
+fn greet(name: string): string {
     return "Hello " + name
 }
