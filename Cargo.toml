@@ -8,9 +8,9 @@ edition = "2018"
 
 [features]
 backend_c = []
-backend_js = []
+backend_node = []
 
-default = ["backend_js"]
+default = ["backend_node"]
 
 [dependencies]
 structopt = "0.3.21"

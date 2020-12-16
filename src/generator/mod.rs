@@ -31,7 +31,7 @@ pub fn generate(prog: Program) -> String {
         c::CGenerator::generate(prog)
     }
 
-    #[cfg(feature = "backend_js")]
+    #[cfg(feature = "backend_node")]
     {
         js::JsGenerator::generate(prog)
     }
