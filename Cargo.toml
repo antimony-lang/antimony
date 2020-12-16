@@ -10,7 +10,7 @@ edition = "2018"
 backend_c = []
 backend_node = []
 
-default = ["backend_node"]
+default = ["backend_c"]
 
 [dependencies]
 structopt = "0.3.21"

@@ -59,13 +59,17 @@ fn main() -> Result<(), String> {
     let mut file = File::open(in_file).expect("Could not open file");
     let mut contents = String::new();
 
-    contents = append_stdlib(contents);
-
     file.read_to_string(&mut contents)
         .expect("Could not read file");
-
     let tokens = lexer::tokenize(&contents);
-    let program = parser::parse(tokens, Some(contents))?;
+    let mut program = parser::parse(tokens, Some(contents))?;
+
+    // C Backend currently does not support stdlib yet, since not all features are implemented
+    #[cfg(features = "backend_node")]
+    {
+        let stdlib = build_stdlib();
+        program.merge_with(stdlib);
+    }
 
     let output = generator::generate(program);
     let mut file = std::fs::File::create(out_file).expect("create failed");
@@ -74,13 +78,12 @@ fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn append_stdlib(mut buffer: String) -> String {
-    buffer += "// START stdlib\n\n";
+fn build_stdlib() -> parser::node_type::Program {
+    let stdlib_raw =
+        Lib::get("stdio.sb").expect("Standard library not found. This should not occur.");
+    let stblib_str =
+        std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
+    let stdlib_tokens = lexer::tokenize(&stblib_str);
 
-    let stdlib = Lib::get("stdio.sb").expect("Standard library not found. This should not occur.");
-    buffer += std::str::from_utf8(&stdlib).expect("Could not interpret standard library.");
-
-    buffer += "\n// END stdlib\n\n";
-
-    buffer
+    parser::parse(stdlib_tokens, Some(stblib_str.into())).expect("Could not parse stdlib")
 }

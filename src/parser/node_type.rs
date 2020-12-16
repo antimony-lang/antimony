@@ -22,6 +22,13 @@ pub struct Program {
     pub globals: Vec<String>,
 }
 
+impl Program {
+    pub fn merge_with(&mut self, mut other: Program) {
+        self.func.append(&mut other.func);
+        self.globals.append(&mut other.globals)
+    }
+}
+
 #[derive(Debug)]
 pub struct Function {
     pub name: String,

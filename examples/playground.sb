@@ -1,2 +1,3 @@
 fn main(n: int) {
+    _printf("Hello World!\n")
 }
