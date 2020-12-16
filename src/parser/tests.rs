@@ -605,3 +605,18 @@ fn test_function_with_return_type() {
     assert!(tree.is_ok());
     assert_eq!(tree.unwrap().func[0].ret_type, Some(Type::Int));
 }
+
+#[test]
+#[ignore]
+fn test_booleans_in_function_call() {
+    let raw = "
+    if n > 2 {
+        _printf(true)
+    } else {
+        _printf(true)
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}
