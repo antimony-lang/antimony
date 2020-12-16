@@ -65,8 +65,7 @@ fn main() -> Result<(), String> {
     let mut program = parser::parse(tokens, Some(contents))?;
 
     // C Backend currently does not support stdlib yet, since not all features are implemented
-    #[cfg(features = "backend_node")]
-    {
+    if cfg!(feature = "backend_node") {
         let stdlib = build_stdlib();
         program.merge_with(stdlib);
     }

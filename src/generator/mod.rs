@@ -26,13 +26,11 @@ pub trait Generator {
 }
 
 pub fn generate(prog: Program) -> String {
-    #[cfg(feature = "backend_c")]
-    {
+    if cfg!(feature = "backend_c") {
         c::CGenerator::generate(prog)
-    }
-
-    #[cfg(feature = "backend_node")]
-    {
+    } else if cfg!(feature = "backend_node") {
         js::JsGenerator::generate(prog)
+    } else {
+        panic!("No backend specified")
     }
 }

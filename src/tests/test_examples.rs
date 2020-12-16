@@ -17,6 +17,7 @@ use std::fs;
 use std::io::Error;
 use std::process::Command;
 #[test]
+#[cfg(feature = "backend_node")]
 fn test_examples() -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
 
@@ -45,17 +46,14 @@ fn test_examples() -> Result<(), Error> {
             .success();
         assert_eq!(success, true, "{:?}", &in_file);
 
-        #[cfg(backend_node)]
-        {
-            let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
-            if node_installed {
-                let execution = Command::new("node")
-                    .arg(out_file)
-                    .spawn()?
-                    .wait()?
-                    .success();
-                assert_eq!(execution, true, "{:?}", &in_file)
-            }
+        let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
+        if node_installed {
+            let execution = Command::new("node")
+                .arg(out_file)
+                .spawn()?
+                .wait()?
+                .success();
+            assert_eq!(execution, true, "{:?}", &in_file)
         }
     }
     Ok(())

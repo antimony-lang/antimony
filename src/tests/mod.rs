@@ -15,5 +15,5 @@
  */
 
 /// This test currently only runs on the node backend, and has to be disabled for the C backend
-#[cfg(backend_node)]
+#[cfg(feature = "backend_node")]
 mod test_examples;
