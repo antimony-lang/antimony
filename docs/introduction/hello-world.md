@@ -25,19 +25,10 @@ fn main() {
 }
 ```
 
-Save the file and go back to your terminal window. Now, run the following command to compile your program:
+Save the file and go back to your terminal window. Now, run the following command to compile and run your program:
 
 ```
-sabre build main.sb -o main.js
-```
-
-> **Note:** JavaScript is the only currently supported backend for Sabre. There will be more soon.
-
-Now, execute the compiled program with a runtime of your choice. We will be using Node.js for this example.
-
-```
-> node main.js
-Hello, world!
+sabre run main.sb
 ```
 
 You should see the string `Hello World!` on the screen. Congrats! You have officially written a Sabre Program!

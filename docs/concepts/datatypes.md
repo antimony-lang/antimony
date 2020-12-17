@@ -1,21 +1,20 @@
 # Datatypes
 
-> **Note:** Due to the fact that Sabre currently emits javascript, static types are not needed, as of yet. They will however be introduced soon, once a statically typed backend is used.
+Sabre comes with some generic data types.
 
 ## The Integer type
 
-The `integer` datatype represents a number. The JavaScript backend interprets any integer as a `Number` type.
+The `integer` datatype represents a 4 byte decimal number.
 
 ```
 fn main() {
-    let sum = 1 + 2
+    let sum: int = 1 + 2
     println("1 + 2 is ", sum)
 }
 ```
 
 ```
-$ sabre build main.sb -o main.js
-$ node main.js
+$ sabre run main.sb
 1 + 2 is 3
 ```
 
@@ -25,14 +24,13 @@ A string is a sequence of characters.
 
 ```
 fn main() {
-    let name = "Jon"
+    let name: string = "Jon"
     println("Hello " + name)
 }
 ```
 
 ```
-$ sabre build main.sb -o main.js
-$ node main.js
+$ sabre run main.sb
 Hello Jon
 ```
 
@@ -40,11 +38,9 @@ Hello Jon
 
 Arrays represent a sequence of values. They can hold any number of values of a specific type.
 
-> **NOTE:** Currently, there is no type-checking involved when creating arrays. There will be, once a type system is in place, so don't get too attached to mixing and matching element types. ;)
-
 ```
 fn main() {
-    let fruits = ["Banana", "Apple", "Pineapple"]
+    let fruits: string[] = ["Banana", "Apple", "Pineapple"]
 
     for fruit in fruits {
         println(fruit)
@@ -53,8 +49,7 @@ fn main() {
 ```
 
 ```
-$ sabre build main.sb -o main.js
-$ node main.js
+$ sabre run main.sb
 Banana
 Apple
 Pineapple

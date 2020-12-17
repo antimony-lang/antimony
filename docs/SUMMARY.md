@@ -8,3 +8,4 @@
   - [Data Types](./concepts/datatypes.md)
 - [Developer Resources](./developers/SUMMARY.md)
   - [Backends](./developers/backends.md)
+  - [Contributing to Sabre](./developers/contributing.md)
