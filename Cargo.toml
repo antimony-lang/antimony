@@ -1,6 +1,6 @@
 [package]
 name = "sabre"
-version = "0.0.1"
+version = "0.0.3"
 authors = ["Garrit Franke <garritfranke@gmail.com>"]
 edition = "2018"
 
@@ -10,8 +10,9 @@ edition = "2018"
 backend_c = []
 backend_node = []
 
-default = ["backend_c"]
+default = ["backend_node"]
 
 [dependencies]
 structopt = "0.3.21"
 rust-embed = "5.7.0"
+tempfile = "3.1.0"

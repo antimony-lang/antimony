@@ -1,3 +1,4 @@
+extern crate cc;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -15,8 +16,8 @@
  */
 extern crate rust_embed;
 extern crate structopt;
+extern crate tempfile;
 
-use crate::Opt::Build;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -45,13 +46,16 @@ enum Opt {
         #[structopt(short, long)]
         out_file: PathBuf,
     },
+    #[structopt()]
+    Run { in_file: PathBuf },
 }
 
 fn main() -> Result<(), String> {
     let opts = Opt::from_args();
 
     match opts {
-        Build { in_file, out_file } => command::build::build(in_file, out_file)?,
+        Opt::Build { in_file, out_file } => command::build::build(&in_file, &out_file)?,
+        Opt::Run { in_file } => command::run::run(in_file)?,
     };
 
     Ok(())
