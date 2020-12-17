@@ -29,7 +29,7 @@ impl Program {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Function {
     pub name: String,
     pub arguments: Vec<Variable>,
@@ -63,7 +63,7 @@ impl TryFrom<String> for Type {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Statement {
     Block(Vec<Statement>),
     Declare(Variable, Option<Expression>),
@@ -74,7 +74,7 @@ pub enum Statement {
     Exp(Expression),
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Expression {
     Int(u32),
     Str(String),
@@ -111,7 +111,7 @@ impl TryFrom<Token> for Expression {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub enum BinOp {
     Addition,
     Subtraction,

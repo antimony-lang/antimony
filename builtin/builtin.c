@@ -4,7 +4,7 @@
 
 void _printf(char *msg)
 {
-    printf(msg);
+    printf("%s", msg);
 }
 
 /* END builtins */

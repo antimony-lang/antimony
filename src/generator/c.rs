@@ -27,6 +27,11 @@ impl Generator for CGenerator {
             crate::Builtins::get("builtin.c").expect("Could not locate builtin functions");
         code += std::str::from_utf8(raw_builtins.as_ref())
             .expect("Unable to interpret builtin functions");
+
+        for func in &prog.func {
+            code += &format!("{};\n", &generate_function_signature(func.clone()));
+        }
+
         let funcs: String = prog
             .func
             .into_iter()
@@ -63,6 +68,14 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
 }
 
 fn generate_function(func: Function) -> String {
+    let mut buf = String::new();
+    buf += &format!("{} ", &generate_function_signature(func.clone()));
+    buf += &generate_block(func.body);
+
+    buf
+}
+
+fn generate_function_signature(func: Function) -> String {
     let arguments: String = func
         .arguments
         .into_iter()
@@ -70,11 +83,7 @@ fn generate_function(func: Function) -> String {
         .collect::<Vec<String>>()
         .join(", ");
     let t = generate_type(Either::Right(func.ret_type));
-    let mut raw = format!("{T} {N}({A})", T = t, N = func.name, A = arguments);
-
-    raw += &generate_block(func.body);
-
-    raw
+    format!("{T} {N}({A})", T = t, N = func.name, A = arguments)
 }
 
 fn generate_block(block: Statement) -> String {

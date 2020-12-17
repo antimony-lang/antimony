@@ -1,5 +1,5 @@
 fn main() {
-    let num = 10
+    let num: int = 10
     println(fib(num))
 }
 

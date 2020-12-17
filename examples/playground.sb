@@ -1,11 +1,4 @@
-fn main(n: int) {
-    _printf("Hello World!\n")
-
-    if n > 2 {
-        _printf("Larger than 2\n")
-    } else if n == 2 {
-        _printf("Is 2\n")
-    } else {
-        _printf("Less than 2\n")
-    }
+fn main() {
+    let x: string = "Hello World\n"
+    _printf(x)
 }
