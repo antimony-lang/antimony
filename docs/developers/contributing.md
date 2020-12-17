@@ -12,6 +12,10 @@ If you want to contribute to the compiler itself, the easiest way to get started
 
 You could also run the tests (`cargo test`) and see if any tests are ignored. Usually, if a bug is found in the wild, a failing but ignored test is written, so that it can be further investigated later.
 
+## Writing documentation
+
+As with all software, Sabre needs good documentation. Since Sabre is still in early development, things change constantly. This means that docs will be out of date in a lot of cases, or not written at all. Any help with the documentation is greatly appreciated!
+
 ## Submitting your code
 
-Development should happen on [SourceHut](https://sr.ht/~garritfra/sabre/). If you want to contribute code, please send a patch to the [public mailing list](https://lists.sr.ht/~garritfra/sabre). If you don't feel confortable with the [patch-based workflow](https://slashdev.space/posts/patch-based-git-workflow) yet, you can also open a pull request in the [GitHub mirror](https://github.com/garritfra/sabre).
+Development should happen on [SourceHut](https://sr.ht/~garritfra/sabre/). If you want to contribute code, please send a patch to the [public mailing list](https://lists.sr.ht/~garritfra/sabre). If you don't feel confortable with the [patch-based workflow](https://slashdev.space/posts/patch-based-git-workflow), you can also open a pull request in the [GitHub mirror](https://github.com/garritfra/sabre). Before submitting the code, please make sure that it is **sufficiently documented and tested**.
