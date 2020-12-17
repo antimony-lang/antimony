@@ -18,11 +18,11 @@ The Sabre compiler emits JavaScript, until the language has matured sufficiently
 // examples/fib.sb
 
 fn main() {
-    let num = 10
+    let num: int = 10
     println(fib(num))
 }
 
-fn fib(n) {
+fn fib(n: int) {
     if n <= 1 {
         return n
     }
