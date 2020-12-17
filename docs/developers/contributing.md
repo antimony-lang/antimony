@@ -8,7 +8,7 @@ If you want to submit a patch, file a bug, suggest a feature or have questions a
 
 ## Fixing things and adding features
 
-If you want to contribute to the compiler itself, the easiest way to get started is to look at the `TODO` file at the root of the project. Usually, this is where important todo items are jotted down.
+If you want to contribute to the compiler itself, the easiest way to get started is to look at the [TODO file](https://git.sr.ht/~garritfra/sabre/tree/master/TODO) at the root of the project. Usually, this is where important todo items are jotted down.
 
 You could also run the tests (`cargo test`) and see if any tests are ignored. Usually, if a bug is found in the wild, a failing but ignored test is written, so that it can be further investigated later.
 
