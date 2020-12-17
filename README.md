@@ -8,9 +8,9 @@ It is meant to "just work", without adding unnecessary and bloated language feat
 
 ## State of this projects
 
-Basic algorithms like the fibonacci sequence should compile fine. More sophisticated programs will not work yet. See [TODO](./TODO) for a roadmap.
+Basic algorithms should compile fine. See the [examples](./examples) More sophisticated programs will not work yet. See [TODO](./TODO) for a roadmap.
 
-The Sabre compiler emits JavaScript, until the language has matured sufficiently. Backends for WASM, C, x86 and ARM are planned.
+The Sabre compiler emits JavaScript, and a C backend is currently in development. Backends for WASM, x86 and ARM are planned.
 
 ## Examples
 
