@@ -1,4 +1,3 @@
-extern crate cc;
 /**
  * Copyright 2020 Garrit Franke
  *
