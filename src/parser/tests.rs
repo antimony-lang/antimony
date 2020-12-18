@@ -607,13 +607,14 @@ fn test_function_with_return_type() {
 }
 
 #[test]
-#[ignore]
 fn test_booleans_in_function_call() {
     let raw = "
-    if n > 2 {
-        _printf(true)
-    } else {
-        _printf(true)
+    fn main() {
+        if n > 2 {
+            _printf(true)
+        } else {
+            _printf(true)
+        }
     }
     ";
     let tokens = tokenize(raw);

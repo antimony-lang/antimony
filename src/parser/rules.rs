@@ -174,6 +174,7 @@ impl Parser {
                 TokenKind::Identifier(_) | TokenKind::Literal(_) => {
                     args.push(self.parse_expression()?)
                 }
+                TokenKind::Keyword(Keyword::Boolean) => args.push(self.parse_expression()?),
                 _ => {
                     return Err(self.make_error(TokenKind::BraceClose, next));
                 }
