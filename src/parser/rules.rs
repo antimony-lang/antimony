@@ -122,6 +122,7 @@ impl Parser {
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
             TokenKind::Keyword(Keyword::While) => self.parse_while_loop(),
+            TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
 
@@ -297,6 +298,17 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Statement::While(expr, Box::new(body)))
+    }
+
+    fn parse_for_loop(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::For)?;
+
+        let ident = self.match_identifier()?;
+        self.match_keyword(Keyword::In)?;
+        let expr = self.parse_expression()?;
+        let body = self.parse_block()?;
+
+        Ok(Statement::For(Variable {name: ident, ty: None}, expr, Box::new(body)))
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {

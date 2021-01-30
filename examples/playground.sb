@@ -1,6 +1,8 @@
 fn main() {
-    let x: string
+    let x = ["Foo", "Bar"]
 
-    x = "Hello World"
-    _printf(x)
+    for i in x {
+        _printf(x[i])
+        _printf("\n")
+    }
 }

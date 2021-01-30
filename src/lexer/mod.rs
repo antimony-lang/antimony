@@ -127,6 +127,8 @@ pub enum Keyword {
     Else,
     Return,
     While,
+    For,
+    In,
     Break,
     Continue,
     Function,
@@ -331,6 +333,8 @@ impl Cursor<'_> {
             c if c == "let" => Keyword::Let,
             c if c == "return" => Keyword::Return,
             c if c == "while" => Keyword::While,
+            c if c == "for" => Keyword::For,
+            c if c == "in" => Keyword::In,
             _ => Keyword::Unknown,
         }
     }

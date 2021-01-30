@@ -49,14 +49,19 @@ fn generate_function(func: Function) -> String {
         .join(", ");
     let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
 
-    raw += &generate_block(func.body);
+    raw += &generate_block(func.body, None);
 
     raw
 }
 
-fn generate_block(block: Statement) -> String {
+/// prepend is used to pass optional statements, that will be put in front of the regular block
+/// Currently used in for statements, to declare local variables
+fn generate_block(block: Statement, prepend: Option<Statement>) -> String {
     let mut generated = String::from("{\n");
 
+
+    // TODO: Prepend statements
+    
     let statements = match block {
         Statement::Block(blk) => blk,
         _ => panic!("Block body should be of type Statement::Block"),
@@ -80,8 +85,9 @@ fn generate_statement(statement: Statement) -> String {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
         Statement::Assign(name, state) => generate_assign(*name, *state),
-        Statement::Block(_) => generate_block(statement),
+        Statement::Block(_) => generate_block(statement, None),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
+        Statement::For(ident, expr, body) => generate_for_loop(ident, expr, *body),
     };
 
     format!("{};\n", state)
@@ -104,7 +110,17 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
 
     out_str += &generate_expression(expr);
     out_str += ") ";
-    out_str += &generate_block(body);
+    out_str += &generate_block(body, None);
+    out_str
+}
+
+fn generate_for_loop(ident: Variable, expr: Expression, body: Statement) -> String {
+    let expr_string = generate_expression(expr);
+    let mut out_str = format!("for (let {I} = 0; {I} < {E}.length; {I}++)", I = ident.name, E = expr_string);
+    
+    // Currently, the index of the current iteration is used, instead of the value itself.
+    // TODO: generate local variable
+    out_str += &generate_block(body, None);
     out_str
 }
 

@@ -641,3 +641,37 @@ fn test_late_initializing_variable() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+fn test_simple_for_loop() {
+    let raw = "
+    fn main() {
+        let x = [1, 2, 3]
+
+        for i in x {
+            _printf(i)
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}
+
+#[test]
+fn test_nested_for_loop() {
+    let raw = "
+    fn main() {
+        let x = [1, 2, 3]
+
+        for i in x {
+            for j in x {
+                _printf(j)
+            }
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}

@@ -71,6 +71,7 @@ pub enum Statement {
     Return(Option<Expression>),
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
+    For(Variable, Expression, Box<Statement>),
     Exp(Expression),
 }
 

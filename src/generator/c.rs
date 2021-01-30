@@ -114,6 +114,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Assign(name, state) => generate_assign(*name, *state),
         Statement::Block(_) => generate_block(statement),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
+        Statement::For(ident, expr, body) => todo!(),
     };
 
     format!("{}\n", state)
