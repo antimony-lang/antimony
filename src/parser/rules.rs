@@ -366,9 +366,17 @@ impl Parser {
             TokenKind::Colon => Some(self.parse_type()?),
             _ => None,
         };
-        self.match_token(TokenKind::Assign)?;
-        let expr = self.parse_expression()?;
-        Ok(Statement::Declare(Variable { name, ty }, Some(expr)))
+
+        match self.peek()?.kind {
+            TokenKind::Assign => {
+                self.match_token(TokenKind::Assign)?; 
+                let expr = self.parse_expression()?;
+                Ok(Statement::Declare(Variable { name, ty }, Some(expr)))
+            },
+            _ => {
+                Ok(Statement::Declare(Variable {name, ty}, None)) 
+            }
+        }
     }
 
     fn parse_assignent(&mut self, name: Option<Expression>) -> Result<Statement, String> {

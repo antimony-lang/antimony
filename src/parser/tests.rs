@@ -621,3 +621,23 @@ fn test_booleans_in_function_call() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+fn test_late_initializing_variable() {
+    let raw = "
+    fn main() {
+        let x: int
+        let y: string
+        x = 5
+        if x > 2 {
+            y = 'test'
+        }
+
+        _printf(x)
+        _printf(y)
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}

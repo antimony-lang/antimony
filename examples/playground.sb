@@ -1,4 +1,6 @@
 fn main() {
-    let x: string = "Hello World\n"
+    let x: string
+
+    x = "Hello World"
     _printf(x)
 }
