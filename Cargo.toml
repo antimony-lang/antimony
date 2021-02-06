@@ -1,10 +1,16 @@
 [package]
 name = "sabre-lang"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Garrit Franke <garrit@slashdev.space>"]
+description = "The sabre programming language"
+license = "Apache-2.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "sabre"
+path = "src/main.rs"
 
 [features]
 backend_c = []
