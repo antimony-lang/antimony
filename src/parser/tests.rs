@@ -693,3 +693,16 @@ fn test_nested_array() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+fn test_simple_nested_expression() {
+    let raw = "
+    fn main() {
+        let x = (1 + 2 * (3 + 2))
+        println(x)
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}

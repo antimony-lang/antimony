@@ -1,7 +1,4 @@
 fn main() {
-    another_function(5)
-}
-
-fn another_function(x: int) {
+    let x = (1 + 2 * (3 + 2))
     println(x)
 }

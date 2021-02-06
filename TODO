@@ -6,7 +6,6 @@
 - stdlib moves line of file, which makes error reporting impossible
 
 # Features
-- Nested expressions like (1 + (2 * 2))
 - Nested arrays like [[1, 2, 3], [1, 2, 3]]
 - Break and Continue keywords
 - Type inference

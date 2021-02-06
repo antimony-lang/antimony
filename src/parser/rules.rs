@@ -198,6 +198,11 @@ impl Parser {
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
         match token.kind {
+            TokenKind::BraceOpen => {
+                let expr = self.parse_expression()?;
+                self.match_token(TokenKind::BraceClose)?;
+                Ok(expr)
+            }
             TokenKind::Keyword(Keyword::Boolean) => {
                 let state = match BinOp::try_from(self.peek()?.kind) {
                     Ok(_) => self.parse_bin_op(None)?,
@@ -308,7 +313,14 @@ impl Parser {
         let expr = self.parse_expression()?;
         let body = self.parse_block()?;
 
-        Ok(Statement::For(Variable {name: ident, ty: None}, expr, Box::new(body)))
+        Ok(Statement::For(
+            Variable {
+                name: ident,
+                ty: None,
+            },
+            expr,
+            Box::new(body),
+        ))
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {
@@ -381,13 +393,11 @@ impl Parser {
 
         match self.peek()?.kind {
             TokenKind::Assign => {
-                self.match_token(TokenKind::Assign)?; 
+                self.match_token(TokenKind::Assign)?;
                 let expr = self.parse_expression()?;
                 Ok(Statement::Declare(Variable { name, ty }, Some(expr)))
-            },
-            _ => {
-                Ok(Statement::Declare(Variable {name, ty}, None)) 
             }
+            _ => Ok(Statement::Declare(Variable { name, ty }, None)),
         }
     }
 
