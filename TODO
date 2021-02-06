@@ -1,18 +1,17 @@
 # Bugs
-- stdlib moves line of file, which makes error reporting impossible
 
 # Cleanups
 - Improve error reporting (See ./util/string_util::highlight_position_in_file)
 - Use .peek() instead of .next() for expression parsing
+- stdlib moves line of file, which makes error reporting impossible
 
-# Roadmap
-
-## 0.2.0
+# Features
 - Nested expressions like (1 + (2 * 2))
+- Nested arrays like [[1, 2, 3], [1, 2, 3]]
 - Type inference
 - Multi-file support
-
-## Down the line
 - Argument overloading
+
+# Long term
 - Stable C backend
 - LLVM support
