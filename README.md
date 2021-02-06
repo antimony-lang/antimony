@@ -1,5 +1,6 @@
 # The Sabre Programming language
 
+[![](https://img.shields.io/crates/v/sabre-lang.svg)](https://crates.io/crates/sabre-lang)
 [![builds.sr.ht status](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml.svg)](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml?)
 [![docs](https://img.shields.io/badge/docs-mdBook-blue.svg)](https://garritfra.github.io/sabre/latest)
 
@@ -8,7 +9,7 @@ It is meant to "just work", without adding unnecessary and bloated language feat
 
 ## State of this projects
 
-Basic algorithms should compile fine. See the [examples](./examples) More sophisticated programs will not work yet. See [TODO](./TODO) for a roadmap.
+Most algorithms should run fine, but some features may be unstable. Standard library is still incomplete. See [TODO](./TODO) for a roadmap.
 
 The Sabre compiler emits JavaScript, and a C backend is currently in development. Backends for WASM, x86 and ARM are planned.
 
@@ -32,6 +33,14 @@ fn fib(n: int) {
 
 // -> 55
 ```
+
+## Documentation
+
+Documentation is hosted on [GitHub Pages](https://garritfra.github.io/sabre).
+
+## Installation
+
+See [installation](https://garritfra.github.io/sabre/latest/introduction/installation.html).
 
 ## License
 
