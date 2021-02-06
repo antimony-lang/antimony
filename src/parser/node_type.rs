@@ -58,7 +58,7 @@ impl TryFrom<String> for Type {
             "int" => Ok(Self::Int),
             "string" => Ok(Self::Str),
             "bool" => Ok(Self::Bool),
-            _ => Err("Expected Type".into()),
+            _ => Err("Unknown Type".into()),
         }
     }
 }
