@@ -12,4 +12,8 @@ cargo install --path .
 
 ## Cargo
 
-TODO
+Install the [latest published version](https://crates.io/crates/sabre-lang) via cargo:
+
+```sh
+cargo install sabre-lang
+```
