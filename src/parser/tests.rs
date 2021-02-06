@@ -745,3 +745,22 @@ fn test_break() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+#[ignore]
+fn test_complex_nested_expressions() {
+    let raw = "
+    fn main() {
+        let year = 2020
+    
+        if (year % 4 == 0) && (year % 100 != 0) || (year % 400 == 0) {
+            println('Leap year')
+        } else {
+            println('Not a leap year')
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}
