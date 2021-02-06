@@ -2,7 +2,6 @@ fn main() {
     let x = ["Foo", "Bar"]
 
     for i in x {
-        _printf(x[i])
-        _printf("\n")
+        println(i)
     }
 }

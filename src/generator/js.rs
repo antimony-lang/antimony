@@ -56,12 +56,14 @@ fn generate_function(func: Function) -> String {
 
 /// prepend is used to pass optional statements, that will be put in front of the regular block
 /// Currently used in for statements, to declare local variables
-fn generate_block(block: Statement, prepend: Option<Statement>) -> String {
+fn generate_block(block: Statement, prepend: Option<String>) -> String {
     let mut generated = String::from("{\n");
 
+    if let Some(pre) = prepend {
+        generated += &pre;
+    }
 
     // TODO: Prepend statements
-    
     let statements = match block {
         Statement::Block(blk) => blk,
         _ => panic!("Block body should be of type Statement::Block"),
@@ -115,12 +117,26 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
 }
 
 fn generate_for_loop(ident: Variable, expr: Expression, body: Statement) -> String {
-    let expr_string = generate_expression(expr);
-    let mut out_str = format!("for (let {I} = 0; {I} < {E}.length; {I}++)", I = ident.name, E = expr_string);
-    
-    // Currently, the index of the current iteration is used, instead of the value itself.
-    // TODO: generate local variable
-    out_str += &generate_block(body, None);
+    // Assign expression to variable to access it from within the loop
+    let expr_name = format!("loop_orig_{}", ident.name);
+    let mut out_str = format!("{};\n", generate_declare(expr_name.clone(), Some(expr)));
+
+    // Loop signature
+    out_str += &format!(
+        "for (let iter_{I} = 0; iter_{I} < {E}.length; iter_{I}++)",
+        I = ident.name,
+        E = expr_name
+    );
+
+    // Block with prepended declaration of the actual variable
+    out_str += &generate_block(
+        body,
+        Some(format!(
+            "let {I} = {E}[iter_{I}];\n",
+            I = ident.name,
+            E = expr_name
+        )),
+    );
     out_str
 }
 
