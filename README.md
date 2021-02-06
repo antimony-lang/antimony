@@ -3,7 +3,7 @@
 [![](https://img.shields.io/crates/v/sabre-lang.svg)](https://crates.io/crates/sabre-lang)
 [![builds.sr.ht status](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml.svg)](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml?)
 [![docs](https://img.shields.io/badge/docs-mdBook-blue.svg)](https://garritfra.github.io/sabre/latest)
-[![Chat on Matrix](https://img.shields.io/badge/chat-on%20Matrix-green)](https://matrix.to/#/!eaupsjLNPYSluWFJOC:matrix.slashdev.space?via=matrix.slashdev.space)
+[![Chat on Matrix](https://img.shields.io/badge/chat-on%20Matrix-green)](https://matrix.to/#/#sabre:matrix.slashdev.space?via=matrix.slashdev.space)
 
 Sabre is a bullshit-free (©) programming language that gets out of your way.
 It is meant to "just work", without adding unnecessary and bloated language features.
