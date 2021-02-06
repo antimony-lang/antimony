@@ -14,3 +14,8 @@
 ## 0.2.0
 - Type inference
 - Multi-file support
+
+## Down the line
+- Argument overloading
+- Stable C backend
+- LLVM support
