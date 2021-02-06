@@ -1,10 +1,16 @@
 # Bugs
 - stdlib moves line of file, which makes error reporting impossible
 
-# Features 
-- For loop
-- Nested expressions like (1 + (2 * 2))
-
 # Cleanups
 - Improve error reporting (See ./util/string_util::highlight_position_in_file)
 - Use .peek() instead of .next() for expression parsing
+
+# Roadmap
+
+## 0.1.0
+- Nested expressions like (1 + (2 * 2))
+- For loop
+
+## 0.2.0
+- Type inference
+- Multi-file support
