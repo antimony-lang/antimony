@@ -225,8 +225,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "sabre"
-version = "0.0.3"
+name = "sabre-lang"
+version = "0.1.0"
 dependencies = [
  "rust-embed",
  "structopt",

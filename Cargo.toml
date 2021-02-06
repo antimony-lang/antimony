@@ -1,7 +1,7 @@
 [package]
-name = "sabre"
-version = "0.0.3"
-authors = ["Garrit Franke <garritfranke@gmail.com>"]
+name = "sabre-lang"
+version = "0.1.0"
+authors = ["Garrit Franke <garrit@slashdev.space>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

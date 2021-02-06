@@ -7,11 +7,8 @@
 
 # Roadmap
 
-## 0.1.0
-- Nested expressions like (1 + (2 * 2))
-- For loop
-
 ## 0.2.0
+- Nested expressions like (1 + (2 * 2))
 - Type inference
 - Multi-file support
 
