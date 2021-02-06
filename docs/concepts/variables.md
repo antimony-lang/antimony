@@ -4,6 +4,8 @@ If you are familiar with some other programming language, the way Sabre handles 
 
 To declare a variable, the `let` keyword is used. The type of the variable is infered, but can be specified explicitly.
 
+> **Note**: Type inference currently only works when using the node-backend. For most other backends, the types need to be specified, until proper type inference is implemented.
+
 ```
 // variables.sb
 fn main() {

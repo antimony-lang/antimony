@@ -12,7 +12,7 @@ default = ["backend_c"]
 
 ## Available Backends
 
-| Target Language | Identifier     | Stability notice      |
-| :-------------- | :------------- | :-------------------- |
-| Node.js         | `backend_node` | mostly stable         |
-| C               | `backend_c`    | in active development |
+| Target Language | Identifier     | Stability notice |
+| :-------------- | :------------- | :--------------- |
+| Node.js         | `backend_node` | mostly stable    |
+| C               | `backend_c`    | unstable         |
