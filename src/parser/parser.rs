@@ -1,3 +1,5 @@
+use crate::lexer::Keyword;
+use crate::lexer::{Token, TokenKind};
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -13,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::lexer::Keyword;
-use crate::lexer::{Token, TokenKind};
+use crate::parser::infer::infer;
 use crate::parser::node_type::*;
 use crate::util::string_util::highlight_position_in_file;
 use std::convert::TryFrom;
@@ -45,7 +46,11 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Program, String> {
-        self.parse_program()
+        let mut program = self.parse_program()?;
+        // infer types
+        infer(&mut program)?;
+
+        Ok(program)
     }
 
     pub(super) fn next(&mut self) -> Result<Token, String> {

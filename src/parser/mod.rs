@@ -1,3 +1,4 @@
+mod infer;
 /**
  * Copyright 2020 Garrit Franke
  *
