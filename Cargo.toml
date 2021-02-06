@@ -4,6 +4,8 @@ version = "0.2.0"
 authors = ["Garrit Franke <garrit@slashdev.space>"]
 description = "The sabre programming language"
 license = "Apache-2.0"
+documentation = "https://garritfra.github.io/sabre"
+repository = "https://github.com/garritfra/sabre"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
