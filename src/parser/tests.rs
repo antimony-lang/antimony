@@ -675,3 +675,22 @@ fn test_nested_for_loop() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+#[ignore]
+fn test_nested_array() {
+    let raw = "
+    fn main() {
+
+        let arr = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
+        for i in arr {
+            for j in arr {
+                println(j)
+            }
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}
