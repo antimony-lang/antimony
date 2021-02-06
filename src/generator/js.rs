@@ -244,7 +244,7 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::Subtraction => "-",
     };
     format!(
-        "{l} {op} {r}",
+        "({l} {op} {r})",
         l = generate_expression(left),
         op = op_str,
         r = generate_expression(right)

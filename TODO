@@ -1,5 +1,4 @@
 # Bugs
-- Generated nested expressions should include braces
 
 # Cleanups
 - Improve error reporting (See ./util/string_util::highlight_position_in_file)
