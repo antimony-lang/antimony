@@ -155,11 +155,7 @@ fn generate_array(elements: Vec<Expression>) -> String {
 
     out_str += &elements
         .iter()
-        .map(|el| match el {
-            Expression::Int(x) => x.to_string(),
-            Expression::Str(x) => x.to_string(),
-            _ => todo!("Not yet implemented"),
-        })
+        .map(|el| generate_expression(el.clone()))
         .collect::<Vec<String>>()
         .join(", ");
 

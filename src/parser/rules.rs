@@ -267,12 +267,9 @@ impl Parser {
                     let value = self.next()?.raw.parse::<u32>().map_err(|e| e.to_string())?;
                     elements.push(Expression::Int(value));
                 }
-                TokenKind::Literal(Value::Str) => {
-                    elements.push(Expression::Str(self.next()?.raw));
-                }
                 _ => {
-                    let n = self.next()?;
-                    return Err(self.make_error(TokenKind::Identifier("Argument".into()), n));
+                    let expr = self.parse_expression()?;
+                    elements.push(expr);
                 }
             };
             if self.peek_token(TokenKind::SquareBraceClose).is_ok() {

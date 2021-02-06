@@ -7,7 +7,6 @@
 - stdlib moves line of file, which makes error reporting impossible
 
 # Features
-- Nested arrays like [[1, 2, 3], [1, 2, 3]]
 - Type inference
 - Multi-file support
 - Argument overloading

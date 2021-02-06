@@ -676,14 +676,13 @@ fn test_nested_for_loop() {
 }
 
 #[test]
-#[ignore]
 fn test_nested_array() {
     let raw = "
     fn main() {
 
         let arr = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
         for i in arr {
-            for j in arr {
+            for j in i {
                 println(j)
             }
         }
