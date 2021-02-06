@@ -1,0 +1,10 @@
+fn main() {
+    let arr = ["One", "Two", "Three"]
+    for x in arr {
+        println(x)
+    }
+
+    for fruit in ["Apple", "Strawberry", "Orange"] {
+        println(fruit)
+    }
+}

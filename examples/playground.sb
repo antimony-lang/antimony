@@ -1,7 +1,7 @@
 fn main() {
-    let x = ["Foo", "Bar"]
+    another_function(5)
+}
 
-    for i in x {
-        println(i)
-    }
+fn another_function(x: int) {
+    println(x)
 }
