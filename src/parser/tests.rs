@@ -518,7 +518,6 @@ fn test_array_access_in_if() {
 }
 
 #[test]
-#[ignore]
 fn test_uninitialized_variables() {
     let raw = "
     fn main() {
