@@ -1,4 +1,5 @@
 # Bugs
+- Generated nested expressions should include braces
 
 # Cleanups
 - Improve error reporting (See ./util/string_util::highlight_position_in_file)
@@ -7,7 +8,6 @@
 
 # Features
 - Nested arrays like [[1, 2, 3], [1, 2, 3]]
-- Break and Continue keywords
 - Type inference
 - Multi-file support
 - Argument overloading

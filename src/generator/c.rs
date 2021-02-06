@@ -115,6 +115,8 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Block(_) => generate_block(statement),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
         Statement::For(ident, expr, body) => todo!(),
+        Statement::Continue => todo!(),
+        Statement::Break => todo!(),
     };
 
     format!("{}\n", state)

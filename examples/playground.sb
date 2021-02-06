@@ -1,4 +1,11 @@
 fn main() {
-    let x = (1 + 2 * (3 + 2))
-    println(x)
+    let arr = [1, 2, 3]
+
+    for x in arr {
+        if x == 2 {
+            break
+        } else {
+            println(x)
+        }
+    }
 }

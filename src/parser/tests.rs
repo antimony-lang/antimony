@@ -706,3 +706,43 @@ fn test_simple_nested_expression() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+fn test_continue() {
+    let raw = "
+    fn main() {
+        let arr = [1, 2, 3]
+    
+        for x in arr {
+            if x == 2 {
+                continue
+            } else {
+                println(x)
+            }
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}
+
+#[test]
+fn test_break() {
+    let raw = "
+    fn main() {
+        let arr = [1, 2, 3]
+    
+        for x in arr {
+            if x == 2 {
+                break
+            } else {
+                println(x)
+            }
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}

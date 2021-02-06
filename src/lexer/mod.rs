@@ -335,6 +335,8 @@ impl Cursor<'_> {
             c if c == "while" => Keyword::While,
             c if c == "for" => Keyword::For,
             c if c == "in" => Keyword::In,
+            c if c == "break" => Keyword::Break,
+            c if c == "continue" => Keyword::Continue,
             _ => Keyword::Unknown,
         }
     }

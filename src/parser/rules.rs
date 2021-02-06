@@ -122,6 +122,8 @@ impl Parser {
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
             TokenKind::Keyword(Keyword::While) => self.parse_while_loop(),
+            TokenKind::Keyword(Keyword::Break) => self.parse_break(),
+            TokenKind::Keyword(Keyword::Continue) => self.parse_continue(),
             TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
@@ -303,6 +305,16 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Statement::While(expr, Box::new(body)))
+    }
+
+    fn parse_break(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::Break)?;
+        Ok(Statement::Break)
+    }
+
+    fn parse_continue(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::Continue)?;
+        Ok(Statement::Continue)
     }
 
     fn parse_for_loop(&mut self) -> Result<Statement, String> {

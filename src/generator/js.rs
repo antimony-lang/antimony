@@ -90,6 +90,8 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Block(_) => generate_block(statement, None),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
         Statement::For(ident, expr, body) => generate_for_loop(ident, expr, *body),
+        Statement::Continue => generate_continue(),
+        Statement::Break => generate_break(),
     };
 
     format!("{};\n", state)
@@ -138,6 +140,14 @@ fn generate_for_loop(ident: Variable, expr: Expression, body: Statement) -> Stri
         )),
     );
     out_str
+}
+
+fn generate_break() -> String {
+    "break;\n".into()
+}
+
+fn generate_continue() -> String {
+    "continue;\n".into()
 }
 
 fn generate_array(elements: Vec<Expression>) -> String {
