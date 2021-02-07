@@ -7,7 +7,7 @@ Sabre code uses snake_case as the conventional style for function and variable n
 ```
 fn main() {
     println("Hello, world!")
-    anotherFunction()
+    another_function()
 }
 
 fn another_function() {
