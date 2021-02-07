@@ -16,19 +16,19 @@ use std::fs;
  */
 use std::io::Error;
 use std::process::Command;
-#[test]
-#[cfg(feature = "backend_node")]
-fn test_examples() -> Result<(), Error> {
+
+fn test_directory(dir_in: &str) -> Result<(), Error> {
+    let dir_out = format!("{}_out", dir_in);
     let dir = std::env::current_dir().unwrap();
 
-    let examples = std::fs::read_dir(dir.join("examples"))?;
+    let examples = std::fs::read_dir(dir.join(dir_in))?;
 
-    let _ = fs::create_dir("examples_out");
+    let _ = fs::create_dir(&dir_out);
 
     for ex in examples {
         let example = ex?;
-        let in_file = dir.join("examples").join(example.file_name());
-        let out_file = dir.join("examples_out").join(
+        let in_file = dir.join(dir_in).join(example.file_name());
+        let out_file = dir.join(&dir_out).join(
             example
                 .file_name()
                 .into_string()
@@ -61,43 +61,14 @@ fn test_examples() -> Result<(), Error> {
 
 #[test]
 #[cfg(feature = "backend_node")]
+fn test_examples() -> Result<(), Error> {
+    test_directory("examples")?;
+    Ok(())
+}
+
+#[test]
+#[cfg(feature = "backend_node")]
 fn test_testcases() -> Result<(), Error> {
-    let dir = std::env::current_dir().unwrap();
-
-    let tests = std::fs::read_dir(dir.join("tests"))?;
-
-    let _ = fs::create_dir("tests_out");
-
-    for ex in tests {
-        let example = ex?;
-        let in_file = dir.join("tests").join(example.file_name());
-        let out_file = dir.join("tests_out").join(
-            example
-                .file_name()
-                .into_string()
-                .unwrap()
-                .replace(".sb", ".js"),
-        );
-        let success = Command::new("cargo")
-            .arg("run")
-            .arg("build")
-            .arg(&in_file)
-            .arg("-o")
-            .arg(&out_file)
-            .spawn()?
-            .wait()?
-            .success();
-        assert_eq!(success, true, "{:?}", &in_file);
-
-        let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
-        if node_installed {
-            let execution = Command::new("node")
-                .arg(out_file)
-                .spawn()?
-                .wait()?
-                .success();
-            assert_eq!(execution, true, "{:?}", &in_file)
-        }
-    }
+    test_directory("tests")?;
     Ok(())
 }
