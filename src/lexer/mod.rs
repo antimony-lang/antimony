@@ -172,15 +172,11 @@ pub fn is_whitespace(c: char) -> bool {
 }
 
 /// True if `c` is valid as a first character of an identifier.
-/// See [Rust language reference](https://doc.rust-lang.org/reference/identifiers.html) for
-/// a formal definition of valid identifier name.
 pub fn is_id_start(c: char) -> bool {
     ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_'
 }
 
 /// True if `c` is valid as a non-first character of an identifier.
-/// See [Rust language reference](https://doc.rust-lang.org/reference/identifiers.html) for
-/// a formal definition of valid identifier name.
 pub fn is_id_continue(c: char) -> bool {
     ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_'
 }
