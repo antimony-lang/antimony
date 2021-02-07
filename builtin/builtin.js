@@ -1,7 +1,8 @@
 /* START builtins */
 
 function _printf(msg) {
-  process.stdout.write(msg);
+  // Message is casted to string to prevent crash
+  process.stdout.write(msg.toString());
 }
 
 /* END builtins */

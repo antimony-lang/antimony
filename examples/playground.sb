@@ -1,6 +1,6 @@
 fn main() {
 
-    let arr = ["Foo", "Bar"]
+    let arr = [1, 2, 3]
 
     for x in arr {
         _printf(x)
