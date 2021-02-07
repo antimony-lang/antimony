@@ -4,11 +4,11 @@ The easiest way to contribute to the Sabre project is by writing code in the lan
 
 ## Getting in touch
 
-If you want to submit a patch, file a bug, suggest a feature or have questions about something, please send a mail to the [public mailing list](https://lists.sr.ht/~garritfra/sabre) of the project.
+If you have a question, found a potential bug or want to engage with the community, you can join the [matrix room](https://matrix.to/#/#sabre:matrix.slashdev.space?via=matrix.slashdev.space) of this project. If you prefer to stay away from matrix, you can also send a mail (or a patch) to the [public mailing list](https://lists.sr.ht/~garritfra/sabre).
 
 ## Fixing things and adding features
 
-If you want to contribute to the compiler itself, the easiest way to get started is to look at the [TODO file](https://git.sr.ht/~garritfra/sabre/tree/master/TODO) at the root of the project. Usually, this is where important todo items are jotted down.
+If you want to contribute to the compiler itself, the easiest way to get started is to look at the [TODO file](https://github.com/garritfra/sabre/blob/master/TODO) at the root of the project. Usually, this is where important todo items are jotted down.
 
 You could also run the tests (`cargo test`) and see if any tests are ignored. Usually, if a bug is found in the wild, a failing but ignored test is written, so that it can be further investigated later.
 
@@ -18,4 +18,6 @@ As with all software, Sabre needs good documentation. Since Sabre is still in ea
 
 ## Submitting your code
 
-Development should happen on [SourceHut](https://sr.ht/~garritfra/sabre/). If you want to contribute code, please send a patch to the [public mailing list](https://lists.sr.ht/~garritfra/sabre). If you don't feel confortable with the [patch-based workflow](https://slashdev.space/posts/patch-based-git-workflow), you can also open a pull request in the [GitHub mirror](https://github.com/garritfra/sabre). Before submitting the code, please make sure that it is **sufficiently documented and tested**.
+If you want to contribute code, please open a pull request on [GitHub](https://github.com/garritfra/sabre). There is also a [SourceHut mirror](https://sr.ht/~garritfra/sabre/), if you're trying to avoid GitHub. Feel free to send a patch to the [public mailing list](https://lists.sr.ht/~garritfra/sabre). Check out [this guide](https://slashdev.space/posts/patch-based-git-workflow) to learn about the patch based workflow.
+
+Before submitting the code, please make sure that it is **sufficiently documented and tested**.
