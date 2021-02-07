@@ -1,8 +1,8 @@
 fn main() {
-    let x = two()
+    let x = add_one(2)
     println(x)
 }
 
-fn two(): int {
-    return 2
+fn add_one(x: int): int {
+    return x + 1
 }

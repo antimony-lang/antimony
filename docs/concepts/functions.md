@@ -33,10 +33,36 @@ fn another_function(x: int) {
 }
 ```
 
-## Functions contain statements
-
-TODO
-
 ## Return types
 
-TODO
+Functions can optionally return a value. To specify the return type, it is added to the function signature, similar to how variables and parameters do. Here's a simple example of a function that returns an integer:
+
+```
+fn add_one(x: int): int {}
+```
+
+Note that this function won't compile, since it doesn't actually return anything. Let's fix that by adding a `return` statement with an expression:
+
+```
+fn add_one(x: int): int {
+    return x + 1
+}
+```
+
+Now, if you call the function with `1` as its argument and read its value, you will see the computed result:
+
+```
+fn main() {
+    let result = add_one(1)
+    println(result)
+}
+
+fn add_one(x: int): int {
+    return x + 1
+}
+```
+
+```
+$ sabre run main.sb
+2
+```
