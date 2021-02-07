@@ -1,8 +1,8 @@
 fn main() {
-    let x = add_one(2)
-    println(x)
-}
 
-fn add_one(x: int): int {
-    return x + 1
+    let arr = [1, "Two", 3]
+
+    for x in arr {
+        println(x)
+    }
 }

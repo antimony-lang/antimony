@@ -54,3 +54,45 @@ Banana
 Apple
 Pineapple
 ```
+
+## The Any type
+
+`any` can be used to specify that any type can be used in this place. This should be used with caution, as it might cause undefined behavior.
+
+```
+fn main() {
+
+    print_anything(5)
+    print_anything("Hello")
+}
+
+fn print_anything(x: any) {
+    println(x)
+}
+```
+
+```
+$ sabre run main.sb
+5
+Hello
+```
+
+`any` can also be used in conjunction with the array notation to allow a mixture of types within an array.
+
+```
+fn main() {
+
+    let arr = [1, "Two", 3]
+
+    for x in arr {
+        println(x)
+    }
+}
+```
+
+```
+$ sabre run main.sb
+1
+Two
+3
+```

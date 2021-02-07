@@ -59,6 +59,7 @@ pub struct Variable {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Type {
+    Any,
     Int,
     Str,
     Bool,
@@ -71,6 +72,7 @@ impl TryFrom<String> for Type {
         match s.as_ref() {
             "int" => Ok(Self::Int),
             "string" => Ok(Self::Str),
+            "any" => Ok(Self::Any),
             "bool" => Ok(Self::Bool),
             _ => Err("Unknown Type".into()),
         }

@@ -1,0 +1,8 @@
+fn main() {
+    print_any(5)
+    print_any("Test")
+}
+
+fn print_any(x: any) {
+    println(x)
+}

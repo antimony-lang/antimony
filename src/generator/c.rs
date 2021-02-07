@@ -53,6 +53,7 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
         Some(t) => match t {
             Type::Int => "int".into(),
             Type::Str => "char *".into(),
+            Type::Any => "void *".into(),
             Type::Bool => "bool".into(),
             Type::Array(_) => match name {
                 Some(n) => format!(
