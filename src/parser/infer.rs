@@ -15,9 +15,9 @@ pub(super) fn infer(program: &mut Program) -> Result<(), String> {
                         if let None = &var.ty {
                             if let Some(e) = expr {
                                 var.ty = infer_expression(&e, table);
-                                // Debug info
+                                #[cfg(debug_assertions)]
                                 if let None = var.ty {
-                                    dbg!(&var.name);
+                                    println!("Type of {} could not be infered: {:?}", &var.name, e);
                                 }
                             }
                         }
