@@ -58,3 +58,46 @@ fn test_examples() -> Result<(), Error> {
     }
     Ok(())
 }
+
+#[test]
+#[cfg(feature = "backend_node")]
+fn test_testcases() -> Result<(), Error> {
+    let dir = std::env::current_dir().unwrap();
+
+    let tests = std::fs::read_dir(dir.join("tests"))?;
+
+    let _ = fs::create_dir("tests_out");
+
+    for ex in tests {
+        let example = ex?;
+        let in_file = dir.join("tests").join(example.file_name());
+        let out_file = dir.join("tests_out").join(
+            example
+                .file_name()
+                .into_string()
+                .unwrap()
+                .replace(".sb", ".js"),
+        );
+        let success = Command::new("cargo")
+            .arg("run")
+            .arg("build")
+            .arg(&in_file)
+            .arg("-o")
+            .arg(&out_file)
+            .spawn()?
+            .wait()?
+            .success();
+        assert_eq!(success, true, "{:?}", &in_file);
+
+        let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
+        if node_installed {
+            let execution = Command::new("node")
+                .arg(out_file)
+                .spawn()?
+                .wait()?
+                .success();
+            assert_eq!(execution, true, "{:?}", &in_file)
+        }
+    }
+    Ok(())
+}

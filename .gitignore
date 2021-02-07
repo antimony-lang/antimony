@@ -1,4 +1,5 @@
 target/
 .vscode/
 examples_out/
+tests_out/
 book/
