@@ -25,6 +25,14 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
 
     let _ = fs::create_dir(&dir_out);
 
+    let out_file_suffix = if cfg!(feature = "backend_node") {
+        ".js"
+    } else if cfg!(feature = "backend_c") {
+        ".c"
+    } else {
+        todo!()
+    };
+
     for ex in examples {
         let example = ex?;
         let in_file = dir.join(dir_in).join(example.file_name());
@@ -33,7 +41,7 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
                 .file_name()
                 .into_string()
                 .unwrap()
-                .replace(".sb", ".js"),
+                .replace(".sb", out_file_suffix),
         );
         let success = Command::new("cargo")
             .arg("run")
@@ -46,28 +54,28 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
             .success();
         assert_eq!(success, true, "{:?}", &in_file);
 
-        let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
-        if node_installed {
-            let execution = Command::new("node")
-                .arg(out_file)
-                .spawn()?
-                .wait()?
-                .success();
-            assert_eq!(execution, true, "{:?}", &in_file)
+        if cfg!(feature = "backend_node") {
+            let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
+            if node_installed {
+                let execution = Command::new("node")
+                    .arg(out_file)
+                    .spawn()?
+                    .wait()?
+                    .success();
+                assert_eq!(execution, true, "{:?}", &in_file)
+            }
         }
     }
     Ok(())
 }
 
 #[test]
-#[cfg(feature = "backend_node")]
 fn test_examples() -> Result<(), Error> {
     test_directory("examples")?;
     Ok(())
 }
 
 #[test]
-#[cfg(feature = "backend_node")]
 fn test_testcases() -> Result<(), Error> {
     test_directory("tests")?;
     Ok(())

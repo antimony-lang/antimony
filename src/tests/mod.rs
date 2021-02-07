@@ -13,7 +13,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/// This test currently only runs on the node backend, and has to be disabled for the C backend
-#[cfg(feature = "backend_node")]
 mod test_examples;

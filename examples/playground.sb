@@ -1,8 +1,8 @@
 fn main() {
 
-    let arr = [1, "Two", 3]
+    let arr = ["Foo", "Bar"]
 
     for x in arr {
-        println(x)
+        _printf(x)
     }
 }
