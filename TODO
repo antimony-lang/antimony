@@ -1,4 +1,5 @@
 # Bugs
+- Nested expressions can have invalid parens. Example: 6 % 3 == 0 should be true; is false
 
 # Cleanups
 - Improve error reporting (See ./util/string_util::highlight_position_in_file)

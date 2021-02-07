@@ -8,6 +8,7 @@
   - [Data Types](./concepts/datatypes.md)
   - [Functions](./concepts/functions.md)
   - [Comments](./concepts/comments.md)
+  - [Control Flow](./concepts/control-flow.md)
 - [Developer Resources](./developers/SUMMARY.md)
   - [Contributing to Sabre](./developers/contributing.md)
   - [Compiler Backends](./developers/backends.md)
