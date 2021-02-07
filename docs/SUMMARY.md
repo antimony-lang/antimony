@@ -7,6 +7,7 @@
   - [Variables](./concepts/variables.md)
   - [Data Types](./concepts/datatypes.md)
   - [Functions](./concepts/functions.md)
+  - [Comments](./concepts/comments.md)
 - [Developer Resources](./developers/SUMMARY.md)
   - [Contributing to Sabre](./developers/contributing.md)
   - [Compiler Backends](./developers/backends.md)

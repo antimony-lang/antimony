@@ -5,4 +5,4 @@ It is meant to "just work", without adding unnecessary and bloated language feat
 
 To get started with Sabre, continue with the [installation](./installation.md)
 
-> **Note**: Some parts have been copied from the [Rust book](https://doc.rust-lang.org/book/).
+> **Note**: Some parts of this documentation have been copied from the [Rust book](https://doc.rust-lang.org/book/).
