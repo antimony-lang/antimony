@@ -764,3 +764,16 @@ fn test_complex_nested_expressions() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+#[ignore]
+fn test_array_as_argument() {
+    let raw = "
+    fn main() {
+        println([1, 2, 3])
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}
