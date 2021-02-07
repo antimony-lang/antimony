@@ -15,6 +15,10 @@
  */
 use crate::lexer::*;
 use core::convert::TryFrom;
+use std::collections::HashMap;
+
+/// Table that contains all symbol and its types
+pub type SymbolTable = HashMap<String, Option<Type>>;
 
 #[derive(Debug)]
 pub struct Program {
@@ -26,6 +30,16 @@ impl Program {
     pub fn merge_with(&mut self, mut other: Program) {
         self.func.append(&mut other.func);
         self.globals.append(&mut other.globals)
+    }
+
+    pub fn get_symbol_table(&self) -> SymbolTable {
+        let mut table = SymbolTable::new();
+
+        for func in self.func.clone() {
+            table.insert(func.name, func.ret_type);
+        }
+
+        table
     }
 }
 

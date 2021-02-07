@@ -1,5 +1,8 @@
 fn main() {
-
-    let x = 2
+    let x = two()
     println(x)
+}
+
+fn two(): int {
+    return 2
 }
