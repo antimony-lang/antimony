@@ -81,7 +81,8 @@ impl TryFrom<String> for Type {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Statement {
-    Block(Vec<Statement>),
+    /// (Statements, Scoped variables)
+    Block(Vec<Statement>, Vec<Variable>),
     Declare(Variable, Option<Expression>),
     Assign(Box<Expression>, Box<Expression>),
     Return(Option<Expression>),

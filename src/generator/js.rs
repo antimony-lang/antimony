@@ -65,7 +65,7 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
 
     // TODO: Prepend statements
     let statements = match block {
-        Statement::Block(blk) => blk,
+        Statement::Block(blk, _) => blk,
         _ => panic!("Block body should be of type Statement::Block"),
     };
 
@@ -87,7 +87,7 @@ fn generate_statement(statement: Statement) -> String {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
         Statement::Assign(name, state) => generate_assign(*name, *state),
-        Statement::Block(_) => generate_block(statement, None),
+        Statement::Block(_, _) => generate_block(statement, None),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
         Statement::For(ident, expr, body) => generate_for_loop(ident, expr, *body),
         Statement::Continue => generate_continue(),
@@ -175,7 +175,7 @@ fn generate_conditional(
     let expr_str = generate_expression(expr);
 
     let body = match if_state {
-        Statement::Block(blk) => blk,
+        Statement::Block(blk, _) => blk,
         _ => panic!("Conditional body should be of type block"),
     };
 

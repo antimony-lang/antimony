@@ -77,7 +77,7 @@ impl X86Generator {
         let mut asm = Assembly::new();
 
         let has_return: bool = match &func.body {
-            Statement::Block(statements) => statements.iter().any(|s| {
+            Statement::Block(statements, _) => statements.iter().any(|s| {
                 if let Statement::Return(_) = *s {
                     true
                 } else {

@@ -39,15 +39,25 @@ impl Parser {
         self.match_token(TokenKind::CurlyBracesOpen)?;
 
         let mut statements = vec![];
+        let mut scope = vec![];
 
+        // Parse statements until a curly brace is encountered
         while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
             let statement = self.parse_statement()?;
+
+            // If the current statement is a variable declaration,
+            // let the scope know
+            if let Statement::Declare(var, _) = &statement {
+                // TODO: Not sure if we should clone here
+                scope.push(var.to_owned());
+            }
+
             statements.push(statement);
         }
 
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::Block(statements))
+        Ok(Statement::Block(statements, scope))
     }
 
     fn parse_function(&mut self) -> Result<Function, String> {

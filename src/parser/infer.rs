@@ -8,7 +8,7 @@ pub(super) fn infer(program: &mut Program) -> Result<(), String> {
     let table = &program.get_symbol_table();
     // TODO: Fix aweful nesting
     for func in &mut program.func {
-        if let Statement::Block(statements) = &mut func.body {
+        if let Statement::Block(statements, _) = &mut func.body {
             for statement in statements {
                 match statement {
                     Statement::Declare(var, expr) => {
