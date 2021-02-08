@@ -318,14 +318,19 @@ impl Parser {
         self.match_keyword(Keyword::For)?;
 
         let ident = self.match_identifier()?;
+        let ident_ty = match self.peek()?.kind {
+            TokenKind::Colon => Some(self.parse_type()?),
+            _ => None,
+        };
         self.match_keyword(Keyword::In)?;
         let expr = self.parse_expression()?;
+
         let body = self.parse_block()?;
 
         Ok(Statement::For(
             Variable {
                 name: ident,
-                ty: None,
+                ty: ident_ty,
             },
             expr,
             Box::new(body),
