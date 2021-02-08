@@ -17,10 +17,13 @@ path = "src/main.rs"
 [features]
 backend_c = []
 backend_node = []
+backend_llvm = ["inkwell"]
 
-default = ["backend_node"]
+default = ["backend_llvm"]
 
 [dependencies]
 structopt = "0.3.21"
 rust-embed = "5.7.0"
 tempfile = "3.1.0"
+inkwell = { version = "0.1.0-beta.2", features = ["llvm11-0"], optional = true }
+

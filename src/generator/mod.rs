@@ -17,6 +17,7 @@ use crate::parser::node_type::*;
 
 pub mod c;
 pub mod js;
+pub mod llvm;
 #[cfg(test)]
 mod tests;
 pub mod x86;
@@ -30,6 +31,8 @@ pub fn generate(prog: Program) -> String {
         c::CGenerator::generate(prog)
     } else if cfg!(feature = "backend_node") {
         js::JsGenerator::generate(prog)
+    } else if cfg!(feature = "backend_llvm") {
+        llvm::LLVMGenerator::generate(prog)
     } else {
         panic!("No backend specified")
     }
