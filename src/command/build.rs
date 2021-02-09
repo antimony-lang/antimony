@@ -39,7 +39,7 @@ pub fn build(in_file: &PathBuf, out_file: &PathBuf) -> Result<(), String> {
 
     let output = generator::generate(program);
     let mut file = std::fs::File::create(out_file).expect("create failed");
-    file.write(output.as_bytes()).expect("write failed");
+    file.write_all(output.as_bytes()).expect("write failed");
     file.flush().expect("Could not flush file");
 
     Ok(())
