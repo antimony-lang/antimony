@@ -212,7 +212,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
-            Expression::Array(_) => todo!(),
+            Expression::Array(elements) => generate_array(elements),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         })
         .collect::<Vec<String>>()

@@ -766,7 +766,6 @@ fn test_complex_nested_expressions() {
 }
 
 #[test]
-#[ignore]
 fn test_array_as_argument() {
     let raw = "
     fn main() {
