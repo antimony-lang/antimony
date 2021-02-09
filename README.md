@@ -1,7 +1,7 @@
 # The Sabre Programming language
 
 [![](https://img.shields.io/crates/v/sabre-lang.svg)](https://crates.io/crates/sabre-lang)
-[![builds.sr.ht status](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml.svg)](https://builds.sr.ht/~garritfra/sabre/commits/ci.yml?)
+![Continuous integration](https://github.com/garritfra/sabre/workflows/Continuous%20integration/badge.svg?branch=master)
 [![docs](https://img.shields.io/badge/docs-mdBook-blue.svg)](https://garritfra.github.io/sabre/latest)
 [![Chat on Matrix](https://img.shields.io/badge/chat-on%20Matrix-green)](https://matrix.to/#/#sabre:matrix.slashdev.space?via=matrix.slashdev.space)
 
