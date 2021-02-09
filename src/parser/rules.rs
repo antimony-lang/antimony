@@ -188,6 +188,12 @@ impl Parser {
                     args.push(self.parse_expression()?)
                 }
                 TokenKind::Keyword(Keyword::Boolean) => args.push(self.parse_expression()?),
+                TokenKind::SquareBraceOpen => {
+                    // TODO: Expression parsing currently uses `next` instead of `peek`.
+                    // We have to eat that token here until that is resolved
+                    self.match_token(TokenKind::SquareBraceOpen)?;
+                    args.push(self.parse_array()?);
+                }
                 _ => {
                     return Err(self.make_error(TokenKind::BraceClose, next));
                 }

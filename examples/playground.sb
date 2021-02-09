@@ -1,8 +1,9 @@
 fn main() {
+    my_print([1, 2, 3])
+}
 
-    let arr = [1, 2, 3]
-
-    for x in arr {
-        _printf(x)
+fn my_print(x: int[]) {
+    for i in x {
+        println(i)
     }
 }
