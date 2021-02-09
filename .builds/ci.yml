@@ -6,6 +6,5 @@ sources:
   - https://git.sr.ht/~garritfra/sabre#master
 tasks:
   - build: |
-      cd sabre
       cargo build
       cargo test
