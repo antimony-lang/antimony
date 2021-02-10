@@ -3,3 +3,4 @@ target/
 examples_out/
 tests_out/
 book/
+examples/playground.sb

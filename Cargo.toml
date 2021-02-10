@@ -17,10 +17,15 @@ path = "src/main.rs"
 [features]
 backend_c = []
 backend_node = []
+backend_llvm = ["inkwell"]
 
+# To change, use the --featues flag:
+# cargo run --features backend_llvm
 default = ["backend_node"]
 
 [dependencies]
 structopt = "0.3.21"
 rust-embed = "5.7.0"
 tempfile = "3.1.0"
+inkwell = { version = "0.1.0-beta.2", features = ["llvm10-0"], optional = true }
+
