@@ -15,8 +15,11 @@
  */
 use crate::parser::node_type::*;
 
+#[cfg(feature = "backend_c")]
 pub mod c;
+#[cfg(feature = "backend_node")]
 pub mod js;
+#[cfg(feature = "backend_llvm")]
 pub mod llvm;
 #[cfg(test)]
 mod tests;
@@ -27,13 +30,14 @@ pub trait Generator {
 }
 
 pub fn generate(prog: Program) -> String {
-    if cfg!(feature = "backend_c") {
-        c::CGenerator::generate(prog)
-    } else if cfg!(feature = "backend_node") {
-        js::JsGenerator::generate(prog)
-    } else if cfg!(feature = "backend_llvm") {
-        llvm::LLVMGenerator::generate(prog)
-    } else {
-        panic!("No backend specified")
-    }
+    #[cfg(feature = "backend_llvm")]
+    return llvm::LLVMGenerator::generate(prog);
+
+    #[cfg(feature = "backend_c")]
+    return c::CGenerator::generate(prog);
+
+    #[cfg(feature = "backend_node")]
+    return js::JsGenerator::generate(prog);
+
+    panic!("No backend specified");
 }
