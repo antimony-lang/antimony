@@ -19,7 +19,9 @@ backend_c = []
 backend_node = []
 backend_llvm = ["inkwell"]
 
-default = ["backend_llvm"]
+# To change, use the --featues flag:
+# cargo run --features backend_llvm
+default = ["backend_node"]
 
 [dependencies]
 structopt = "0.3.21"
