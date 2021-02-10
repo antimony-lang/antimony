@@ -20,7 +20,7 @@ backend_node = []
 backend_llvm = ["inkwell"]
 
 # To change, use the --featues flag:
-# cargo run --features backend_llvm
+# cargo run --no-default-features --features backend_llvm
 default = ["backend_node"]
 
 [dependencies]
