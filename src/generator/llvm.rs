@@ -27,7 +27,13 @@ impl<'ctx> Generator for LLVMGenerator<'ctx> {
 
 impl<'ctx> LLVMGenerator<'ctx> {
     fn generate_function(&mut self, func: Function) {
-        self.module
-            .add_function(&func.name, self.ctx.void_type().fn_type(&[], false), None);
+        dbg!(&func);
+        let ret_type = match func.ret_type {
+            Some(Type::Int) => self.ctx.i32_type().fn_type(&[], false),
+            Some(Type::Bool) => self.ctx.bool_type().fn_type(&[], false),
+            None => self.ctx.void_type().fn_type(&[], false),
+            _ => todo!(),
+        };
+        self.module.add_function(&func.name, ret_type, None);
     }
 }
