@@ -10,9 +10,16 @@ The backend can be specified in the `Cargo.toml` file in the root of the project
 default = ["backend_c"]
 ```
 
+If you're working on an unstable backend, you can override the backend using the `--features` flag of the cargo CLI:
+
+```
+cargo run --features backend_llvm ...
+```
+
 ## Available Backends
 
 | Target Language | Identifier     | Stability notice |
 | :-------------- | :------------- | :--------------- |
 | Node.js         | `backend_node` | mostly stable    |
+| LLVM            | `backend_llvm` | unstable         |
 | C               | `backend_c`    | unstable         |
