@@ -3,7 +3,6 @@ use crate::parser::node_type::*;
 use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
-use inkwell::targets::{InitializationConfig, Target};
 use inkwell::types::*;
 
 pub struct LLVMGenerator<'ctx> {
@@ -27,9 +26,8 @@ impl<'ctx> Generator for LLVMGenerator<'ctx> {
 }
 
 impl<'ctx> LLVMGenerator<'ctx> {
-    fn generate_function(&mut self, func: Function) {
-        let arg_types: Vec<BasicTypeEnum> = func
-            .arguments
+    fn convert_to_llvm_args(&mut self, args: Vec<Variable>) -> Vec<BasicTypeEnum<'ctx>> {
+        let arg_types: Vec<BasicTypeEnum> = args
             .iter()
             .map(|arg| match arg.ty {
                 Some(Type::Int) => self.ctx.i32_type().as_basic_type_enum(),
@@ -40,6 +38,11 @@ impl<'ctx> LLVMGenerator<'ctx> {
                 None => panic!("Function argument has no type"),
             })
             .collect();
+        return arg_types;
+    }
+
+    fn generate_function(&mut self, func: Function) {
+        let arg_types: Vec<BasicTypeEnum> = self.convert_to_llvm_args(func.arguments);
 
         let func_type = match func.ret_type {
             Some(Type::Int) => self.ctx.i32_type().fn_type(&arg_types, false),
@@ -47,6 +50,26 @@ impl<'ctx> LLVMGenerator<'ctx> {
             None => self.ctx.void_type().fn_type(&arg_types, false),
             _ => todo!(),
         };
-        self.module.add_function(&func.name, func_type, None);
+        let function = self.module.add_function(&func.name, func_type, None);
+        let _basic_block = self.ctx.append_basic_block(function, "entry");
+        self.generate_statement(func.body);
+    }
+
+    fn generate_statement(&mut self, statement: Statement) {
+        match statement {
+            Statement::Block(statements, scope) => {
+                for s in statements {
+                    self.generate_statement(s);
+                }
+            }
+            Statement::Exp(expression) => self.generate_expression(expression),
+            _ => todo!(),
+        };
+    }
+
+    fn generate_expression(&mut self, expr: Expression) {
+        match expr {
+            _ => todo!(),
+        }
     }
 }
