@@ -8,6 +8,7 @@
 - stdlib moves line of file, which makes error reporting impossible
 
 # Features
+- number += 1 (also update docs!)
 - Expect return statement if specified in function
 - Type inference
 - Multi-file support

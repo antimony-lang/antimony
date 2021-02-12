@@ -77,4 +77,26 @@ When this program executes, it checks each `if` expression in turn and executes 
 
 ## Loops
 
-TODO
+It's often useful to execute a block of code more than once. For this task, Sabre provides different kind of _loops_. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.
+
+Sabre has two types of loops: `while` and `for`. Let's go through each of them.
+
+### Conditional Loops with `while`
+
+It’s often useful for a program to evaluate a condition within a loop. While the condition is true, the loop runs. When the condition ceases to be true, the program calls `break`, stopping the loop.
+
+The example below loops three times, counting down each time, and then, after the loop, it prints another message and exits.
+
+```
+fn main() {
+    let number = 3
+
+    while number != 0 {
+        println(number)
+
+        number = number - 1
+    }
+
+    println("LIFTOFF!!!")
+}
+```
