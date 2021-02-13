@@ -74,7 +74,7 @@ jobs:
           directory: ${{ runner.temp }}/llvm
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
+          profile: default
           toolchain: stable
           override: true
       - run: rustup component add clippy
