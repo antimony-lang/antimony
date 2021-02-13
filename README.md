@@ -10,7 +10,7 @@ It is meant to "just work", without adding unnecessary and bloated language feat
 
 ## State of this projects
 
-Currently, Sabre is a general-purpose toy language. Its primary goal is to be simple and easy to understand, not to be efficient. Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See [TODO](./TODO) for a roadmap.
+Currently, Sabre is a general-purpose toy language. Its primary goal is to be simple and easy to understand, not to be efficient. Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See the [open issues](https://github.com/garritfra/sabre/issues) for todos.
 
 The Sabre compiler emits JavaScript, and a C backend is currently in development. Backends for WASM, x86 and ARM are planned.
 
