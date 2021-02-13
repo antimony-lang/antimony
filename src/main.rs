@@ -1,3 +1,5 @@
+#![allow(unknown_lints)]
+
 /**
  * Copyright 2020 Garrit Franke
  *
