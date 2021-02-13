@@ -463,7 +463,7 @@ fn test_array_access_in_loop() {
     
         while i < 5 {
           println(x[i])
-          i = i + 1
+          i += 1
         }
     }
     ";
