@@ -2,6 +2,19 @@
 
 Sabre comes with some generic data types.
 
+## The Boolean type
+
+As in most other programming languages, a Boolean type in Sabre has two possible values: `true` and `false`. Booleans are one byte in size. The Boolean type in Sabre is specified using `bool`. For example:
+
+```
+fn main() {
+    let t = true
+    let f: bool = false // with explicit type annotation
+}
+```
+
+The main way to use Boolean values is through conditionals, such as an `if` expression. We’ll cover how `if` expressions work in the ["Control Flow"](introduction/control-flow.md) section.
+
 ## The Integer type
 
 The `integer` datatype represents a 4 byte decimal number.
