@@ -94,6 +94,14 @@ pub enum TokenKind {
     And,
     /// "||"
     Or,
+    /// "+="
+    PlusEqual,
+    /// "-="
+    MinusEqual,
+    /// "*="
+    StarEqual,
+    /// "/="
+    SlashEqual,
     /// "("
     BraceOpen,
     /// ")"
@@ -193,14 +201,36 @@ impl Cursor<'_> {
             c if is_whitespace(c) => self.whitespace(),
             '0'..='9' => self.number(),
             '"' | '\'' => self.string(),
-            '+' => Plus,
-            '-' => Minus,
-            '*' => Star,
+            '+' => match self.first() {
+                '=' => {
+                    self.bump();
+                    PlusEqual
+                }
+                _ => Plus,
+            },
+            '-' => match self.first() {
+                '=' => {
+                    self.bump();
+                    MinusEqual
+                }
+                _ => Minus,
+            },
+            '*' => match self.first() {
+                '=' => {
+                    self.bump();
+                    StarEqual
+                }
+                _ => Star,
+            },
             '%' => Percent,
             '/' => match self.first() {
                 '/' => {
                     self.bump();
                     self.comment()
+                }
+                '=' => {
+                    self.bump();
+                    SlashEqual
                 }
                 _ => Slash,
             },

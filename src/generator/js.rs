@@ -242,6 +242,10 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::NotEqual => "!==",
         BinOp::Or => "||",
         BinOp::Subtraction => "-",
+        BinOp::AddAssign => "+=",
+        BinOp::SubtractAssign => "-=",
+        BinOp::MultiplyAssign => "*=",
+        BinOp::DivideAssign => "/=",
     };
     format!(
         "({l} {op} {r})",

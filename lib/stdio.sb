@@ -13,7 +13,7 @@ fn println(msg: string) {
 fn len(arr: int[]): int {
     let c: int = 0
     while arr[c] {
-        c = c + 1
+        c += 1
     }
 
     return c

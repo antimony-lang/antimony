@@ -152,6 +152,10 @@ impl Parser {
                         TokenKind::Assign => self.parse_assignent(Some(expr)),
                         _ => Ok(Statement::Exp(expr)),
                     }
+                } else if let Ok(_) = BinOp::try_from(self.peek()?.kind) {
+                    let expr = Expression::Variable(ident.into());
+                    let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
+                    Ok(state)
                 } else {
                     let state = Statement::Exp(Expression::Variable(ident.into()));
                     Ok(state)

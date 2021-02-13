@@ -14,10 +14,10 @@ fn main() {
                 arr[d+1] = swap
             }
 
-            d = d + 1
+            d += 1
         }
 
-        c = c + 1
+        c += 1
     }
 
     println(arr)

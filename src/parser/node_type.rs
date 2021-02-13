@@ -146,6 +146,10 @@ pub enum BinOp {
     NotEqual,
     And,
     Or,
+    AddAssign,
+    SubtractAssign,
+    MultiplyAssign,
+    DivideAssign,
 }
 
 impl TryFrom<TokenKind> for BinOp {
@@ -165,6 +169,10 @@ impl TryFrom<TokenKind> for BinOp {
             TokenKind::NotEqual => Ok(BinOp::NotEqual),
             TokenKind::And => Ok(BinOp::And),
             TokenKind::Or => Ok(BinOp::Or),
+            TokenKind::PlusEqual => Ok(BinOp::AddAssign),
+            TokenKind::MinusEqual => Ok(BinOp::SubtractAssign),
+            TokenKind::StarEqual => Ok(BinOp::MultiplyAssign),
+            TokenKind::SlashEqual => Ok(BinOp::DivideAssign),
             other => Err(format!("Token {:?} cannot be converted into a BinOp", other).into()),
         }
     }
