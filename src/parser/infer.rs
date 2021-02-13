@@ -4,30 +4,26 @@ use super::node_type::*;
 ///
 /// TODO: Global symbol table is passed around randomly.
 /// This could probably be cleaned up.
-pub(super) fn infer(program: &mut Program) -> Result<(), String> {
+pub(super) fn infer(program: &mut Program) {
     let table = &program.get_symbol_table();
     // TODO: Fix aweful nesting
     for func in &mut program.func {
         if let Statement::Block(statements, _) = &mut func.body {
             for statement in statements {
-                match statement {
-                    Statement::Declare(var, expr) => {
-                        if let None = &var.ty {
-                            if let Some(e) = expr {
-                                var.ty = infer_expression(&e, table);
-                                #[cfg(debug_assertions)]
-                                if let None = var.ty {
-                                    println!("Type of {} could not be infered: {:?}", &var.name, e);
-                                }
+                if let Statement::Declare(var, expr) = statement {
+                    if var.ty.is_none() {
+                        if let Some(e) = expr {
+                            var.ty = infer_expression(&e, table);
+                            #[cfg(debug_assertions)]
+                            if var.ty.is_none() {
+                                println!("Type of {} could not be infered: {:?}", &var.name, e);
                             }
                         }
                     }
-                    _ => {}
                 }
             }
         }
     }
-    Ok(())
 }
 
 /// Function table is needed to infer possible function calls
@@ -42,7 +38,7 @@ fn infer_expression(expr: &Expression, table: &SymbolTable) -> Option<Type> {
     }
 }
 
-fn infer_array(elements: &Vec<Expression>, table: &SymbolTable) -> Option<Type> {
+fn infer_array(elements: &[Expression], table: &SymbolTable) -> Option<Type> {
     let types: Vec<Option<Type>> = elements
         .iter()
         .map(|el| infer_expression(el, table))

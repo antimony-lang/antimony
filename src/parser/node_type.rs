@@ -173,7 +173,10 @@ impl TryFrom<TokenKind> for BinOp {
             TokenKind::MinusEqual => Ok(BinOp::SubtractAssign),
             TokenKind::StarEqual => Ok(BinOp::MultiplyAssign),
             TokenKind::SlashEqual => Ok(BinOp::DivideAssign),
-            other => Err(format!("Token {:?} cannot be converted into a BinOp", other).into()),
+            other => Err(format!(
+                "Token {:?} cannot be converted into a BinOp",
+                other
+            )),
         }
     }
 }

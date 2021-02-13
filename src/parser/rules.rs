@@ -21,7 +21,7 @@ use crate::lexer::{TokenKind, Value};
 use std::convert::TryFrom;
 
 impl Parser {
-    pub(super) fn parse_program(&mut self) -> Result<Program, String> {
+    pub fn parse_program(&mut self) -> Result<Program, String> {
         let mut functions = Vec::new();
         let globals = Vec::new();
 
@@ -31,7 +31,7 @@ impl Parser {
 
         Ok(Program {
             func: functions,
-            globals: globals,
+            globals,
         })
     }
 
@@ -42,7 +42,7 @@ impl Parser {
         let mut scope = vec![];
 
         // Parse statements until a curly brace is encountered
-        while let Err(_) = self.peek_token(TokenKind::CurlyBracesClose) {
+        while self.peek_token(TokenKind::CurlyBracesClose).is_err() {
             let statement = self.parse_statement()?;
 
             // If the current statement is a variable declaration,
@@ -81,16 +81,16 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Function {
-            name: name,
-            arguments: arguments,
-            body: body,
+            name,
+            arguments,
+            body,
             ret_type: ty,
         })
     }
 
     fn parse_arguments(&mut self) -> Result<Vec<Variable>, String> {
         let mut args = Vec::new();
-        while let Err(_) = self.peek_token(TokenKind::BraceClose) {
+        while self.peek_token(TokenKind::BraceClose).is_err() {
             let next = self.next()?;
             match next.kind {
                 TokenKind::Comma => {
@@ -98,7 +98,7 @@ impl Parser {
                 }
                 TokenKind::Identifier(name) => {
                     args.push(Variable {
-                        name: name,
+                        name,
                         ty: Some(self.parse_type()?),
                     });
                 }
@@ -116,7 +116,7 @@ impl Parser {
             TokenKind::Identifier(_) => Type::try_from(self.next()?.raw),
             _ => Err("Expected type".into()),
         }?;
-        if let Ok(_) = self.peek_token(TokenKind::SquareBraceOpen) {
+        if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
             self.match_token(TokenKind::SquareBraceOpen)?;
             self.match_token(TokenKind::SquareBraceClose)?;
             Ok(Type::Array(Box::new(typ)))
@@ -127,7 +127,7 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.peek()?;
-        let state = match &token.kind {
+        match &token.kind {
             TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
@@ -138,13 +138,13 @@ impl Parser {
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
 
-                if let Ok(_) = self.peek_token(TokenKind::BraceOpen) {
+                if self.peek_token(TokenKind::BraceOpen).is_ok() {
                     let state = self.parse_function_call(Some(ident))?;
                     Ok(Statement::Exp(state))
-                } else if let Ok(_) = self.peek_token(TokenKind::Assign) {
+                } else if self.peek_token(TokenKind::Assign).is_ok() {
                     let state = self.parse_assignent(Some(Expression::Variable(ident)))?;
                     Ok(state)
-                } else if let Ok(_) = self.peek_token(TokenKind::SquareBraceOpen) {
+                } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
                     let expr = self.parse_array_access(Some(ident))?;
 
                     let next = self.peek()?;
@@ -152,19 +152,19 @@ impl Parser {
                         TokenKind::Assign => self.parse_assignent(Some(expr)),
                         _ => Ok(Statement::Exp(expr)),
                     }
-                } else if let Ok(_) = BinOp::try_from(self.peek()?.kind) {
-                    let expr = Expression::Variable(ident.into());
+                } else if BinOp::try_from(self.peek()?.kind).is_ok() {
+                    // Parse Binary operation
+                    let expr = Expression::Variable(ident);
                     let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
                     Ok(state)
                 } else {
-                    let state = Statement::Exp(Expression::Variable(ident.into()));
+                    let state = Statement::Exp(Expression::Variable(ident));
                     Ok(state)
                 }
             }
             TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
-            _ => return Err(self.make_error(TokenKind::Unknown, token)),
-        };
-        state
+            _ => Err(self.make_error(TokenKind::Unknown, token)),
+        }
     }
 
     /// Parses a function call from tokens.
@@ -398,7 +398,7 @@ impl Parser {
         let left = match lhs {
             Some(lhs) => lhs,
             None => {
-                let prev = self.prev().ok_or_else(|| "Expected Token")?;
+                let prev = self.prev().ok_or("Expected token")?;
                 match &prev.kind {
                     TokenKind::Identifier(_) | TokenKind::Literal(_) | TokenKind::Keyword(_) => {
                         Ok(Expression::try_from(prev)?)
@@ -411,7 +411,7 @@ impl Parser {
         let op = self.match_operator()?;
 
         Ok(Expression::BinOp(
-            Box::from(Expression::try_from(left).map_err(|e| e.to_string())?),
+            Box::from(left),
             op,
             Box::from(self.parse_expression()?),
         ))

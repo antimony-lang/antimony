@@ -32,15 +32,11 @@ impl Generator for CGenerator {
             code += &format!("{};\n", &generate_function_signature(func.clone()));
         }
 
-        let funcs: String = prog
-            .func
-            .into_iter()
-            .map(|f| generate_function(f))
-            .collect();
+        let funcs: String = prog.func.into_iter().map(generate_function).collect();
 
         code += &funcs;
 
-        return code;
+        code
     }
 }
 
@@ -89,7 +85,7 @@ fn generate_function_signature(func: Function) -> String {
     format!("{T} {N}({A})", T = t, N = func.name, A = arguments)
 }
 
-fn generate_block(block: Vec<Statement>, scope: Vec<Variable>) -> String {
+fn generate_block(block: Vec<Statement>, _scope: Vec<Variable>) -> String {
     let mut generated = String::from("{\n");
 
     for statement in block {
@@ -112,7 +108,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Assign(name, state) => generate_assign(*name, *state),
         Statement::Block(statements, scope) => generate_block(statements, scope),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
-        Statement::For(ident, expr, body) => todo!(),
+        Statement::For(_ident, _expr, _body) => todo!(),
         Statement::Continue => todo!(),
         Statement::Break => todo!(),
     };
@@ -121,7 +117,7 @@ fn generate_statement(statement: Statement) -> String {
 }
 
 fn generate_expression(expr: Expression) -> String {
-    let st = match expr {
+    match expr {
         Expression::Int(val) => val.to_string(),
         Expression::Variable(val) | Expression::Str(val) => val,
         Expression::Bool(b) => b.to_string(),
@@ -129,9 +125,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Array(els) => generate_array(els),
         Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
-    };
-
-    format!("{}", st)
+    }
 }
 
 fn generate_while_loop(expr: Expression, body: Statement) -> String {
@@ -201,7 +195,7 @@ fn generate_declare(var: Variable, val: Option<Expression>) -> String {
         Some(expr) => format!(
             "{} {} = {};",
             generate_type(Either::Left(var.to_owned())),
-            var.to_owned().name,
+            var.name,
             generate_expression(expr)
         ),
         None => format!(
@@ -246,6 +240,10 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::GreaterThanOrEqual => ">=",
         BinOp::LessThan => "<",
         BinOp::LessThanOrEqual => "<=",
+        BinOp::AddAssign => "+=",
+        BinOp::SubtractAssign => "-=",
+        BinOp::MultiplyAssign => "*=",
+        BinOp::DivideAssign => "/=",
         BinOp::Modulus => "%",
         BinOp::Multiplication => "*",
         BinOp::NotEqual => "!=",

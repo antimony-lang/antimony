@@ -14,7 +14,7 @@ pub fn run(in_file: PathBuf) -> Result<(), String> {
     build::build(&in_file, &intermediate_out_file_path)?;
     let out_file = out_dir.join("out");
     if cfg!(feature = "backend_c") {
-        let comp = Command::new("/usr/bin/cc")
+        Command::new("/usr/bin/cc")
             .arg(&intermediate_out_file_path)
             .arg("-o")
             .arg(&out_file)

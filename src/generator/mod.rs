@@ -29,10 +29,12 @@ pub trait Generator {
     fn generate(prog: Program) -> String;
 }
 
+// Since we're using multiple features,
+// "unreachable" statements are okay
+#[allow(unreachable_code)]
 pub fn generate(prog: Program) -> String {
     #[cfg(feature = "backend_llvm")]
     return llvm::LLVMGenerator::generate(prog);
-
     #[cfg(feature = "backend_c")]
     return c::CGenerator::generate(prog);
 

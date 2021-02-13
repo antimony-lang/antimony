@@ -20,6 +20,8 @@ struct Assembly {
     asm: Vec<String>,
 }
 
+// We don't need "From", so we can ignore the lint here
+#[allow(clippy::from_over_into)]
 impl Into<String> for Assembly {
     fn into(self) -> String {
         self.build()
@@ -55,20 +57,18 @@ impl X86Generator {
 
     fn gen_program(&mut self, prog: Program) -> Assembly {
         let mut asm = Assembly::new();
-        match prog {
-            Program { func, globals } => {
-                asm.add(".intel_syntax noprefix");
-                asm.add(".text");
+        let Program { func, globals } = prog;
 
-                for f in func {
-                    asm.add(self.gen_function(f));
-                }
-                asm.add(".data");
-                for g in globals {
-                    asm.add(format!("_{0}: .word 0", g));
-                }
-            }
-        };
+        asm.add(".intel_syntax noprefix");
+        asm.add(".text");
+
+        for f in func {
+            asm.add(self.gen_function(f));
+        }
+        asm.add(".data");
+        for g in globals {
+            asm.add(format!("_{0}: .word 0", g));
+        }
 
         asm
     }
@@ -77,13 +77,9 @@ impl X86Generator {
         let mut asm = Assembly::new();
 
         let has_return: bool = match &func.body {
-            Statement::Block(statements, _) => statements.iter().any(|s| {
-                if let Statement::Return(_) = *s {
-                    true
-                } else {
-                    false
-                }
-            }),
+            Statement::Block(statements, _) => statements
+                .iter()
+                .any(|s| matches!(*s, Statement::Return(_))),
             _ => panic!("Function body should be of type Block"),
         };
 

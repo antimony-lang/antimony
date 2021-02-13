@@ -20,9 +20,9 @@ use crate::Lib;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::Path;
 
-pub fn build(in_file: &PathBuf, out_file: &PathBuf) -> Result<(), String> {
+pub fn build(in_file: &Path, out_file: &Path) -> Result<(), String> {
     let mut file = File::open(in_file).expect("Could not open file");
     let mut contents = String::new();
 

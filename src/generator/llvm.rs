@@ -1,6 +1,5 @@
 use crate::generator::Generator;
 use crate::parser::node_type::*;
-use inkwell::builder::Builder;
 use inkwell::context::Context;
 use inkwell::module::Module;
 use inkwell::types::*;
@@ -14,10 +13,7 @@ impl<'ctx> Generator for LLVMGenerator<'ctx> {
     fn generate(prog: Program) -> String {
         let ctx = Context::create();
         let module = ctx.create_module("main");
-        let mut generator = LLVMGenerator {
-            ctx: &ctx,
-            module: module,
-        };
+        let mut generator = LLVMGenerator { ctx: &ctx, module };
         for func in prog.func {
             generator.generate_function(func);
         }
@@ -38,7 +34,7 @@ impl<'ctx> LLVMGenerator<'ctx> {
                 None => panic!("Function argument has no type"),
             })
             .collect();
-        return arg_types;
+        arg_types
     }
 
     fn generate_function(&mut self, func: Function) {
@@ -57,7 +53,7 @@ impl<'ctx> LLVMGenerator<'ctx> {
 
     fn generate_statement(&mut self, statement: Statement) {
         match statement {
-            Statement::Block(statements, scope) => {
+            Statement::Block(statements, _) => {
                 for s in statements {
                     self.generate_statement(s);
                 }
@@ -67,9 +63,7 @@ impl<'ctx> LLVMGenerator<'ctx> {
         };
     }
 
-    fn generate_expression(&mut self, expr: Expression) {
-        match expr {
-            _ => todo!(),
-        }
+    fn generate_expression(&mut self, _expr: Expression) {
+        todo!()
     }
 }

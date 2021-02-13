@@ -181,12 +181,12 @@ pub fn is_whitespace(c: char) -> bool {
 
 /// True if `c` is valid as a first character of an identifier.
 pub fn is_id_start(c: char) -> bool {
-    ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_'
+    ('a'..='z').contains(&c) || ('A'..='Z').contains(&c) || c == '_'
 }
 
 /// True if `c` is valid as a non-first character of an identifier.
 pub fn is_id_continue(c: char) -> bool {
-    ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || ('0' <= c && c <= '9') || c == '_'
+    ('a'..='z').contains(&c) || ('A'..='Z').contains(&c) || ('0'..='9').contains(&c) || c == '_'
 }
 
 impl Cursor<'_> {
@@ -305,9 +305,7 @@ impl Cursor<'_> {
         // Cut the original tokens to the length of the token
         raw.truncate(len);
         let position = self.pos();
-        let token = Token::new(token_kind, len, raw, position);
-
-        token
+        Token::new(token_kind, len, raw, position)
     }
 
     /// Eats symbols while predicate returns true or until the end of file is reached.

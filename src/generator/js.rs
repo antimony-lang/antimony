@@ -26,17 +26,13 @@ impl Generator for JsGenerator {
             crate::Builtins::get("builtin.js").expect("Could not locate builtin functions");
         code += std::str::from_utf8(raw_builtins.as_ref())
             .expect("Unable to interpret builtin functions");
-        let funcs: String = prog
-            .func
-            .into_iter()
-            .map(|f| generate_function(f))
-            .collect();
+        let funcs: String = prog.func.into_iter().map(generate_function).collect();
 
         code += &funcs;
 
         code += "main();";
 
-        return code;
+        code
     }
 }
 

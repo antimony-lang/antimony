@@ -15,7 +15,9 @@ mod infer;
  * limitations under the License.
  */
 pub mod node_type;
-pub mod parser;
+// TODO: Resolve this lint by renaming the module
+#[allow(clippy::module_inception)]
+mod parser;
 mod rules;
 use crate::lexer::Token;
 use node_type::Program;

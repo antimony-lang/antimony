@@ -84,8 +84,7 @@ impl<'a> Cursor<'a> {
     }
 
     pub(crate) fn pos(&self) -> Position {
-        let p = self.pos.clone();
-        p
+        *self.pos
     }
 
     /// Moves to the next character.
