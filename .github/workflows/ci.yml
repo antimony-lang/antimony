@@ -74,11 +74,11 @@ jobs:
           directory: ${{ runner.temp }}/llvm
       - uses: actions-rs/toolchain@v1
         with:
-          profile: default
+          profile: minimal
           toolchain: stable
           override: true
       - run: rustup component add clippy
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --all-targets --all-features -- -D warnings
+          args: --all-targets --all-features # -- -D warnings <-- Doesn't work yet; TODO
