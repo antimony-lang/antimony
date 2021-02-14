@@ -283,7 +283,7 @@ fn generate_struct_initialization(
 
     out_str += "}";
 
-    out_str.into()
+    out_str
 }
 
 fn generate_assign(name: Expression, expr: Expression) -> String {
