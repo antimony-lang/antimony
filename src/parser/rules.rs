@@ -23,16 +23,66 @@ use std::convert::TryFrom;
 impl Parser {
     pub fn parse_program(&mut self) -> Result<Program, String> {
         let mut functions = Vec::new();
+        let mut structs = Vec::new();
         let globals = Vec::new();
 
         while self.has_more() {
-            functions.push(self.parse_function()?)
+            let next = self.peek()?;
+            match next.kind {
+                TokenKind::Keyword(Keyword::Function) => functions.push(self.parse_function()?),
+                TokenKind::Keyword(Keyword::Struct) => {
+                    structs.push(self.parse_struct_definition()?)
+                }
+                _ => return Err(format!("Unexpected token: {}", next.raw)),
+            }
         }
 
         Ok(Program {
             func: functions,
+            structs,
             globals,
         })
+    }
+
+    fn parse_struct_definition(&mut self) -> Result<StructDef, String> {
+        self.match_keyword(Keyword::Struct)?;
+        let name = self.match_identifier()?;
+
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+        let fields = self.parse_typed_variable_list()?;
+        self.match_token(TokenKind::CurlyBracesClose)?;
+
+        Ok(StructDef { name, fields })
+    }
+
+    fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
+        let mut args = Vec::new();
+
+        // If there is an argument
+        if let TokenKind::Identifier(_) = self.peek()?.kind {
+            // Parse first argument
+            args.push(self.parse_typed_variable()?);
+            // Then continue to parse arguments
+            // as long as a comma token is found
+            while self.peek_token(TokenKind::Comma).is_ok() {
+                self.match_token(TokenKind::Comma)?;
+                args.push(self.parse_typed_variable()?);
+            }
+        }
+
+        Ok(args)
+    }
+
+    fn parse_typed_variable(&mut self) -> Result<Variable, String> {
+        let next = self.next()?;
+        if let TokenKind::Identifier(name) = next.kind {
+            return Ok(Variable {
+                name,
+                ty: Some(self.parse_type()?),
+            });
+        }
+
+        Err(format!("Argument could not be parsed: {}", next.raw))
     }
 
     fn parse_block(&mut self) -> Result<Statement, String> {
@@ -68,7 +118,7 @@ impl Parser {
 
         let arguments: Vec<Variable> = match self.peek()? {
             t if t.kind == TokenKind::BraceClose => Vec::new(),
-            _ => self.parse_arguments()?,
+            _ => self.parse_typed_variable_list()?,
         };
 
         self.match_token(TokenKind::BraceClose)?;
@@ -86,36 +136,6 @@ impl Parser {
             body,
             ret_type: ty,
         })
-    }
-
-    fn parse_arguments(&mut self) -> Result<Vec<Variable>, String> {
-        let mut args = Vec::new();
-
-        // If there is an argument
-        if let TokenKind::Identifier(_) = self.peek()?.kind {
-            // Parse first argument
-            args.push(self.parse_typed_argument_list()?);
-            // Then continue to parse arguments
-            // as long as a comma token is found
-            while self.peek_token(TokenKind::Comma).is_ok() {
-                self.match_token(TokenKind::Comma)?;
-                args.push(self.parse_typed_argument_list()?);
-            }
-        }
-
-        Ok(args)
-    }
-
-    fn parse_typed_argument_list(&mut self) -> Result<Variable, String> {
-        let next = self.next()?;
-        if let TokenKind::Identifier(name) = next.kind {
-            return Ok(Variable {
-                name,
-                ty: Some(self.parse_type()?),
-            });
-        }
-
-        Err(format!("Argument could not be parsed: {}", next.raw))
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
@@ -172,6 +192,9 @@ impl Parser {
                 }
             }
             TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
+            TokenKind::Keyword(Keyword::Struct) => {
+                Err("Struct definitions inside functions are not allowed".to_string())
+            }
             _ => Err(self.make_error(TokenKind::Unknown, token)),
         }
     }

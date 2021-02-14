@@ -26,6 +26,15 @@ impl Generator for JsGenerator {
             crate::Builtins::get("builtin.js").expect("Could not locate builtin functions");
         code += std::str::from_utf8(raw_builtins.as_ref())
             .expect("Unable to interpret builtin functions");
+
+        let structs: String = prog
+            .structs
+            .into_iter()
+            .map(generate_struct_definition)
+            .collect();
+
+        code += &structs;
+
         let funcs: String = prog.func.into_iter().map(generate_function).collect();
 
         code += &funcs;
@@ -48,6 +57,11 @@ fn generate_function(func: Function) -> String {
     raw += &generate_block(func.body, None);
 
     raw
+}
+
+fn generate_struct_definition(struct_def: StructDef) -> String {
+    // JS doesn't care about field declaration
+    format!("class {} {{}}\n", struct_def.name)
 }
 
 /// prepend is used to pass optional statements, that will be put in front of the regular block

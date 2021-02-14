@@ -141,6 +141,7 @@ pub enum Keyword {
     Continue,
     Function,
     Boolean,
+    Struct,
     Unknown,
 }
 
@@ -361,6 +362,7 @@ impl Cursor<'_> {
             c if c == "in" => Keyword::In,
             c if c == "break" => Keyword::Break,
             c if c == "continue" => Keyword::Continue,
+            c if c == "struct" => Keyword::Struct,
             _ => Keyword::Unknown,
         }
     }

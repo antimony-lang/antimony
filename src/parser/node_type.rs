@@ -23,6 +23,7 @@ pub type SymbolTable = HashMap<String, Option<Type>>;
 #[derive(Debug)]
 pub struct Program {
     pub func: Vec<Function>,
+    pub structs: Vec<StructDef>,
     pub globals: Vec<String>,
 }
 
@@ -49,6 +50,12 @@ pub struct Function {
     pub arguments: Vec<Variable>,
     pub body: Statement,
     pub ret_type: Option<Type>,
+}
+
+#[derive(Debug, Clone)]
+pub struct StructDef {
+    pub name: String,
+    pub fields: Vec<Variable>,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
