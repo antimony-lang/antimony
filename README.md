@@ -8,19 +8,17 @@
 Sabre is a bullshit-free (©) programming language that gets out of your way.
 It is meant to "just work", without adding unnecessary and bloated language features.
 
-## State of this project
+## Why yet another language?
 
-Currently, Sabre is a general-purpose toy language. Its primary goal is to be simple and easy to understand, not to be efficient. Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See the [open issues](https://github.com/garritfra/sabre/issues) for todos.
+The goal Sabre is to be a simple language that anyone - beginner and expert - can pick up and use. A "bullshit-free programming language" is of course a highly subjective opinion, and this project is my very own attempt at this. There are plenty of great programming languages out there, and Sabre is not meant to replace any of them. Currently, Sabre is just a general-purpose toy language. Its primary goal is to be simple and easy to understand, not to be efficient.
 
-The Sabre compiler emits JavaScript, and a C backend is currently in development. Backends for WASM, x86 and ARM are planned.
-
-## Examples
+## Example
 
 ```rs
 // examples/fib.sb
 
 fn main() {
-    let num: int = 10
+    let num = 10
     println(fib(num))
 }
 
@@ -35,17 +33,23 @@ fn fib(n: int) {
 // -> 55
 ```
 
+## State of this project
+
+Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See the [open issues](https://github.com/garritfra/sabre/issues) for upcoming todos.
+
+The Sabre compiler emits JavaScript for the Node.js runtime, and a C backend is currently under development. Backends for WASM and LLVM are planned.
+
 ## Documentation
 
-Documentation is hosted on [GitHub Pages](https://garritfra.github.io/sabre).
+Documentation is hosted [here](https://garritfra.github.io/sabre).
 
-## Installation
+## Getting started
 
-See [installation](https://garritfra.github.io/sabre/latest/introduction/installation.html).
+See the [installation](https://garritfra.github.io/sabre/latest/introduction/installation.html) instructions to get started.
 
 ## Chat on matrix
 
-[Join here!](https://matrix.to/#/!eaupsjLNPYSluWFJOC:matrix.slashdev.space?via=matrix.slashdev.space)
+[Join here](https://matrix.to/#/!eaupsjLNPYSluWFJOC:matrix.slashdev.space?via=matrix.slashdev.space)!
 
 ## License
 
