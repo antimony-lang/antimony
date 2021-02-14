@@ -8,7 +8,7 @@
 Sabre is a bullshit-free (©) programming language that gets out of your way.
 It is meant to "just work", without adding unnecessary and bloated language features.
 
-## State of this projects
+## State of this project
 
 Currently, Sabre is a general-purpose toy language. Its primary goal is to be simple and easy to understand, not to be efficient. Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See the [open issues](https://github.com/garritfra/sabre/issues) for todos.
 
