@@ -90,23 +90,32 @@ impl Parser {
 
     fn parse_arguments(&mut self) -> Result<Vec<Variable>, String> {
         let mut args = Vec::new();
-        while self.peek_token(TokenKind::BraceClose).is_err() {
-            let next = self.next()?;
-            match next.kind {
-                TokenKind::Comma => {
-                    continue;
-                }
-                TokenKind::Identifier(name) => {
-                    args.push(Variable {
-                        name,
-                        ty: Some(self.parse_type()?),
-                    });
-                }
-                _ => return Err(self.make_error(TokenKind::Identifier("Argument".into()), next)),
+
+        // If there is an argument
+        if let TokenKind::Identifier(_) = self.peek()?.kind {
+            // Parse first argument
+            args.push(self.parse_typed_argument_list()?);
+            // Then continue to parse arguments
+            // as long as a comma token is found
+            while self.peek_token(TokenKind::Comma).is_ok() {
+                self.match_token(TokenKind::Comma)?;
+                args.push(self.parse_typed_argument_list()?);
             }
         }
 
         Ok(args)
+    }
+
+    fn parse_typed_argument_list(&mut self) -> Result<Variable, String> {
+        let next = self.next()?;
+        if let TokenKind::Identifier(name) = next.kind {
+            return Ok(Variable {
+                name,
+                ty: Some(self.parse_type()?),
+            });
+        }
+
+        Err(format!("Argument could not be parsed: {}", next.raw))
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
