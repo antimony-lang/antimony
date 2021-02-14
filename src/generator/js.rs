@@ -15,6 +15,7 @@
  */
 use crate::generator::Generator;
 use crate::parser::node_type::*;
+use std::collections::HashMap;
 
 pub struct JsGenerator;
 
@@ -116,6 +117,9 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Array(els) => generate_array(els),
         Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
+        Expression::StructInitialization(name, fields) => {
+            generate_struct_initialization(name, fields)
+        }
     }
 }
 
@@ -224,6 +228,9 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Str(s) | Expression::Variable(s) => s,
             Expression::Array(elements) => generate_array(elements),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
+            Expression::StructInitialization(name, fields) => {
+                generate_struct_initialization(name, fields)
+            }
         })
         .collect::<Vec<String>>()
         .join(",");
@@ -263,6 +270,20 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         op = op_str,
         r = generate_expression(right)
     )
+}
+
+fn generate_struct_initialization(
+    _name: String,
+    fields: HashMap<String, Box<Expression>>,
+) -> String {
+    let mut out_str = "{".to_string();
+    for (key, value) in fields {
+        out_str += &format!("{}: {},", key, generate_expression(*value));
+    }
+
+    out_str += "}";
+
+    out_str.into()
 }
 
 fn generate_assign(name: Expression, expr: Expression) -> String {

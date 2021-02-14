@@ -18,6 +18,7 @@ use super::node_type::*;
 use super::parser::Parser;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 impl Parser {
@@ -305,8 +306,49 @@ impl Parser {
                 Ok(state)
             }
             TokenKind::SquareBraceOpen => self.parse_array(),
+            TokenKind::Keyword(Keyword::Struct) => self.parse_struct_initialization(),
             other => Err(format!("Expected Expression, found {:?}", other)),
         }
+    }
+
+    /// TODO: Cleanup
+    fn parse_struct_initialization(&mut self) -> Result<Expression, String> {
+        let name = self.match_identifier()?;
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+        let fields = self.parse_struct_fields()?;
+        self.match_token(TokenKind::CurlyBracesClose)?;
+
+        Ok(Expression::StructInitialization(name, fields))
+    }
+
+    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>, String> {
+        let mut map = HashMap::new();
+
+        // If there is a field
+        if let TokenKind::Identifier(_) = self.peek()?.kind {
+            // Parse first field
+            let (name, expr) = self.parse_struct_field()?;
+            map.insert(name, expr);
+            // Then continue to parse fields
+            // as long as a comma token is found
+            while self.peek_token(TokenKind::Comma).is_ok() {
+                self.match_token(TokenKind::Comma)?;
+                let (name, expr) = self.parse_struct_field()?;
+                map.insert(name, expr);
+            }
+        }
+
+        Ok(map)
+    }
+
+    fn parse_struct_field(&mut self) -> Result<(String, Box<Expression>), String> {
+        let next = self.next()?;
+        if let TokenKind::Identifier(name) = next.kind {
+            self.match_token(TokenKind::Colon)?;
+            return Ok((name, Box::new(self.parse_expression()?)));
+        }
+
+        Err(format!("Struct field could not be parsed: {}", next.raw))
     }
 
     fn parse_array(&mut self) -> Result<Expression, String> {
