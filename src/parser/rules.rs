@@ -306,7 +306,7 @@ impl Parser {
                 Ok(state)
             }
             TokenKind::SquareBraceOpen => self.parse_array(),
-            TokenKind::Keyword(Keyword::Struct) => self.parse_struct_initialization(),
+            TokenKind::Keyword(Keyword::New) => self.parse_struct_initialization(),
             other => Err(format!("Expected Expression, found {:?}", other)),
         }
     }
