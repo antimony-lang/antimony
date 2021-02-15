@@ -82,7 +82,7 @@ impl TryFrom<String> for Type {
             "string" => Ok(Self::Str),
             "any" => Ok(Self::Any),
             "bool" => Ok(Self::Bool),
-            _ => Err("Unknown Type".into()),
+            name => Ok(Self::Struct(name.to_string())),
         }
     }
 }
