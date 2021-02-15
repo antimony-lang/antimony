@@ -71,6 +71,7 @@ pub enum Type {
     Str,
     Bool,
     Array(Box<Type>),
+    Struct(String),
 }
 
 impl TryFrom<String> for Type {
