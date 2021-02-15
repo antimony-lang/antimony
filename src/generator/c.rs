@@ -127,6 +127,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         Expression::StructInitialization(_, _) => todo!(),
+        Expression::FieldAccess(_, _) => todo!(),
     }
 }
 
@@ -220,6 +221,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Array(_) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(_, _) => todo!(),
+            Expression::FieldAccess(_, _) => todo!(),
         })
         .collect::<Vec<String>>()
         .join(",");

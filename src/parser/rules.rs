@@ -298,6 +298,15 @@ impl Parser {
                             Err(_) => arr,
                         }
                     }
+                    TokenKind::Dot => {
+                        let subject = Expression::Variable(token.raw);
+                        self.match_token(TokenKind::Dot)?;
+                        let field = self.match_identifier()?;
+                        match BinOp::try_from(self.peek()?.kind) {
+                            Ok(_) => self.parse_bin_op(Some(Expression::Variable(field)))?,
+                            Err(_) => return Ok(Expression::FieldAccess(Box::new(subject), field)),
+                        }
+                    }
                     _ => match BinOp::try_from(self.peek()?.kind) {
                         Ok(_) => self.parse_bin_op(Some(Expression::Variable(token.raw)))?,
                         Err(_) => Expression::Variable(val),

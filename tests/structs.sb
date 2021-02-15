@@ -1,0 +1,17 @@
+struct User {
+    username: string,
+    first_name: string,
+    last_name: string
+}
+
+fn test_initialization() {
+    let foo = new User {
+        username: "Foo Bar",
+        first_name: "Bar",
+        last_name: "Foo Bar"
+    }
+}
+
+fn main() {
+    test_initialization()
+}
