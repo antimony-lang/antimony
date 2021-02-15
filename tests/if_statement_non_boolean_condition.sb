@@ -3,5 +3,7 @@ fn main() {
 
     if number {
         println("number was three")
+    } else {
+        assert(false)
     }
 }

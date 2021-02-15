@@ -9,6 +9,18 @@ fn println(msg: string) {
     print(msg + "\n")
 }
 
+// Exit the program immediately
+fn exit(code: int) {
+    _exit(code)
+}
+
+fn assert(condition: bool) {
+    if condition == false {
+        println("Assertion failed")
+        exit(1)
+    }
+}
+
 // Prints the size of an array
 fn len(arr: int[]): int {
     let c: int = 0

@@ -4,14 +4,36 @@ struct User {
     last_name: string
 }
 
+// Creates a stub user
+fn user_stub() {
+    let stub = new User {
+        username: "Foo Bar",
+        first_name: "Foo",
+        last_name: "Bar"
+    }
+
+    assert(stub.first_name)
+    assert(stub.last_name)
+    return stub
+}
+
 fn test_initialization() {
     let foo = new User {
         username: "Foo Bar",
         first_name: "Bar",
-        last_name: "Foo Bar"
+        last_name: "Bar"
     }
+
+    assert(foo)
+}
+
+fn test_simple_field_access() {
+    let user: User = user_stub()
+    // user.username = "Foo Bar"
+    // assert(user.username == "Foo Bar")
 }
 
 fn main() {
     test_initialization()
+    test_simple_field_access()
 }
