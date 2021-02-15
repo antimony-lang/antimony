@@ -114,7 +114,7 @@ pub enum Expression {
     ArrayAccess(String, Box<Expression>),
     BinOp(Box<Expression>, BinOp, Box<Expression>),
     StructInitialization(String, HashMap<String, Box<Expression>>),
-    FieldAccess(Box<Expression>, String)
+    FieldAccess(Box<Expression>, String),
 }
 
 impl TryFrom<Token> for Expression {
