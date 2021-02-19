@@ -30,10 +30,16 @@ fn test_initialization() {
 fn test_simple_field_access() {
     let user: User = user_stub()
     user.username = "Foo Bar"
-    // assert(user.username == "Foo Bar")
+}
+
+fn test_field_access_in_function_call() {
+    let user: User = user_stub()
+    user.username = "Bar"
+    assert(user.username == "Bar")
 }
 
 fn main() {
     test_initialization()
     test_simple_field_access()
+    test_field_access_in_function_call()
 }
