@@ -167,12 +167,18 @@ impl Parser {
             TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
+                let expr = if self.peek_token(TokenKind::Dot).is_ok() {
+                    self.parse_field_access(Expression::Variable(ident.clone()))?
+                } else {
+                    Expression::Variable(ident.clone())
+                };
 
+                // TODO: Use match statement
                 if self.peek_token(TokenKind::BraceOpen).is_ok() {
                     let state = self.parse_function_call(Some(ident))?;
                     Ok(Statement::Exp(state))
                 } else if self.peek_token(TokenKind::Assign).is_ok() {
-                    let state = self.parse_assignent(Some(Expression::Variable(ident)))?;
+                    let state = self.parse_assignent(Some(expr))?;
                     Ok(state)
                 } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
                     let expr = self.parse_array_access(Some(ident))?;
@@ -187,9 +193,10 @@ impl Parser {
                     let expr = Expression::Variable(ident);
                     let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
                     Ok(state)
+                } else if self.peek_token(TokenKind::Dot).is_ok() {
+                   Ok(Statement::Exp(self.parse_field_access(Expression::Variable(ident))?))
                 } else {
-                    let state = Statement::Exp(Expression::Variable(ident));
-                    Ok(state)
+                    Ok(Statement::Exp(expr))
                 }
             }
             TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
@@ -311,14 +318,18 @@ impl Parser {
         };
 
         if self.peek_token(TokenKind::Dot).is_ok() {
-            self.match_token(TokenKind::Dot)?;
-            let field = self.match_identifier()?;
-            match BinOp::try_from(self.peek()?.kind) {
-                Ok(_) => self.parse_bin_op(Some(expr)),
-                Err(_) => return Ok(Expression::FieldAccess(Box::new(expr), field)),
-            }
+            self.parse_field_access(expr)
         } else {
             Ok(expr)
+        }
+    }
+
+    fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
+        self.match_token(TokenKind::Dot)?;
+        let field = self.match_identifier()?;
+        match BinOp::try_from(self.peek()?.kind) {
+            Ok(_) => self.parse_bin_op(Some(lhs)),
+            Err(_) => return Ok(Expression::FieldAccess(Box::new(lhs), field)),
         }
     }
 
