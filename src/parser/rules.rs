@@ -311,12 +311,12 @@ impl Parser {
         };
 
         if self.peek_token(TokenKind::Dot).is_ok() {
-                self.match_token(TokenKind::Dot)?;
-                let field = self.match_identifier()?;
-                match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(Some(expr)),
-                    Err(_) => return Ok(Expression::FieldAccess(Box::new(expr), field)),
-                }
+            self.match_token(TokenKind::Dot)?;
+            let field = self.match_identifier()?;
+            match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(Some(expr)),
+                Err(_) => return Ok(Expression::FieldAccess(Box::new(expr), field)),
+            }
         } else {
             Ok(expr)
         }
