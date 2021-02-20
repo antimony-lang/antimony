@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.4.0 (2021-02-20)
+
+This release introduces the concept of structs, alongside many improvements to the documentation.
+
+**Features**
+
+- Assignment operators (#10)
+- Structs (#12)
+
+**Fixes**
+
+None
+
+**Documentation**
+
+- Fixed some typose and broken links
+- Document boolean values
+- Added this changelog!
+
 ## v0.3.0 (2021-02-12)
 
 This release adds type inference to Sabre. There are also a lot of improvements in terms of documentation. The docs are now at a state that can be considered "usable".
