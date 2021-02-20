@@ -20,6 +20,8 @@ use std::collections::HashMap;
 /// Table that contains all symbol and its types
 pub type SymbolTable = HashMap<String, Option<Type>>;
 
+pub type MatchArm = (Expression, Statement);
+
 #[derive(Debug)]
 pub struct Program {
     pub func: Vec<Function>,
@@ -97,6 +99,7 @@ pub enum Statement {
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
     For(Variable, Expression, Box<Statement>),
+    Match(Expression, Vec<MatchArm>),
     Break,
     Continue,
     Exp(Expression),
