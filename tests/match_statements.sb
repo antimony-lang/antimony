@@ -1,0 +1,12 @@
+fn test_basic_match() {
+    let x = true
+
+    match x {
+        true => assert(true)
+        false => assert(false)
+    }
+}
+
+fn main() {
+    test_basic_match()
+}
