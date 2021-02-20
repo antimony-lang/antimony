@@ -15,6 +15,7 @@
  */
 pub mod string_util;
 
+#[cfg(feature = "backend_c")]
 /// Datatype that holds one of two types
 pub enum Either<L, R> {
     Left(L),

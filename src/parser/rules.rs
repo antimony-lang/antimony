@@ -271,32 +271,21 @@ impl Parser {
                 self.match_token(TokenKind::BraceClose)?;
                 expr
             }
-            TokenKind::Keyword(Keyword::Boolean) => {
-                let state = match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(None)?,
-                    Err(_) => {
-                        Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
-                    }
-                };
-                state
-            }
-            TokenKind::Literal(Value::Int) => {
-                let state = match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(None)?,
-                    Err(_) => Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?),
-                };
-                state
-            }
-            TokenKind::Literal(Value::Str) => {
-                let state = match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(None)?,
-                    Err(_) => Expression::Str(token.raw),
-                };
-                state
-            }
+            TokenKind::Keyword(Keyword::Boolean) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?),
+            },
+            TokenKind::Literal(Value::Int) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?),
+            },
+            TokenKind::Literal(Value::Str) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Str(token.raw),
+            },
             TokenKind::Identifier(val) => {
                 let next = self.peek()?;
-                let state = match &next.kind {
+                match &next.kind {
                     TokenKind::BraceOpen => {
                         let func_call = self.parse_function_call(Some(val))?;
                         match BinOp::try_from(self.peek()?.kind) {
@@ -323,12 +312,11 @@ impl Parser {
                         Ok(_) => self.parse_bin_op(Some(Expression::Variable(token.raw)))?,
                         Err(_) => Expression::Variable(val),
                     },
-                };
-                state
+                }
             }
             TokenKind::SquareBraceOpen => self.parse_array()?,
             TokenKind::Keyword(Keyword::New) => self.parse_struct_initialization()?,
-            other => Err(format!("Expected Expression, found {:?}", other))?,
+            other => return Err(format!("Expected Expression, found {:?}", other)),
         };
 
         if self.peek_token(TokenKind::Dot).is_ok() {
