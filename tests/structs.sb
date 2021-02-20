@@ -38,8 +38,13 @@ fn test_field_access_in_function_call() {
     assert(user.username == "Bar")
 }
 
+fn test_field_access_on_function() {
+    assert(user_stub().first_name == "Foo")
+}
+
 fn main() {
     test_initialization()
     test_simple_field_access()
     test_field_access_in_function_call()
+    test_field_access_on_function()
 }

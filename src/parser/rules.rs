@@ -247,7 +247,11 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        Ok(Expression::FunctionCall(name, args))
+        let expr = Expression::FunctionCall(name, args);
+        match self.peek()?.kind {
+            TokenKind::Dot => self.parse_field_access(expr),
+            _ => Ok(expr)
+        }
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {
@@ -310,7 +314,6 @@ impl Parser {
                     TokenKind::Dot => {
                         let lhs = Expression::Variable(val);
                         let expr = self.parse_field_access(lhs)?;
-                        dbg!(&expr);
                         match BinOp::try_from(self.peek()?.kind) {
                             Ok(_) => self.parse_bin_op(Some(expr))?,
                             Err(_) => expr,
