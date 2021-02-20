@@ -51,6 +51,7 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
             Type::Str => "char *".into(),
             Type::Any => "void *".into(),
             Type::Bool => "bool".into(),
+            Type::Struct(_) => todo!(),
             Type::Array(_) => match name {
                 Some(n) => format!(
                     "{T} {N}[]",
@@ -125,6 +126,8 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Array(els) => generate_array(els),
         Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
+        Expression::StructInitialization(_, _) => todo!(),
+        Expression::FieldAccess(_, _) => todo!(),
     }
 }
 
@@ -217,6 +220,8 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Str(s) | Expression::Variable(s) => s,
             Expression::Array(_) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
+            Expression::StructInitialization(_, _) => todo!(),
+            Expression::FieldAccess(_, _) => todo!(),
         })
         .collect::<Vec<String>>()
         .join(",");

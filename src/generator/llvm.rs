@@ -31,6 +31,7 @@ impl<'ctx> LLVMGenerator<'ctx> {
                 Some(Type::Any) => todo!(),
                 Some(Type::Str) => todo!(),
                 Some(Type::Array(_)) => todo!(),
+                Some(Type::Struct(_)) => todo!(),
                 None => panic!("Function argument has no type"),
             })
             .collect();

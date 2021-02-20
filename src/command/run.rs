@@ -1,6 +1,7 @@
 use crate::command::build;
 use std::io::Write;
 use std::path::PathBuf;
+use std::process;
 use std::process::Command;
 use std::process::Stdio;
 use tempfile::tempdir;
@@ -51,6 +52,8 @@ pub fn run(in_file: PathBuf) -> Result<(), String> {
         std::io::stderr()
             .write_all(&out.stderr)
             .expect("Could not write to stderr");
+
+        process::exit(out.status.code().unwrap())
     }
     Ok(())
 }

@@ -23,6 +23,7 @@ pub type SymbolTable = HashMap<String, Option<Type>>;
 #[derive(Debug)]
 pub struct Program {
     pub func: Vec<Function>,
+    pub structs: Vec<StructDef>,
     pub globals: Vec<String>,
 }
 
@@ -51,6 +52,12 @@ pub struct Function {
     pub ret_type: Option<Type>,
 }
 
+#[derive(Debug, Clone)]
+pub struct StructDef {
+    pub name: String,
+    pub fields: Vec<Variable>,
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Variable {
     pub name: String,
@@ -64,6 +71,7 @@ pub enum Type {
     Str,
     Bool,
     Array(Box<Type>),
+    Struct(String),
 }
 
 impl TryFrom<String> for Type {
@@ -74,7 +82,7 @@ impl TryFrom<String> for Type {
             "string" => Ok(Self::Str),
             "any" => Ok(Self::Any),
             "bool" => Ok(Self::Bool),
-            _ => Err("Unknown Type".into()),
+            name => Ok(Self::Struct(name.to_string())),
         }
     }
 }
@@ -105,6 +113,8 @@ pub enum Expression {
     /// (name, index)
     ArrayAccess(String, Box<Expression>),
     BinOp(Box<Expression>, BinOp, Box<Expression>),
+    StructInitialization(String, HashMap<String, Box<Expression>>),
+    FieldAccess(Box<Expression>, String),
 }
 
 impl TryFrom<Token> for Expression {

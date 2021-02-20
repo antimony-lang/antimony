@@ -1,0 +1,73 @@
+struct User {
+    username: string,
+    first_name: string,
+    last_name: string
+}
+
+// Creates a stub user
+fn user_stub() {
+    let stub = new User {
+        username: "Foo Bar",
+        first_name: "Foo",
+        last_name: "Bar"
+    }
+
+    assert(stub.first_name)
+    assert(stub.last_name)
+    return stub
+}
+
+fn test_initialization() {
+    let foo = new User {
+        username: "Foo Bar",
+        first_name: "Bar",
+        last_name: "Bar"
+    }
+
+    assert(foo)
+}
+
+fn test_simple_field_access() {
+    let user: User = user_stub()
+    user.username = "Foo Bar"
+}
+
+fn test_field_access_in_function_call() {
+    let user: User = user_stub()
+    user.username = "Bar"
+    assert(user.username == "Bar")
+}
+
+fn test_field_access_on_function() {
+    assert(user_stub().first_name == "Foo")
+}
+
+struct Foo {
+    x: int,
+    bar: Bar
+}
+
+struct Bar {
+    y: string
+}
+
+fn test_nested_structs() {
+    let foo = new Foo {
+        x: 5,
+        bar: new Bar {
+            y: "Nested field"
+        }
+    }
+
+    assert(foo.x == 5)
+    println(foo.bar.y)
+    assert(foo.bar.y == "Nested field")
+}
+
+fn main() {
+    test_initialization()
+    test_simple_field_access()
+    test_field_access_in_function_call()
+    test_field_access_on_function()
+    test_nested_structs()
+}

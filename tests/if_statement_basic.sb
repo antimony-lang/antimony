@@ -5,5 +5,7 @@ fn main() {
         println("condition was true")
     } else {
         println("condition was false")
+        // Should not be true
+
     }
 }

@@ -18,21 +18,72 @@ use super::node_type::*;
 use super::parser::Parser;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
+use std::collections::HashMap;
 use std::convert::TryFrom;
 
 impl Parser {
     pub fn parse_program(&mut self) -> Result<Program, String> {
         let mut functions = Vec::new();
+        let mut structs = Vec::new();
         let globals = Vec::new();
 
         while self.has_more() {
-            functions.push(self.parse_function()?)
+            let next = self.peek()?;
+            match next.kind {
+                TokenKind::Keyword(Keyword::Function) => functions.push(self.parse_function()?),
+                TokenKind::Keyword(Keyword::Struct) => {
+                    structs.push(self.parse_struct_definition()?)
+                }
+                _ => return Err(format!("Unexpected token: {}", next.raw)),
+            }
         }
 
         Ok(Program {
             func: functions,
+            structs,
             globals,
         })
+    }
+
+    fn parse_struct_definition(&mut self) -> Result<StructDef, String> {
+        self.match_keyword(Keyword::Struct)?;
+        let name = self.match_identifier()?;
+
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+        let fields = self.parse_typed_variable_list()?;
+        self.match_token(TokenKind::CurlyBracesClose)?;
+
+        Ok(StructDef { name, fields })
+    }
+
+    fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
+        let mut args = Vec::new();
+
+        // If there is an argument
+        if let TokenKind::Identifier(_) = self.peek()?.kind {
+            // Parse first argument
+            args.push(self.parse_typed_variable()?);
+            // Then continue to parse arguments
+            // as long as a comma token is found
+            while self.peek_token(TokenKind::Comma).is_ok() {
+                self.match_token(TokenKind::Comma)?;
+                args.push(self.parse_typed_variable()?);
+            }
+        }
+
+        Ok(args)
+    }
+
+    fn parse_typed_variable(&mut self) -> Result<Variable, String> {
+        let next = self.next()?;
+        if let TokenKind::Identifier(name) = next.kind {
+            return Ok(Variable {
+                name,
+                ty: Some(self.parse_type()?),
+            });
+        }
+
+        Err(format!("Argument could not be parsed: {}", next.raw))
     }
 
     fn parse_block(&mut self) -> Result<Statement, String> {
@@ -68,7 +119,7 @@ impl Parser {
 
         let arguments: Vec<Variable> = match self.peek()? {
             t if t.kind == TokenKind::BraceClose => Vec::new(),
-            _ => self.parse_arguments()?,
+            _ => self.parse_typed_variable_list()?,
         };
 
         self.match_token(TokenKind::BraceClose)?;
@@ -86,36 +137,6 @@ impl Parser {
             body,
             ret_type: ty,
         })
-    }
-
-    fn parse_arguments(&mut self) -> Result<Vec<Variable>, String> {
-        let mut args = Vec::new();
-
-        // If there is an argument
-        if let TokenKind::Identifier(_) = self.peek()?.kind {
-            // Parse first argument
-            args.push(self.parse_typed_argument_list()?);
-            // Then continue to parse arguments
-            // as long as a comma token is found
-            while self.peek_token(TokenKind::Comma).is_ok() {
-                self.match_token(TokenKind::Comma)?;
-                args.push(self.parse_typed_argument_list()?);
-            }
-        }
-
-        Ok(args)
-    }
-
-    fn parse_typed_argument_list(&mut self) -> Result<Variable, String> {
-        let next = self.next()?;
-        if let TokenKind::Identifier(name) = next.kind {
-            return Ok(Variable {
-                name,
-                ty: Some(self.parse_type()?),
-            });
-        }
-
-        Err(format!("Argument could not be parsed: {}", next.raw))
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
@@ -146,12 +167,18 @@ impl Parser {
             TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
+                let expr = if self.peek_token(TokenKind::Dot).is_ok() {
+                    self.parse_field_access(Expression::Variable(ident.clone()))?
+                } else {
+                    Expression::Variable(ident.clone())
+                };
 
+                // TODO: Use match statement
                 if self.peek_token(TokenKind::BraceOpen).is_ok() {
                     let state = self.parse_function_call(Some(ident))?;
                     Ok(Statement::Exp(state))
                 } else if self.peek_token(TokenKind::Assign).is_ok() {
-                    let state = self.parse_assignent(Some(Expression::Variable(ident)))?;
+                    let state = self.parse_assignent(Some(expr))?;
                     Ok(state)
                 } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
                     let expr = self.parse_array_access(Some(ident))?;
@@ -166,12 +193,18 @@ impl Parser {
                     let expr = Expression::Variable(ident);
                     let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
                     Ok(state)
+                } else if self.peek_token(TokenKind::Dot).is_ok() {
+                    Ok(Statement::Exp(
+                        self.parse_field_access(Expression::Variable(ident))?,
+                    ))
                 } else {
-                    let state = Statement::Exp(Expression::Variable(ident));
-                    Ok(state)
+                    Ok(Statement::Exp(expr))
                 }
             }
             TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
+            TokenKind::Keyword(Keyword::Struct) => {
+                Err("Struct definitions inside functions are not allowed".to_string())
+            }
             _ => Err(self.make_error(TokenKind::Unknown, token)),
         }
     }
@@ -214,7 +247,11 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        Ok(Expression::FunctionCall(name, args))
+        let expr = Expression::FunctionCall(name, args);
+        match self.peek()?.kind {
+            TokenKind::Dot => self.parse_field_access(expr),
+            _ => Ok(expr),
+        }
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {
@@ -228,38 +265,27 @@ impl Parser {
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
-        match token.kind {
+        let expr = match token.kind {
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
                 self.match_token(TokenKind::BraceClose)?;
-                Ok(expr)
+                expr
             }
-            TokenKind::Keyword(Keyword::Boolean) => {
-                let state = match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(None)?,
-                    Err(_) => {
-                        Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
-                    }
-                };
-                Ok(state)
-            }
-            TokenKind::Literal(Value::Int) => {
-                let state = match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(None)?,
-                    Err(_) => Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?),
-                };
-                Ok(state)
-            }
-            TokenKind::Literal(Value::Str) => {
-                let state = match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(None)?,
-                    Err(_) => Expression::Str(token.raw),
-                };
-                Ok(state)
-            }
+            TokenKind::Keyword(Keyword::Boolean) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?),
+            },
+            TokenKind::Literal(Value::Int) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?),
+            },
+            TokenKind::Literal(Value::Str) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Str(token.raw),
+            },
             TokenKind::Identifier(val) => {
                 let next = self.peek()?;
-                let state = match &next.kind {
+                match &next.kind {
                     TokenKind::BraceOpen => {
                         let func_call = self.parse_function_call(Some(val))?;
                         match BinOp::try_from(self.peek()?.kind) {
@@ -274,16 +300,81 @@ impl Parser {
                             Err(_) => arr,
                         }
                     }
+                    TokenKind::Dot => {
+                        let lhs = Expression::Variable(val);
+                        let expr = self.parse_field_access(lhs)?;
+                        match BinOp::try_from(self.peek()?.kind) {
+                            Ok(_) => self.parse_bin_op(Some(expr))?,
+                            Err(_) => expr,
+                        }
+                    }
                     _ => match BinOp::try_from(self.peek()?.kind) {
                         Ok(_) => self.parse_bin_op(Some(Expression::Variable(token.raw)))?,
                         Err(_) => Expression::Variable(val),
                     },
-                };
-                Ok(state)
+                }
             }
-            TokenKind::SquareBraceOpen => self.parse_array(),
-            other => Err(format!("Expected Expression, found {:?}", other)),
+            TokenKind::SquareBraceOpen => self.parse_array()?,
+            TokenKind::Keyword(Keyword::New) => self.parse_struct_initialization()?,
+            other => return Err(format!("Expected Expression, found {:?}", other)),
+        };
+
+        if self.peek_token(TokenKind::Dot).is_ok() {
+            self.parse_field_access(expr)
+        } else {
+            Ok(expr)
         }
+    }
+
+    fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
+        self.match_token(TokenKind::Dot)?;
+        let field = self.match_identifier()?;
+        let expr = Expression::FieldAccess(Box::new(lhs), field);
+        if self.peek_token(TokenKind::Dot).is_ok() {
+            self.parse_field_access(expr)
+        } else {
+            Ok(expr)
+        }
+    }
+
+    /// TODO: Cleanup
+    fn parse_struct_initialization(&mut self) -> Result<Expression, String> {
+        let name = self.match_identifier()?;
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+        let fields = self.parse_struct_fields()?;
+        self.match_token(TokenKind::CurlyBracesClose)?;
+
+        Ok(Expression::StructInitialization(name, fields))
+    }
+
+    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>, String> {
+        let mut map = HashMap::new();
+
+        // If there is a field
+        if let TokenKind::Identifier(_) = self.peek()?.kind {
+            // Parse first field
+            let (name, expr) = self.parse_struct_field()?;
+            map.insert(name, expr);
+            // Then continue to parse fields
+            // as long as a comma token is found
+            while self.peek_token(TokenKind::Comma).is_ok() {
+                self.match_token(TokenKind::Comma)?;
+                let (name, expr) = self.parse_struct_field()?;
+                map.insert(name, expr);
+            }
+        }
+
+        Ok(map)
+    }
+
+    fn parse_struct_field(&mut self) -> Result<(String, Box<Expression>), String> {
+        let next = self.next()?;
+        if let TokenKind::Identifier(name) = next.kind {
+            self.match_token(TokenKind::Colon)?;
+            return Ok((name, Box::new(self.parse_expression()?)));
+        }
+
+        Err(format!("Struct field could not be parsed: {}", next.raw))
     }
 
     fn parse_array(&mut self) -> Result<Expression, String> {

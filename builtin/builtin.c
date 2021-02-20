@@ -7,4 +7,9 @@ void _printf(char *msg)
     printf("%s", msg);
 }
 
+void _exit(int code)
+{
+    exit(code);
+}
+
 /* END builtins */

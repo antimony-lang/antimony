@@ -776,3 +776,25 @@ fn test_array_as_argument() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
+
+#[test]
+fn test_struct_initialization() {
+    let raw = "
+    struct User {
+        username: string,
+        first_name: string,
+        last_name: string
+    }
+    
+    fn main() {
+        let foo = new User {
+            username: 'foobar',
+            first_name: 'Foo',
+            last_name: 'Bar'
+        }
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok());
+}

@@ -5,4 +5,8 @@ function _printf(msg) {
   process.stdout.write(msg.toString());
 }
 
+function _exit(code) {
+  process.exit(code);
+}
+
 /* END builtins */

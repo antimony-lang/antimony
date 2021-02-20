@@ -9,6 +9,7 @@
   - [Functions](./concepts/functions.md)
   - [Comments](./concepts/comments.md)
   - [Control Flow](./concepts/control-flow.md)
+  - [Structured data](./concepts/structured-data.md)
 - [Developer Resources](./developers/SUMMARY.md)
   - [Contributing to Sabre](./developers/contributing.md)
   - [Compiler Backends](./developers/backends.md)

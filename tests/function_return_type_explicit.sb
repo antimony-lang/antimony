@@ -1,5 +1,6 @@
 fn main() {
     let x = add_one(2)
+    assert(x == 3)
     println(x)
 }
 

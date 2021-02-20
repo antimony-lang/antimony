@@ -72,6 +72,8 @@ pub enum TokenKind {
     Colon,
     /// ";"
     SemiColon,
+    /// "."
+    Dot,
     /// "!"
     Exclamation,
     /// ","
@@ -141,6 +143,8 @@ pub enum Keyword {
     Continue,
     Function,
     Boolean,
+    Struct,
+    New,
     Unknown,
 }
 
@@ -201,6 +205,7 @@ impl Cursor<'_> {
             c if is_whitespace(c) => self.whitespace(),
             '0'..='9' => self.number(),
             '"' | '\'' => self.string(),
+            '.' => Dot,
             '+' => match self.first() {
                 '=' => {
                     self.bump();
@@ -361,6 +366,8 @@ impl Cursor<'_> {
             c if c == "in" => Keyword::In,
             c if c == "break" => Keyword::Break,
             c if c == "continue" => Keyword::Continue,
+            c if c == "struct" => Keyword::Struct,
+            c if c == "new" => Keyword::New,
             _ => Keyword::Unknown,
         }
     }
