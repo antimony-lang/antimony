@@ -49,7 +49,7 @@ See the [installation](https://garritfra.github.io/sabre/latest/introduction/ins
 
 ## Chat on matrix
 
-[Join here](https://matrix.to/#/!eaupsjLNPYSluWFJOC:matrix.slashdev.space?via=matrix.slashdev.space)!
+[Get in touch](https://matrix.to/#/!eaupsjLNPYSluWFJOC:matrix.slashdev.space?via=matrix.slashdev.space)!
 
 ## License
 
