@@ -345,7 +345,7 @@ impl Parser {
         if self.peek_token(TokenKind::Dot).is_ok() {
             self.parse_field_access(expr)
         } else {
-           Ok(expr) 
+            Ok(expr)
         }
     }
 
