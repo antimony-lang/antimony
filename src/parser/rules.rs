@@ -250,7 +250,7 @@ impl Parser {
         let expr = Expression::FunctionCall(name, args);
         match self.peek()?.kind {
             TokenKind::Dot => self.parse_field_access(expr),
-            _ => Ok(expr)
+            _ => Ok(expr),
         }
     }
 
