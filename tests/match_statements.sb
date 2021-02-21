@@ -1,0 +1,37 @@
+fn test_basic_match() {
+    let x = 1
+
+    match x {
+        1 => assert(true)
+        2 => assert(false)
+    }
+}
+
+fn test_boolean_match() {
+    let x = true
+
+    match x {
+        true => assert(true)
+        false => assert(false)
+    }
+}
+
+fn test_match_with_block_statement() {
+    let x = 42
+
+    match x {
+        1 => println("x is 1")
+        2 => {
+            println("This is a branch with multiple statements.") 
+            println("x is 2, in case you are wondering")
+        }
+        42 => println("The answer to the universe and everything!")
+        else => println("Default case")
+    }
+}
+
+fn main() {
+    test_basic_match()
+    test_boolean_match()
+    test_match_with_block_statement()
+}

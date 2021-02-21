@@ -1,3 +1,4 @@
+use crate::lexer::Keyword;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -13,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::lexer::Keyword;
+use crate::lexer::Position;
 use crate::lexer::{Token, TokenKind};
 use crate::parser::infer::infer;
 use crate::parser::node_type::*;
@@ -124,6 +125,11 @@ impl Parser {
             ),
             None => format!("Token {:?} not found, found {:?}", token_kind, other),
         }
+    }
+
+    pub(super) fn make_error_msg(&mut self, pos: Position, msg: String) -> String {
+        let pos_string = format!("{}:{}", pos.line, pos.offset);
+        format!("ERROR: {}\nAt {}", msg, pos_string)
     }
 
     pub(super) fn prev(&mut self) -> Option<Token> {

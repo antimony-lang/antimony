@@ -158,6 +158,7 @@ impl Parser {
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.peek()?;
         match &token.kind {
+            TokenKind::CurlyBracesOpen => self.parse_block(),
             TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
@@ -165,6 +166,7 @@ impl Parser {
             TokenKind::Keyword(Keyword::Break) => self.parse_break(),
             TokenKind::Keyword(Keyword::Continue) => self.parse_continue(),
             TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
+            TokenKind::Keyword(Keyword::Match) => self.parse_match_statement(),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
                 let expr = if self.peek_token(TokenKind::Dot).is_ok() {
@@ -455,6 +457,57 @@ impl Parser {
             expr,
             Box::new(body),
         ))
+    }
+
+    fn parse_match_statement(&mut self) -> Result<Statement, String> {
+        self.match_keyword(Keyword::Match)?;
+        let subject = self.parse_expression()?;
+        self.match_token(TokenKind::CurlyBracesOpen)?;
+        let mut arms: Vec<MatchArm> = Vec::new();
+
+        // Used to mitigate multiple else cases were defined
+        let mut has_else = false;
+        loop {
+            let next = self.peek()?;
+            match next.kind {
+                TokenKind::Literal(_)
+                | TokenKind::Identifier(_)
+                | TokenKind::Keyword(Keyword::Boolean) => arms.push(self.parse_match_arm()?),
+                TokenKind::Keyword(Keyword::Else) => {
+                    if has_else {
+                        return Err(self.make_error_msg(
+                            next.pos,
+                            "Multiple else arms are not allowed".to_string(),
+                        ));
+                    }
+                    has_else = true;
+                    arms.push(self.parse_match_arm()?);
+                }
+                TokenKind::CurlyBracesClose => break,
+                _ => return Err(self.make_error_msg(next.pos, "Illegal token".to_string())),
+            }
+        }
+        self.match_token(TokenKind::CurlyBracesClose)?;
+        Ok(Statement::Match(subject, arms))
+    }
+
+    fn parse_match_arm(&mut self) -> Result<MatchArm, String> {
+        let next = self.peek()?;
+
+        match next.kind {
+            TokenKind::Keyword(Keyword::Else) => {
+                self.match_keyword(Keyword::Else)?;
+                self.match_token(TokenKind::ArrowRight)?;
+                Ok(MatchArm::Else(self.parse_statement()?))
+            }
+            _ => {
+                let expr = self.parse_expression()?;
+                self.match_token(TokenKind::ArrowRight)?;
+                let statement = self.parse_statement()?;
+
+                Ok(MatchArm::Case(expr, statement))
+            }
+        }
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {

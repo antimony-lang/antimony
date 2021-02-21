@@ -97,6 +97,7 @@ pub enum Statement {
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),
     For(Variable, Expression, Box<Statement>),
+    Match(Expression, Vec<MatchArm>),
     Break,
     Continue,
     Exp(Expression),
@@ -139,6 +140,12 @@ impl TryFrom<Token> for Expression {
             _ => Err("Value could not be parsed".into()),
         }
     }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum MatchArm {
+    Case(Expression, Statement),
+    Else(Statement),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]

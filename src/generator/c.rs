@@ -112,6 +112,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::For(_ident, _expr, _body) => todo!(),
         Statement::Continue => todo!(),
         Statement::Break => todo!(),
+        Statement::Match(_, _) => todo!(),
     };
 
     format!("{}\n", state)
