@@ -1,3 +1,6 @@
+use crate::lexer::*;
+use core::convert::TryFrom;
+use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -14,9 +17,6 @@
  * limitations under the License.
  */
 use std::collections::HashSet;
-use crate::lexer::*;
-use core::convert::TryFrom;
-use std::collections::HashMap;
 
 /// Table that contains all symbol and its types
 pub type SymbolTable = HashMap<String, Option<Type>>;

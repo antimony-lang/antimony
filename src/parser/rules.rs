@@ -151,20 +151,19 @@ impl Parser {
     fn parse_import(&mut self) -> Result<String, String> {
         self.match_keyword(Keyword::Import)?;
         let import_path_token = self.match_token(TokenKind::Literal(Value::Str))?;
-        
+
         // Remove leading and trailing string tokens
         let mut chars = import_path_token.raw.chars();
         chars.next();
         chars.next_back();
 
         let import_path = if chars.as_str().ends_with(".sb") {
-           chars.collect() 
+            chars.collect()
         } else {
             format!("{}.sb", chars.collect::<String>())
         };
 
         Ok(import_path)
-        
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
