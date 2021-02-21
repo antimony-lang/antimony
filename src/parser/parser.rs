@@ -1,3 +1,4 @@
+use crate::lexer::Keyword;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -14,7 +15,6 @@
  * limitations under the License.
  */
 use crate::lexer::Position;
-use crate::lexer::Keyword;
 use crate::lexer::{Token, TokenKind};
 use crate::parser::infer::infer;
 use crate::parser::node_type::*;

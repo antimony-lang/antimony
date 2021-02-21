@@ -145,7 +145,7 @@ impl TryFrom<Token> for Expression {
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum MatchArm {
     Case(Expression, Statement),
-    Default(Statement)
+    Default(Statement),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
