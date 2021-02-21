@@ -469,9 +469,9 @@ impl Parser {
         loop {
             let next = self.peek()?;
             match next.kind {
-                TokenKind::Literal(_) | TokenKind::Identifier(_) => {
-                    arms.push(self.parse_match_arm()?)
-                }
+                TokenKind::Literal(_)
+                | TokenKind::Identifier(_)
+                | TokenKind::Keyword(Keyword::Boolean) => arms.push(self.parse_match_arm()?),
                 TokenKind::Keyword(Keyword::Default) => {
                     if has_default {
                         return Err(self.make_error_msg(
@@ -483,7 +483,7 @@ impl Parser {
                     arms.push(self.parse_match_arm()?);
                 }
                 TokenKind::CurlyBracesClose => break,
-                _ => return Err(self.make_error_msg(next.pos, "Illegal token".to_string()))
+                _ => return Err(self.make_error_msg(next.pos, "Illegal token".to_string())),
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
@@ -496,7 +496,6 @@ impl Parser {
         let statement = self.parse_statement()?;
 
         Ok((expr, statement))
-
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {

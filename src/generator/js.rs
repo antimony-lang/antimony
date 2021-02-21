@@ -103,7 +103,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::For(ident, expr, body) => generate_for_loop(ident, expr, *body),
         Statement::Continue => generate_continue(),
         Statement::Break => generate_break(),
-        Statement::Match(_, _) => todo!(),
+        Statement::Match(subject, arms) => generate_match(subject, arms),
     };
 
     format!("{};\n", state)
@@ -164,6 +164,19 @@ fn generate_break() -> String {
 
 fn generate_continue() -> String {
     "continue;\n".into()
+}
+
+fn generate_match(subject: Expression, arms: Vec<MatchArm>) -> String {
+    let mut out_str = format!("switch ({E}) {{\n", E = generate_expression(subject));
+    for (case, statement) in arms {
+        out_str += &format!("case {}:\n", generate_expression(case));
+        out_str += &format!("{}\n", &generate_statement(statement));
+        out_str += "break;";
+    }
+
+    out_str += "}";
+
+    out_str
 }
 
 fn generate_array(elements: Vec<Expression>) -> String {

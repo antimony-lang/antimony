@@ -1,4 +1,13 @@
 fn test_basic_match() {
+    let x = 1
+
+    match x {
+        1 => assert(true)
+        2 => assert(false)
+    }
+}
+
+fn test_boolean_match() {
     let x = true
 
     match x {
@@ -9,4 +18,5 @@ fn test_basic_match() {
 
 fn main() {
     test_basic_match()
+    test_boolean_match()
 }
