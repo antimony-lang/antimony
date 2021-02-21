@@ -65,13 +65,13 @@ impl Builder {
 
         // TODO: We shouldn't clone here
         let mut condensed = mod_iter.next().ok_or("No module specified")?.clone();
-        while let Some(module) = mod_iter.next() {
+        for module in mod_iter {
             condensed.merge_with(module.clone());
         }
         let output = generator::generate(condensed);
         let mut file = std::fs::File::create(out_file).expect("create failed");
         file.write_all(output.as_bytes()).expect("write failed");
-        Ok(file.flush().expect("Could not flush file"))
+        file.flush().map_err(|_| "Could not flush file".into())
     }
 }
 

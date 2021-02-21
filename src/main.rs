@@ -27,7 +27,6 @@ mod command;
 mod generator;
 mod lexer;
 mod parser;
-mod table;
 #[cfg(test)]
 mod tests;
 mod util;

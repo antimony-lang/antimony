@@ -61,8 +61,8 @@ impl X86Generator {
             func,
             globals,
             structs: _,
-            path,
-            imports,
+            path: _,
+            imports: _,
         } = prog;
 
         asm.add(".intel_syntax noprefix");
