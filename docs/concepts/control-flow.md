@@ -75,6 +75,42 @@ number is divisible by 3
 
 When this program executes, it checks each `if` expression in turn and executes the first body for which the condition holds true. Note that even though 6 is divisible by 2, we don’t see the output `number is divisible by 2`, nor do we see the `number is not divisible by 4, 3, or 2` text from the else block. That’s because Sabre only executes the block for the first true condition, and once it finds one, it doesn’t even check the rest.
 
+### Value matching
+
+Working with `if` statements with multiple `else` branches can become tedious. `match` statements provide a cleaner syntax for this case. You can compare `match` statements to `switch` in many other languages. Let's look at a very simple match statement.
+
+```
+    let x = 42
+
+    match x {
+        1 => println("x is 1")
+        2 => println("x is 2")
+        42 => println("The answer to the universe and everything!")
+        default => println("This will not be called")
+    }
+```
+
+In this example, we check the value of `x`, and execute some code based on the value. Instead of having to type `x == 1`, `x == 2` and so on, we instead provide the value only once, and decide what to do for each case. We can optionally provide a `default` case, which will be executed if no other case was triggered.
+
+You can execute multiple statements inside a single case. A common case would be to log some debug output and then return a value.
+
+```
+fn invert(x: bool): bool {
+    match x {
+        true => {
+            println("The value is true")
+            return false
+        }
+        false => {
+            println("The value is false")
+            return true
+        }
+    }
+}
+```
+
+Keep in mind that excessive use of this could hurt the readability of your code. Instead, you could try to outsource those statements into a function and call that instead.
+
 ## Loops
 
 It's often useful to execute a block of code more than once. For this task, Sabre provides different kind of _loops_. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.
