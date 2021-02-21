@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::collections::HashSet;
 use crate::lexer::*;
 use core::convert::TryFrom;
 use std::collections::HashMap;
@@ -23,7 +24,7 @@ pub type SymbolTable = HashMap<String, Option<Type>>;
 #[derive(Debug, Clone)]
 pub struct Module {
     pub path: String,
-    pub imports: Vec<String>,
+    pub imports: HashSet<String>,
     pub func: Vec<Function>,
     pub structs: Vec<StructDef>,
     pub globals: Vec<String>,

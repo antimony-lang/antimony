@@ -148,6 +148,7 @@ pub enum Keyword {
     Struct,
     New,
     Match,
+    Import,
     Unknown,
 }
 
@@ -376,6 +377,7 @@ impl Cursor<'_> {
             c if c == "struct" => Keyword::Struct,
             c if c == "new" => Keyword::New,
             c if c == "match" => Keyword::Match,
+            c if c == "import" => Keyword::Import,
             _ => Keyword::Unknown,
         }
     }

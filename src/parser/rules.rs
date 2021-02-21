@@ -1,3 +1,9 @@
+use super::node_type::Statement;
+use super::node_type::*;
+use super::parser::Parser;
+use crate::lexer::Keyword;
+use crate::lexer::{TokenKind, Value};
+use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -13,25 +19,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use super::node_type::Statement;
-use super::node_type::*;
-use super::parser::Parser;
-use crate::lexer::Keyword;
-use crate::lexer::{TokenKind, Value};
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::convert::TryFrom;
 
 impl Parser {
     pub fn parse_module(&mut self) -> Result<Module, String> {
         let mut functions = Vec::new();
         let mut structs = Vec::new();
-        let imports = Vec::new();
+        let mut imports = HashSet::new();
         let globals = Vec::new();
 
         while self.has_more() {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::Keyword(Keyword::Function) => functions.push(self.parse_function()?),
+                TokenKind::Keyword(Keyword::Import) => {
+                    imports.insert(self.parse_import()?);
+                }
                 TokenKind::Keyword(Keyword::Struct) => {
                     structs.push(self.parse_struct_definition()?)
                 }
@@ -142,6 +146,25 @@ impl Parser {
             body,
             ret_type: ty,
         })
+    }
+
+    fn parse_import(&mut self) -> Result<String, String> {
+        self.match_keyword(Keyword::Import)?;
+        let import_path_token = self.match_token(TokenKind::Literal(Value::Str))?;
+        
+        // Remove leading and trailing string tokens
+        let mut chars = import_path_token.raw.chars();
+        chars.next();
+        chars.next_back();
+
+        let import_path = if chars.as_str().ends_with(".sb") {
+           chars.collect() 
+        } else {
+            format!("{}.sb", chars.collect::<String>())
+        };
+
+        Ok(import_path)
+        
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
