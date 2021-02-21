@@ -13,30 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::generator;
-use crate::lexer;
 use crate::builder;
-use crate::parser;
-use crate::Lib;
-use std::io::Write;
 use std::path::Path;
 
 pub fn build(in_file: &Path, out_file: &Path) -> Result<(), String> {
     let mut b = builder::Builder::new(in_file.to_path_buf());
-    b.build();
-
-    b.generate(out_file.to_path_buf())?;
-
-
-    Ok(())
-}
-
-fn build_stdlib() -> parser::node_type::Module {
-    let stdlib_raw =
-        Lib::get("stdio.sb").expect("Standard library not found. This should not occur.");
-    let stblib_str =
-        std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
-    let stdlib_tokens = lexer::tokenize(&stblib_str);
-
-    parser::parse(stdlib_tokens, Some(stblib_str.into()), "stdio".to_string()).expect("Could not parse stdlib")
+    b.build()?;
+    b.generate(out_file.to_path_buf())
 }

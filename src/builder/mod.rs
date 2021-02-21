@@ -1,7 +1,7 @@
 use crate::generator;
 use crate::lexer;
 use crate::parser;
-use std::io::Write;
+use crate::Lib;
 use crate::PathBuf;
 use parser::node_type::Module;
 /**
@@ -21,6 +21,7 @@ use parser::node_type::Module;
  */
 use std::fs::File;
 use std::io::Read;
+use std::io::Write;
 
 pub struct Builder {
     in_file: PathBuf,
@@ -38,6 +39,8 @@ impl Builder {
     pub fn build(&mut self) -> Result<(), String> {
         self.build_module(self.in_file.clone())?;
 
+        // Append standard library
+        self.modules.push(build_stdlib());
         Ok(())
     }
 
@@ -64,10 +67,21 @@ impl Builder {
         let mut condensed = mod_iter.next().ok_or("No module specified")?.clone();
         while let Some(module) = mod_iter.next() {
             condensed.merge_with(module.clone());
-        };
+        }
         let output = generator::generate(condensed);
         let mut file = std::fs::File::create(out_file).expect("create failed");
         file.write_all(output.as_bytes()).expect("write failed");
         Ok(file.flush().expect("Could not flush file"))
     }
+}
+
+fn build_stdlib() -> parser::node_type::Module {
+    let stdlib_raw =
+        Lib::get("stdio.sb").expect("Standard library not found. This should not occur.");
+    let stblib_str =
+        std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
+    let stdlib_tokens = lexer::tokenize(&stblib_str);
+
+    parser::parse(stdlib_tokens, Some(stblib_str.into()), "stdio".to_string())
+        .expect("Could not parse stdlib")
 }
