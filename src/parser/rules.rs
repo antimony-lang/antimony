@@ -46,7 +46,7 @@ impl Parser {
             structs,
             globals,
             path: self.path.clone(),
-            imports
+            imports,
         })
     }
 
