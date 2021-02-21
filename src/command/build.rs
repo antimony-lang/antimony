@@ -45,7 +45,7 @@ pub fn build(in_file: &Path, out_file: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn build_stdlib() -> parser::node_type::Program {
+fn build_stdlib() -> parser::node_type::Module {
     let stdlib_raw =
         Lib::get("stdio.sb").expect("Standard library not found. This should not occur.");
     let stblib_str =

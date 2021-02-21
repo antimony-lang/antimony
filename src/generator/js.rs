@@ -20,7 +20,7 @@ use std::collections::HashMap;
 pub struct JsGenerator;
 
 impl Generator for JsGenerator {
-    fn generate(prog: Program) -> String {
+    fn generate(prog: Module) -> String {
         let mut code = String::new();
 
         let raw_builtins =

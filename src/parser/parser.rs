@@ -46,8 +46,8 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Program, String> {
-        let mut program = self.parse_program()?;
+    pub fn parse(&mut self) -> Result<Module, String> {
+        let mut program = self.parse_module()?;
         // infer types
         infer(&mut program);
 

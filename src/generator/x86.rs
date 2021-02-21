@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 use crate::generator::Generator;
-use crate::parser::node_type::{Function, Program, Statement};
+use crate::parser::node_type::{Function, Module, Statement};
 
 struct Assembly {
     asm: Vec<String>,
@@ -45,7 +45,7 @@ impl Assembly {
 pub struct X86Generator;
 
 impl Generator for X86Generator {
-    fn generate(prog: Program) -> String {
+    fn generate(prog: Module) -> String {
         Self::new().gen_program(prog).build()
     }
 }
@@ -55,9 +55,9 @@ impl X86Generator {
         X86Generator {}
     }
 
-    fn gen_program(&mut self, prog: Program) -> Assembly {
+    fn gen_program(&mut self, prog: Module) -> Assembly {
         let mut asm = Assembly::new();
-        let Program {
+        let Module {
             func,
             globals,
             structs: _,

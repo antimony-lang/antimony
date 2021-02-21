@@ -26,13 +26,13 @@ mod tests;
 pub mod x86;
 
 pub trait Generator {
-    fn generate(prog: Program) -> String;
+    fn generate(prog: Module) -> String;
 }
 
 // Since we're using multiple features,
 // "unreachable" statements are okay
 #[allow(unreachable_code)]
-pub fn generate(prog: Program) -> String {
+pub fn generate(prog: Module) -> String {
     #[cfg(feature = "backend_llvm")]
     return llvm::LLVMGenerator::generate(prog);
     #[cfg(feature = "backend_c")]

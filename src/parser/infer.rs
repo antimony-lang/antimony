@@ -19,7 +19,7 @@ use super::node_type::*;
 ///
 /// TODO: Global symbol table is passed around randomly.
 /// This could probably be cleaned up.
-pub(super) fn infer(program: &mut Program) {
+pub(super) fn infer(program: &mut Module) {
     let table = &program.get_symbol_table();
     // TODO: Fix aweful nesting
     for func in &mut program.func {

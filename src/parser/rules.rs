@@ -22,7 +22,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 
 impl Parser {
-    pub fn parse_program(&mut self) -> Result<Program, String> {
+    pub fn parse_module(&mut self) -> Result<Module, String> {
         let mut functions = Vec::new();
         let mut structs = Vec::new();
         let globals = Vec::new();
@@ -38,7 +38,7 @@ impl Parser {
             }
         }
 
-        Ok(Program {
+        Ok(Module {
             func: functions,
             structs,
             globals,

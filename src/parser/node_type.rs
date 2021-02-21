@@ -21,14 +21,14 @@ use std::collections::HashMap;
 pub type SymbolTable = HashMap<String, Option<Type>>;
 
 #[derive(Debug)]
-pub struct Program {
+pub struct Module {
     pub func: Vec<Function>,
     pub structs: Vec<StructDef>,
     pub globals: Vec<String>,
 }
 
-impl Program {
-    pub fn merge_with(&mut self, mut other: Program) {
+impl Module {
+    pub fn merge_with(&mut self, mut other: Module) {
         self.func.append(&mut other.func);
         self.globals.append(&mut other.globals)
     }
