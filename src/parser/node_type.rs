@@ -20,8 +20,10 @@ use std::collections::HashMap;
 /// Table that contains all symbol and its types
 pub type SymbolTable = HashMap<String, Option<Type>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Module {
+    pub path: String,
+    pub imports: Vec<String>,
     pub func: Vec<Function>,
     pub structs: Vec<StructDef>,
     pub globals: Vec<String>,

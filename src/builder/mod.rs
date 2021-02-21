@@ -1,0 +1,73 @@
+use crate::generator;
+use crate::lexer;
+use crate::parser;
+use std::io::Write;
+use crate::PathBuf;
+use parser::node_type::Module;
+/**
+ * Copyright 2021 Garrit Franke
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+use std::fs::File;
+use std::io::Read;
+
+pub struct Builder {
+    in_file: PathBuf,
+    modules: Vec<Module>,
+}
+
+impl Builder {
+    pub fn new(entrypoint: PathBuf) -> Self {
+        Self {
+            in_file: entrypoint,
+            modules: Vec::new(),
+        }
+    }
+
+    pub fn build(&mut self) -> Result<(), String> {
+        self.build_module(self.in_file.clone())?;
+
+        Ok(())
+    }
+
+    fn build_module(&mut self, file_path: PathBuf) -> Result<Module, String> {
+        let mut file = File::open(&file_path)
+            .map_err(|_| format!("Could not open file: {}", file_path.display()))?;
+        let mut contents = String::new();
+
+        file.read_to_string(&mut contents)
+            .expect("Could not read file");
+        let tokens = lexer::tokenize(&contents);
+        let module = parser::parse(tokens, Some(contents), file_path.display().to_string())?;
+        for import in &module.imports {
+            self.build_module(PathBuf::from(import))?;
+        }
+        self.modules.push(module.clone());
+        Ok(module)
+    }
+
+    pub(crate) fn generate(&mut self, out_file: PathBuf) -> Result<(), String> {
+        let mut mod_iter = self.modules.iter();
+
+        // TODO: We shouldn't clone here
+        let mut condensed = mod_iter.next().ok_or("No module specified")?.clone();
+        while let Some(module) = mod_iter.next() {
+            condensed.merge_with(module.clone());
+        };
+        let output = generator::generate(condensed);
+        let mut file = std::fs::File::create(out_file).expect("create failed");
+        file.write_all(output.as_bytes()).expect("write failed");
+        Ok(file.flush().expect("Could not flush file"))
+    }
+}

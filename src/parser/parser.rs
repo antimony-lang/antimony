@@ -24,6 +24,7 @@ use std::iter::Peekable;
 use std::vec::IntoIter;
 
 pub struct Parser {
+    pub path: String,
     tokens: Peekable<IntoIter<Token>>,
     peeked: Vec<Token>,
     current: Option<Token>,
@@ -32,12 +33,13 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(tokens: Vec<Token>, raw: Option<String>) -> Parser {
+    pub fn new(tokens: Vec<Token>, raw: Option<String>, file_name: String) -> Parser {
         let tokens_without_whitespace: Vec<Token> = tokens
             .into_iter()
             .filter(|token| token.kind != TokenKind::Whitespace && token.kind != TokenKind::Comment)
             .collect();
         Parser {
+            path: file_name,
             tokens: tokens_without_whitespace.into_iter().peekable(),
             peeked: vec![],
             current: None,

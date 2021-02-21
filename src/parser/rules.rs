@@ -25,6 +25,7 @@ impl Parser {
     pub fn parse_module(&mut self) -> Result<Module, String> {
         let mut functions = Vec::new();
         let mut structs = Vec::new();
+        let imports = Vec::new();
         let globals = Vec::new();
 
         while self.has_more() {
@@ -38,10 +39,14 @@ impl Parser {
             }
         }
 
+        // TODO: Populate imports
+
         Ok(Module {
             func: functions,
             structs,
             globals,
+            path: self.path.clone(),
+            imports
         })
     }
 

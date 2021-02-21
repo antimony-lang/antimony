@@ -15,32 +15,18 @@
  */
 use crate::generator;
 use crate::lexer;
+use crate::builder;
 use crate::parser;
 use crate::Lib;
-use std::fs::File;
-use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 
 pub fn build(in_file: &Path, out_file: &Path) -> Result<(), String> {
-    let mut file = File::open(in_file).expect("Could not open file");
-    let mut contents = String::new();
+    let mut b = builder::Builder::new(in_file.to_path_buf());
+    b.build();
 
-    file.read_to_string(&mut contents)
-        .expect("Could not read file");
-    let tokens = lexer::tokenize(&contents);
-    let mut program = parser::parse(tokens, Some(contents))?;
+    b.generate(out_file.to_path_buf())?;
 
-    // C Backend currently does not support stdlib yet, since not all features are implemented
-    if cfg!(feature = "backend_node") {
-        let stdlib = build_stdlib();
-        program.merge_with(stdlib);
-    }
-
-    let output = generator::generate(program);
-    let mut file = std::fs::File::create(out_file).expect("create failed");
-    file.write_all(output.as_bytes()).expect("write failed");
-    file.flush().expect("Could not flush file");
 
     Ok(())
 }
@@ -52,5 +38,5 @@ fn build_stdlib() -> parser::node_type::Module {
         std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
     let stdlib_tokens = lexer::tokenize(&stblib_str);
 
-    parser::parse(stdlib_tokens, Some(stblib_str.into())).expect("Could not parse stdlib")
+    parser::parse(stdlib_tokens, Some(stblib_str.into()), "stdio".to_string()).expect("Could not parse stdlib")
 }

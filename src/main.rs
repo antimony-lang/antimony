@@ -22,10 +22,12 @@ extern crate tempfile;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+mod builder;
 mod command;
 mod generator;
 mod lexer;
 mod parser;
+mod table;
 #[cfg(test)]
 mod tests;
 mod util;
