@@ -43,7 +43,7 @@ impl Builder {
         if let Some(base_directory) = self.in_file.clone().parent() {
             if let Ok(resolved_delta) = in_file.strip_prefix(base_directory) {
                 // TODO: This error could probably be handled better
-                let _ = env::set_current_dir(resolved_delta);
+                let _ = env::set_current_dir(base_directory);
                 self.in_file = resolved_delta.to_path_buf();
             }
         };
