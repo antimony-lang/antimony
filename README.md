@@ -10,7 +10,7 @@ It is meant to "just work", without adding unnecessary and bloated language feat
 
 ## Why yet another language?
 
-The goal Sabre is to be a simple language that anyone - beginner and expert - can pick up and use. A "bullshit-free programming language" is of course a highly subjective opinion, and this project is my very own attempt at this. There are plenty of great programming languages out there, and Sabre is not meant to replace any of them. Currently, Sabre is just a general-purpose toy language. Its primary goal is to be simple and easy to understand, not to be efficient.
+The goal of Sabre is to be a simple language that anyone - beginner and expert - can pick up and use. A "bullshit-free programming language" is of course a highly subjective opinion, and this project is my very own attempt at this. There are plenty of great programming languages out there, and Sabre is not meant to replace any of them. Currently, Sabre is just a general-purpose toy language. Its primary goal is to be simple and easy to understand, not to be efficient.
 
 ## Example
 
