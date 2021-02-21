@@ -175,7 +175,7 @@ fn generate_match(subject: Expression, arms: Vec<MatchArm>) -> String {
                 out_str += &format!("{}\n", &generate_statement(statement));
                 out_str += "break;";
             }
-            MatchArm::Default(statement) => {
+            MatchArm::Else(statement) => {
                 out_str += "default:\n";
                 out_str += &format!("{}\n", &generate_statement(statement));
             }

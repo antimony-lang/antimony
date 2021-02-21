@@ -86,11 +86,11 @@ Working with `if` statements with multiple `else` branches can become tedious. `
         1 => println("x is 1")
         2 => println("x is 2")
         42 => println("The answer to the universe and everything!")
-        default => println("This will not be called")
+        else => println("This will not be called")
     }
 ```
 
-In this example, we check the value of `x`, and execute some code based on the value. Instead of having to type `x == 1`, `x == 2` and so on, we instead provide the value only once, and decide what to do for each case. We can optionally provide a `default` case, which will be executed if no other case was triggered.
+In this example, we check the value of `x`, and execute some code based on the value. Instead of having to type `x == 1`, `x == 2` and so on, we instead provide the value only once, and decide what to do for each case. We can optionally provide a `else` case, which will be executed if no other case was triggered.
 
 You can execute multiple statements inside a single case. A common case would be to log some debug output and then return a value.
 

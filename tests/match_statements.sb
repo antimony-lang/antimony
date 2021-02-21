@@ -26,7 +26,7 @@ fn test_match_with_block_statement() {
             println("x is 2, in case you are wondering")
         }
         42 => println("The answer to the universe and everything!")
-        default => println("Default case")
+        else => println("Default case")
     }
 }
 

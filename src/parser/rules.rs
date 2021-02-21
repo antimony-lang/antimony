@@ -465,22 +465,22 @@ impl Parser {
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let mut arms: Vec<MatchArm> = Vec::new();
 
-        // Used to mitigate multiple default cases were defined
-        let mut has_default = false;
+        // Used to mitigate multiple else cases were defined
+        let mut has_else = false;
         loop {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::Literal(_)
                 | TokenKind::Identifier(_)
                 | TokenKind::Keyword(Keyword::Boolean) => arms.push(self.parse_match_arm()?),
-                TokenKind::Keyword(Keyword::Default) => {
-                    if has_default {
+                TokenKind::Keyword(Keyword::Else) => {
+                    if has_else {
                         return Err(self.make_error_msg(
                             next.pos,
-                            "Multiple defaults are not allowed".to_string(),
+                            "Multiple else arms are not allowed".to_string(),
                         ));
                     }
-                    has_default = true;
+                    has_else = true;
                     arms.push(self.parse_match_arm()?);
                 }
                 TokenKind::CurlyBracesClose => break,
@@ -495,10 +495,10 @@ impl Parser {
         let next = self.peek()?;
 
         match next.kind {
-            TokenKind::Keyword(Keyword::Default) => {
-                self.match_keyword(Keyword::Default)?;
+            TokenKind::Keyword(Keyword::Else) => {
+                self.match_keyword(Keyword::Else)?;
                 self.match_token(TokenKind::ArrowRight)?;
-                Ok(MatchArm::Default(self.parse_statement()?))
+                Ok(MatchArm::Else(self.parse_statement()?))
             }
             _ => {
                 let expr = self.parse_expression()?;
