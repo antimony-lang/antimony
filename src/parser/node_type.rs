@@ -20,8 +20,6 @@ use std::collections::HashMap;
 /// Table that contains all symbol and its types
 pub type SymbolTable = HashMap<String, Option<Type>>;
 
-pub type MatchArm = (Expression, Statement);
-
 #[derive(Debug)]
 pub struct Program {
     pub func: Vec<Function>,
@@ -142,6 +140,12 @@ impl TryFrom<Token> for Expression {
             _ => Err("Value could not be parsed".into()),
         }
     }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum MatchArm {
+    Case(Expression, Statement),
+    Default(Statement)
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]

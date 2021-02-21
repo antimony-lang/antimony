@@ -492,11 +492,22 @@ impl Parser {
     }
 
     fn parse_match_arm(&mut self) -> Result<MatchArm, String> {
-        let expr = self.parse_expression()?;
-        self.match_token(TokenKind::ArrowRight)?;
-        let statement = self.parse_statement()?;
+        let next = self.peek()?;
 
-        Ok((expr, statement))
+        match next.kind {
+            TokenKind::Keyword(Keyword::Default) => {
+                self.match_keyword(Keyword::Default)?;
+                self.match_token(TokenKind::ArrowRight)?;
+                return Ok(MatchArm::Default(self.parse_statement()?));
+            }
+            _ => {
+                let expr = self.parse_expression()?;
+                self.match_token(TokenKind::ArrowRight)?;
+                let statement = self.parse_statement()?;
+
+                Ok(MatchArm::Case(expr, statement))
+            }
+        }
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement, String> {

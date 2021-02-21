@@ -168,10 +168,18 @@ fn generate_continue() -> String {
 
 fn generate_match(subject: Expression, arms: Vec<MatchArm>) -> String {
     let mut out_str = format!("switch ({E}) {{\n", E = generate_expression(subject));
-    for (case, statement) in arms {
-        out_str += &format!("case {}:\n", generate_expression(case));
-        out_str += &format!("{}\n", &generate_statement(statement));
-        out_str += "break;";
+    for arm in arms {
+        match arm {
+            MatchArm::Case(expr, statement) => {
+                out_str += &format!("case {}:\n", generate_expression(expr));
+                out_str += &format!("{}\n", &generate_statement(statement));
+                out_str += "break;";
+            }
+            MatchArm::Default(statement) => {
+                out_str += "default:\n";
+                out_str += &format!("{}\n", &generate_statement(statement));
+            }
+        }
     }
 
     out_str += "}";
