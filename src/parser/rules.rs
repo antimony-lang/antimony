@@ -498,7 +498,7 @@ impl Parser {
             TokenKind::Keyword(Keyword::Default) => {
                 self.match_keyword(Keyword::Default)?;
                 self.match_token(TokenKind::ArrowRight)?;
-                return Ok(MatchArm::Default(self.parse_statement()?));
+                Ok(MatchArm::Default(self.parse_statement()?))
             }
             _ => {
                 let expr = self.parse_expression()?;
