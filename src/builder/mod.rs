@@ -4,6 +4,7 @@ use crate::parser;
 use crate::Lib;
 use crate::PathBuf;
 use parser::node_type::Module;
+use std::env;
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -37,6 +38,16 @@ impl Builder {
     }
 
     pub fn build(&mut self) -> Result<(), String> {
+        let in_file = self.in_file.clone();
+        // Resolve path deltas between working directory and entrypoint
+        if let Some(base_directory) = self.in_file.clone().parent() {
+            if let Ok(resolved_delta) = in_file.strip_prefix(base_directory) {
+
+                // TODO: This error could probably be handled better
+                let _ = env::set_current_dir(resolved_delta);
+                self.in_file = resolved_delta.to_path_buf();
+            }
+        };
         self.build_module(self.in_file.clone())?;
 
         // Append standard library
