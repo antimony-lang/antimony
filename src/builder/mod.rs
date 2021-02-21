@@ -50,7 +50,7 @@ impl Builder {
         self.build_module(self.in_file.clone())?;
 
         // Append standard library
-        self.modules.push(build_stdlib());
+        self.build_stdlib();
         Ok(())
     }
 
@@ -83,15 +83,19 @@ impl Builder {
         file.write_all(output.as_bytes()).expect("write failed");
         file.flush().map_err(|_| "Could not flush file".into())
     }
-}
 
-fn build_stdlib() -> parser::node_type::Module {
-    let stdlib_raw =
-        Lib::get("stdio.sb").expect("Standard library not found. This should not occur.");
-    let stblib_str =
-        std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
-    let stdlib_tokens = lexer::tokenize(&stblib_str);
+    fn build_stdlib(&mut self) {
+        let assets = Lib::iter();
 
-    parser::parse(stdlib_tokens, Some(stblib_str.into()), "stdio".to_string())
-        .expect("Could not parse stdlib")
+        for file in assets {
+            let stdlib_raw =
+                Lib::get(&file).expect("Standard library not found. This should not occur.");
+            let stblib_str =
+                std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
+            let stdlib_tokens = lexer::tokenize(&stblib_str);
+            let module = parser::parse(stdlib_tokens, Some(stblib_str.into()), file.to_string())
+                .expect("Could not parse stdlib");
+            self.modules.push(module);
+        }
+    }
 }

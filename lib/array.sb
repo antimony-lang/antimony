@@ -1,0 +1,27 @@
+// Prints the size of an array
+fn len(arr: int[]): int {
+    let c: int = 0
+    while arr[c] {
+        c += 1
+    }
+
+    return c
+}
+
+// Reverses an array
+// TODO: fix me!
+fn rev(arr: int[]): int[] {
+
+    let l: int = len(arr)
+    let new_arr: int[] = []
+
+    let i: int = 0
+    let j: int = l
+    while i < l {
+        new_arr[i] = arr[j]
+        i = i - 1
+        j = j - 1
+    }
+
+    return new_arr
+}
