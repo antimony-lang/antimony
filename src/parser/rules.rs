@@ -158,6 +158,7 @@ impl Parser {
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.peek()?;
         match &token.kind {
+            TokenKind::CurlyBracesOpen => self.parse_block(),
             TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
