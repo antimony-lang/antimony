@@ -1,4 +1,3 @@
-mod infer;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -14,6 +13,7 @@ mod infer;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+mod infer;
 pub mod node_type;
 // TODO: Resolve this lint by renaming the module
 #[allow(clippy::module_inception)]

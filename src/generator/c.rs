@@ -1,5 +1,3 @@
-use crate::generator::Generator;
-use crate::parser::node_type::*;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -15,6 +13,8 @@ use crate::parser::node_type::*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::generator::Generator;
+use crate::parser::node_type::*;
 use crate::util::Either;
 
 pub struct CGenerator;
