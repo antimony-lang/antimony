@@ -37,16 +37,23 @@ impl Builder {
         }
     }
 
+    fn get_base_path(&self) -> Result<PathBuf, String> {
+        Ok(self
+            .in_file
+            .parent()
+            .expect("Directory has no root")
+            .to_path_buf())
+    }
+
     pub fn build(&mut self) -> Result<(), String> {
         let in_file = self.in_file.clone();
         // Resolve path deltas between working directory and entrypoint
-        if let Some(base_directory) = self.in_file.clone().parent() {
-            if let Ok(resolved_delta) = in_file.strip_prefix(base_directory) {
-                // TODO: This error could probably be handled better
-                let _ = env::set_current_dir(base_directory);
-                self.in_file = resolved_delta.to_path_buf();
-            }
-        };
+        let base_directory = self.get_base_path()?;
+        if let Ok(resolved_delta) = in_file.strip_prefix(&base_directory) {
+            // TODO: This error could probably be handled better
+            let _ = env::set_current_dir(base_directory);
+            self.in_file = resolved_delta.to_path_buf();
+        }
         self.build_module(self.in_file.clone())?;
 
         // Append standard library
@@ -55,16 +62,33 @@ impl Builder {
     }
 
     fn build_module(&mut self, file_path: PathBuf) -> Result<Module, String> {
-        let mut file = File::open(&file_path)
-            .map_err(|_| format!("Could not open file: {}", file_path.display()))?;
+        // TODO: This method can probably cleaned up quite a bit
+
+        // In case the module is a directory, we have to append the filename of the entrypoint
+        let resolved_file_path = if file_path.is_dir() {
+            file_path.join("module.sb")
+        } else {
+            file_path
+        };
+        let mut file = File::open(&resolved_file_path)
+            .map_err(|_| format!("Could not open file: {}", resolved_file_path.display()))?;
         let mut contents = String::new();
 
         file.read_to_string(&mut contents)
             .expect("Could not read file");
         let tokens = lexer::tokenize(&contents);
-        let module = parser::parse(tokens, Some(contents), file_path.display().to_string())?;
+        let module = parser::parse(
+            tokens,
+            Some(contents),
+            resolved_file_path.display().to_string(),
+        )?;
         for import in &module.imports {
-            self.build_module(PathBuf::from(import))?;
+            // Build module relative to the current file
+            let import_path = resolved_file_path
+                .parent()
+                .unwrap()
+                .join(PathBuf::from(import));
+            self.build_module(import_path)?;
         }
         self.modules.push(module.clone());
         Ok(module)

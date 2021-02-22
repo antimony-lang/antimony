@@ -1,0 +1,5 @@
+import "importable_module/module"
+
+fn main() {
+    external_function()
+}
