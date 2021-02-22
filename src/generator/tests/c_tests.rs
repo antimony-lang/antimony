@@ -1,5 +1,5 @@
-use crate::generator::c::generate_type;
 use crate::ast::Type;
+use crate::generator::c::generate_type;
 use crate::util::Either;
 
 #[test]

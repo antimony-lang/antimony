@@ -1,3 +1,4 @@
+use crate::ast::{Function, Module, Statement};
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -14,7 +15,6 @@
  * limitations under the License.
  */
 use crate::generator::Generator;
-use crate::ast::{Function, Module, Statement};
 
 struct Assembly {
     asm: Vec<String>,
