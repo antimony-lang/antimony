@@ -41,7 +41,7 @@ impl Builder {
         Ok(self
             .in_file
             .parent()
-            .expect("Directory has no root")
+            .ok_or("File does not have a parent")?
             .to_path_buf())
     }
 
