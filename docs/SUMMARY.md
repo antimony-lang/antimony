@@ -12,6 +12,5 @@
   - [Structured Data](./concepts/structured-data.md)
 - [Modules and Imports](./modules/SUMMARY.md)
 - [Developer Resources](./developers/SUMMARY.md)
-  - [Contributing to Sabre](./developers/contributing.md)
   - [Compiler Backends](./developers/backends.md)
   - [Release Workflow](./developers/releasing.md)
