@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 use crate::lexer::*;
-use crate::parser::node_type::*;
+use crate::ast::*;
 use crate::parser::parse;
 
 #[test]

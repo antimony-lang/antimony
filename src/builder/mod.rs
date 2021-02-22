@@ -1,9 +1,9 @@
+use crate::ast::Module;
 use crate::generator;
 use crate::lexer;
 use crate::parser;
 use crate::Lib;
 use crate::PathBuf;
-use parser::node_type::Module;
 use std::env;
 /**
  * Copyright 2021 Garrit Franke

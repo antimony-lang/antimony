@@ -1,5 +1,5 @@
 use crate::generator::c::generate_type;
-use crate::parser::node_type::Type;
+use crate::ast::Type;
 use crate::util::Either;
 
 #[test]

@@ -1,3 +1,5 @@
+use crate::ast::{Expression, Module, Statement, SymbolTable, Type};
+
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -13,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use super::node_type::*;
 
 /// Try to infer types of variables
 ///

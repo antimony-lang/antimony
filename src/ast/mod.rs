@@ -2,7 +2,7 @@ use crate::lexer::*;
 use core::convert::TryFrom;
 use std::collections::HashMap;
 /**
- * Copyright 2020 Garrit Franke
+ * Copyright 2021 Garrit Franke
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

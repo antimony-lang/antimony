@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 use crate::generator::Generator;
-use crate::parser::node_type::{Function, Module, Statement};
+use crate::ast::{Function, Module, Statement};
 
 struct Assembly {
     asm: Vec<String>,

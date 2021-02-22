@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 use crate::generator::Generator;
-use crate::parser::node_type::*;
+use crate::ast::*;
 use inkwell::context::Context;
 use inkwell::module;
 use inkwell::types::*;

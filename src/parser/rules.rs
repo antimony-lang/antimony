@@ -1,6 +1,5 @@
-use super::node_type::Statement;
-use super::node_type::*;
 use super::parser::Parser;
+use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
 use std::collections::HashMap;

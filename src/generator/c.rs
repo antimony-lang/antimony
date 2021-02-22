@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 use crate::generator::Generator;
-use crate::parser::node_type::*;
+use crate::ast::*;
 use crate::util::Either;
 
 pub struct CGenerator;

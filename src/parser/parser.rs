@@ -17,7 +17,7 @@ use crate::lexer::Keyword;
 use crate::lexer::Position;
 use crate::lexer::{Token, TokenKind};
 use crate::parser::infer::infer;
-use crate::parser::node_type::*;
+use crate::ast::*;
 use crate::util::string_util::highlight_position_in_file;
 use std::convert::TryFrom;
 use std::iter::Peekable;

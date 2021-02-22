@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 mod infer;
-pub mod node_type;
 // TODO: Resolve this lint by renaming the module
 #[allow(clippy::module_inception)]
 mod parser;
 mod rules;
+use crate::ast::Module;
 use crate::lexer::Token;
-use node_type::Module;
 #[cfg(test)]
 mod tests;
 
