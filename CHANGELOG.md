@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+**Features**
+
+- Match statements (#15)
+
 ## v0.4.0 (2021-02-20)
 
 This release introduces the concept of structs, alongside many improvements to the documentation.
