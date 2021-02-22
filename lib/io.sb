@@ -1,0 +1,10 @@
+// Raw wrapper around _printf builtin function.
+// Writes the given content to stdout
+fn print(arg: string) {
+    _printf(arg)
+}
+
+// Like print(), but with an extra newline ('\n') character
+fn println(msg: string) {
+    print(msg + "\n")
+}

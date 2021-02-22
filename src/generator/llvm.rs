@@ -16,16 +16,16 @@
 use crate::generator::Generator;
 use crate::parser::node_type::*;
 use inkwell::context::Context;
-use inkwell::module::Module;
+use inkwell::module;
 use inkwell::types::*;
 
 pub struct LLVMGenerator<'ctx> {
     ctx: &'ctx Context,
-    module: Module<'ctx>,
+    module: module::Module<'ctx>,
 }
 
 impl<'ctx> Generator for LLVMGenerator<'ctx> {
-    fn generate(prog: Program) -> String {
+    fn generate(prog: Module) -> String {
         let ctx = Context::create();
         let module = ctx.create_module("main");
         let mut generator = LLVMGenerator { ctx: &ctx, module };

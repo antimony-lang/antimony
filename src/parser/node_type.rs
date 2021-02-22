@@ -1,3 +1,6 @@
+use crate::lexer::*;
+use core::convert::TryFrom;
+use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -13,22 +16,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::lexer::*;
-use core::convert::TryFrom;
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 /// Table that contains all symbol and its types
 pub type SymbolTable = HashMap<String, Option<Type>>;
 
-#[derive(Debug)]
-pub struct Program {
+#[derive(Debug, Clone)]
+pub struct Module {
+    pub path: String,
+    pub imports: HashSet<String>,
     pub func: Vec<Function>,
     pub structs: Vec<StructDef>,
     pub globals: Vec<String>,
 }
 
-impl Program {
-    pub fn merge_with(&mut self, mut other: Program) {
+impl Module {
+    pub fn merge_with(&mut self, mut other: Module) {
         self.func.append(&mut other.func);
         self.globals.append(&mut other.globals)
     }

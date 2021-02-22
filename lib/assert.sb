@@ -1,0 +1,6 @@
+fn assert(condition: bool) {
+    if condition == false {
+        println("Assertion failed")
+        exit(1)
+    }
+}

@@ -5,6 +5,7 @@
 **Features**
 
 - Match statements (#15)
+- Modules and imports (#17)
 
 ## v0.4.0 (2021-02-20)
 

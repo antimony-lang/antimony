@@ -36,6 +36,11 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
     for ex in examples {
         let example = ex?;
         let in_file = dir.join(dir_in).join(example.file_name());
+
+        // We don't want to build submodules, since they don't run without a main function
+        if in_file.is_dir() {
+            continue;
+        }
         let out_file = dir.join(&dir_out).join(
             example
                 .file_name()

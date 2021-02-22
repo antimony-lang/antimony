@@ -20,7 +20,7 @@ use crate::util::Either;
 pub struct CGenerator;
 
 impl Generator for CGenerator {
-    fn generate(prog: Program) -> String {
+    fn generate(prog: Module) -> String {
         let mut code = String::new();
 
         let raw_builtins =

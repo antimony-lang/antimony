@@ -20,11 +20,11 @@ pub mod node_type;
 mod parser;
 mod rules;
 use crate::lexer::Token;
-use node_type::Program;
+use node_type::Module;
 #[cfg(test)]
 mod tests;
 
-pub fn parse(tokens: Vec<Token>, raw: Option<String>) -> Result<Program, String> {
-    let mut parser = parser::Parser::new(tokens, raw);
+pub fn parse(tokens: Vec<Token>, raw: Option<String>, path: String) -> Result<Module, String> {
+    let mut parser = parser::Parser::new(tokens, raw, path);
     parser.parse()
 }

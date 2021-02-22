@@ -22,6 +22,7 @@ extern crate tempfile;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+mod builder;
 mod command;
 mod generator;
 mod lexer;

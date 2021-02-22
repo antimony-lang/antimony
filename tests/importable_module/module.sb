@@ -1,0 +1,6 @@
+import "foo/bar"
+
+fn external_function() {
+    println("I was called!!")
+    nested_module()
+}
