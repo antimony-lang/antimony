@@ -20,11 +20,9 @@ struct Assembly {
     asm: Vec<String>,
 }
 
-// We don't need "From", so we can ignore the lint here
-#[allow(clippy::from_over_into)]
-impl Into<String> for Assembly {
-    fn into(self) -> String {
-        self.build()
+impl From<Assembly> for String {
+    fn from(asm: Assembly) -> Self {
+        asm.build()
     }
 }
 
