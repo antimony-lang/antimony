@@ -1,4 +1,4 @@
-use crate::ast::Type;
+use crate::ast::types::Type;
 use crate::generator::c::generate_type;
 use crate::util::Either;
 

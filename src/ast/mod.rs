@@ -18,6 +18,9 @@ use std::collections::HashMap;
  */
 use std::collections::HashSet;
 
+pub mod types;
+use types::Type;
+
 /// Table that contains all symbol and its types
 pub type SymbolTable = HashMap<String, Option<Type>>;
 
@@ -65,29 +68,6 @@ pub struct StructDef {
 pub struct Variable {
     pub name: String,
     pub ty: Option<Type>,
-}
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Type {
-    Any,
-    Int,
-    Str,
-    Bool,
-    Array(Box<Type>),
-    Struct(String),
-}
-
-impl TryFrom<String> for Type {
-    type Error = String;
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        match s.as_ref() {
-            "int" => Ok(Self::Int),
-            "string" => Ok(Self::Str),
-            "any" => Ok(Self::Any),
-            "bool" => Ok(Self::Bool),
-            name => Ok(Self::Struct(name.to_string())),
-        }
-    }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]

@@ -1,4 +1,5 @@
 use super::parser::Parser;
+use crate::ast::types::Type;
 use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};

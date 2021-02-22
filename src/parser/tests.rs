@@ -1,4 +1,4 @@
-use crate::ast::*;
+use crate::ast::types::Type;
 /**
  * Copyright 2020 Garrit Franke
  *

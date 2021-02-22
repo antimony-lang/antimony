@@ -1,4 +1,5 @@
-use crate::ast::{Expression, Module, Statement, SymbolTable, Type};
+use crate::ast::types::Type;
+use crate::ast::{Expression, Module, Statement, SymbolTable};
 
 /**
  * Copyright 2021 Garrit Franke
