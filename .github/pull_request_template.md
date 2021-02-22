@@ -13,3 +13,4 @@ Fixes #XXX
 
 - [ ] Proposed feature/fix is sufficiently tested
 - [ ] Proposed feature/fix is sufficiently documented
+- [ ] The "Unreleased" section in the changelog has been updated, if applicable
