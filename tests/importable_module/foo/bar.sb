@@ -1,3 +1,4 @@
+import "baz"
 
 fn nested_module() {
     println("A deeply nested function was called!")

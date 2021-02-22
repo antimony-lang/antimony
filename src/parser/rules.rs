@@ -157,13 +157,7 @@ impl Parser {
         chars.next();
         chars.next_back();
 
-        let import_path = if chars.as_str().ends_with(".sb") {
-            chars.collect()
-        } else {
-            format!("{}.sb", chars.collect::<String>())
-        };
-
-        Ok(import_path)
+        Ok(chars.collect())
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {

@@ -1,0 +1,3 @@
+fn baz() {
+    println("Baz was called")
+}

@@ -84,10 +84,17 @@ impl Builder {
         )?;
         for import in &module.imports {
             // Build module relative to the current file
-            let import_path = resolved_file_path
+            let mut import_path = resolved_file_path
                 .parent()
                 .unwrap()
                 .join(PathBuf::from(import));
+
+            if import_path.is_dir() {
+                import_path = import_path.join("module.sb");
+            } else if !import_path.ends_with(".sb") {
+                import_path.set_extension("sb");
+            }
+
             self.build_module(import_path)?;
         }
         self.modules.push(module.clone());
