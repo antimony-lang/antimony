@@ -747,7 +747,6 @@ fn test_break() {
 }
 
 #[test]
-#[ignore]
 fn test_complex_nested_expressions() {
     let raw = "
     fn main() {
@@ -800,7 +799,6 @@ fn test_struct_initialization() {
 }
 
 #[test]
-#[ignore]
 fn test_arithmetic() {
     // These should pass
     let raw = "fn main() {1*1}";

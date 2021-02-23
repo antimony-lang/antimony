@@ -180,6 +180,7 @@ impl Parser {
         let token = self.peek()?;
         match &token.kind {
             TokenKind::CurlyBracesOpen => self.parse_block(),
+            TokenKind::BraceOpen => Ok(Statement::Exp(self.parse_expression()?)),
             TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
@@ -292,7 +293,10 @@ impl Parser {
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
                 self.match_token(TokenKind::BraceClose)?;
-                expr
+                match BinOp::try_from(self.peek()?.kind) {
+                    Ok(_) => self.parse_bin_op(Some(expr))?,
+                    Err(_) => expr,
+                }
             }
             TokenKind::Keyword(Keyword::Boolean) => match BinOp::try_from(self.peek()?.kind) {
                 Ok(_) => self.parse_bin_op(None)?,
