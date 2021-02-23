@@ -229,7 +229,7 @@ impl Parser {
             TokenKind::Keyword(Keyword::Struct) => {
                 Err("Struct definitions inside functions are not allowed".to_string())
             }
-            _ => Err(self.make_error(TokenKind::Unknown, token)),
+            _ => Err(self.make_error_msg(token.pos, "Failed to parse statement".to_string())),
         }
     }
 
@@ -581,7 +581,8 @@ impl Parser {
                     TokenKind::Identifier(_) | TokenKind::Literal(_) | TokenKind::Keyword(_) => {
                         Ok(Expression::try_from(prev)?)
                     }
-                    _ => Err(self.make_error(TokenKind::Unknown, prev)),
+                    _ => Err(self
+                        .make_error_msg(prev.pos, "Failed to parse binary operation".to_string())),
                 }?
             }
         };
