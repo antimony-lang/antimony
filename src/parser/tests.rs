@@ -798,3 +798,33 @@ fn test_struct_initialization() {
     let tree = parse(tokens, Some(raw.to_string()), "".into());
     assert!(tree.is_ok());
 }
+
+#[test]
+#[ignore]
+fn test_arithmetic() {
+    // These should pass
+    let raw = "fn main() {1*1}";
+    let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
+    assert!(tree.is_ok());
+
+    let raw = "fn main() {2+3*4}";
+    let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
+    assert!(tree.is_ok());
+
+    let raw = "fn main() {(2+2)*3}"; // TODO: Fix!
+    let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
+    assert!(tree.is_ok());
+
+    // These should fail
+    let raw = "fn main() {(22+)+1}";
+    let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
+    assert!(tree.is_err());
+
+    let raw = "fn main() {1++1}";
+    let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
+    assert!(tree.is_err());
+
+    let raw = "fn main() {3)+1}";
+    let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
+    assert!(tree.is_err());
+}
