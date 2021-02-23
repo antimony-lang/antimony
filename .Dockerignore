@@ -1,0 +1,10 @@
+*_out/
+.builds/
+.github/
+.vscode/
+TODO
+book/
+docs/
+examples/
+target/
+tests/
