@@ -1,11 +1,22 @@
 # Changelog
 
-## Unreleased
+## v0.5.0 (2021-02-23)
 
 **Features**
 
 - Match statements (#15)
 - Modules and imports (#17)
+- Support for Docker
+- Support for Arch Linux build system (Thanks Alex)
+
+**Fixes**
+
+- Fixed a bug with nested expressions and arithmetic operations
+
+**Documentation**
+
+- Added some in-repo technical documentation
+- Minor fixes
 
 ## v0.4.0 (2021-02-20)
 
