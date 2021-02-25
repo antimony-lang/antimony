@@ -8,7 +8,7 @@ If you have a question, found a potential bug or want to engage with the communi
 
 ## Fixing things and adding features
 
-If you want to contribute to the compiler itself, the easiest way to get started is to look at the [open issues](https://github.com/garritfra/antimony/issues) of the project. Usually, this is where important todo items are jotted down and bugs are reported.
+If you want to contribute to the compiler itself, the easiest way to get started is to look at the [open issues](https://github.com/antimony-lang/antimony/issues) of the project. Usually, this is where important todo items are jotted down and bugs are reported.
 
 You could also run the tests (`cargo test`) and see if any tests are ignored. Usually, if a bug is found in the wild, a failing but ignored test is written, so that it can be further investigated later.
 
@@ -18,6 +18,6 @@ As with all software, Antimony needs good documentation. Since Antimony is still
 
 ## Submitting your code
 
-If you want to contribute code, please open a pull request on [GitHub](https://github.com/garritfra/antimony). There is also a [SourceHut mirror](https://sr.ht/~garritfra/antimony/), if you're trying to avoid GitHub. Feel free to send a patch to the [public mailing list](https://lists.sr.ht/~garritfra/antimony). Check out [this guide](https://slashdev.space/posts/patch-based-git-workflow) to learn about the patch based workflow.
+If you want to contribute code, please open a pull request on [GitHub](https://github.com/antimony-lang/antimony). There is also a [SourceHut mirror](https://sr.ht/~garritfra/antimony/), if you're trying to avoid GitHub. Feel free to send a patch to the [public mailing list](https://lists.sr.ht/~garritfra/antimony). Check out [this guide](https://slashdev.space/posts/patch-based-git-workflow) to learn about the patch based workflow.
 
 Before submitting the code, please make sure that it is **sufficiently documented and tested**.

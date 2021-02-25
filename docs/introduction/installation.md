@@ -12,7 +12,7 @@ cargo install antimony-lang
 
 ## Git
 
-To get the current development version, you can clone the Git [repository](https://github.com/garritfra/antimony) and run the following command:
+To get the current development version, you can clone the Git [repository](https://github.com/antimony-lang/antimony) and run the following command:
 
 ```sh
 cargo install --path .
@@ -20,7 +20,7 @@ cargo install --path .
 
 ## Docker
 
-Antimony provides a [Docker image](https://hub.docker.com/r/garritfra/antimony). It currently only supports the x64 architecture. Please reach out if you need a ARM variant (needed for Raspberry Pi). If you don't want to wait, you can build the image yourself by running this command in the root of the project:
+Antimony provides a [Docker image](https://hub.docker.com/r/antimony-lang/antimony). It currently only supports the x64 architecture. Please reach out if you need a ARM variant (needed for Raspberry Pi). If you don't want to wait, you can build the image yourself by running this command in the root of the project:
 
 ```
 docker build . -t antimony

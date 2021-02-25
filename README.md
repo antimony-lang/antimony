@@ -1,7 +1,7 @@
 # The Antimony Programming language
 
 [![](https://img.shields.io/crates/v/antimony-lang.svg)](https://crates.io/crates/antimony-lang)
-![Continuous integration](https://github.com/garritfra/antimony/workflows/Continuous%20integration/badge.svg?branch=master)
+![Continuous integration](https://github.com/antimony-lang/antimony/workflows/Continuous%20integration/badge.svg?branch=master)
 [![docs](https://img.shields.io/badge/docs-mdBook-blue.svg)](https://garritfra.github.io/antimony/latest)
 [![Chat on Matrix](https://img.shields.io/badge/chat-on%20Matrix-green)](https://matrix.to/#/#antimony:matrix.slashdev.space?via=matrix.slashdev.space)
 
@@ -35,7 +35,7 @@ fn fib(n: int) {
 
 ## State of this project
 
-Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See the [open issues](https://github.com/garritfra/antimony/issues) for upcoming todos.
+Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See the [open issues](https://github.com/antimony-lang/antimony/issues) for upcoming todos.
 
 The Antimony compiler emits JavaScript for the Node.js runtime, and a C backend is currently under development. Backends for WASM and LLVM are planned.
 

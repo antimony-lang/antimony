@@ -4,8 +4,8 @@ version = "0.5.0"
 authors = ["Garrit Franke <garrit@slashdev.space>"]
 description = "The Antimony programming language"
 license = "Apache-2.0"
-documentation = "https://garritfra.github.io/antimony"
-repository = "https://github.com/garritfra/antimony"
+documentation = "https://antimony-lang.github.io/antimony"
+repository = "https://github.com/antimony-lang/antimony"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

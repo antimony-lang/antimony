@@ -4,7 +4,7 @@ pkgname="antimony-git"
 pkgver=v0.4.0.r7.fe7b035
 pkgrel=1
 pkgdesc="The bullshit-free programming language"
-url="https://github.com/garritfra/antimony"
+url="https://github.com/antimony-lang/antimony"
 license=("Apache")
 arch=("x86_64" "pentium4" "i686")
 makedepends=("git" "cargo")
@@ -14,7 +14,7 @@ optdepends=(
 )
 provides=("antimony")
 source=(
-	"antimony::git+https://github.com/garritfra/antimony"
+	"antimony::git+https://github.com/antimony-lang/antimony"
 )
 sha256sums=("SKIP")
 
