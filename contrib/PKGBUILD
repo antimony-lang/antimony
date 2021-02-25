@@ -1,7 +1,7 @@
 # Maintainer: Garrit Franke <garrit@slashdev.space>
 # Contributor: Alexey Yerin <yyp@disroot.org>
 pkgname="antimony-git"
-pkgver=v0.4.0.r7.fe7b035
+pkgver=v0.5.1.r1.fd08c6a
 pkgrel=1
 pkgdesc="The bullshit-free programming language"
 url="https://github.com/antimony-lang/antimony"
@@ -39,5 +39,5 @@ check() {
 package() {
 	cd "${srcdir}/antimony"
 
-	install -Dm755 target/release/antimony "${pkgdir}/usr/bin/antimony"
+	install -Dm755 target/release/sb "${pkgdir}/usr/bin/sb"
 }
