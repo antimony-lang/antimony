@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/crates/v/antimony-lang.svg)](https://crates.io/crates/antimony-lang)
 ![Continuous integration](https://github.com/antimony-lang/antimony/workflows/Continuous%20integration/badge.svg?branch=master)
-[![docs](https://img.shields.io/badge/docs-mdBook-blue.svg)](https://garritfra.github.io/antimony/latest)
+[![docs](https://img.shields.io/badge/docs-mdBook-blue.svg)](https://antimony-lang.github.io/antimony/latest)
 [![Chat on Matrix](https://img.shields.io/badge/chat-on%20Matrix-green)](https://matrix.to/#/#antimony:matrix.slashdev.space?via=matrix.slashdev.space)
 
 Antimony is a bullshit-free (©) programming language that gets out of your way.
@@ -41,15 +41,15 @@ The Antimony compiler emits JavaScript for the Node.js runtime, and a C backend 
 
 ## Documentation
 
-Documentation is hosted [here](https://garritfra.github.io/antimony).
+Documentation is hosted [here](https://antimony-lang.github.io/antimony).
 
 ## Getting started
 
-See the [installation](https://garritfra.github.io/antimony/latest/introduction/installation.html) instructions to get started.
+See the [installation](https://antimony-lang.github.io/antimony/latest/introduction/installation.html) instructions to get started.
 
 ## Chat on matrix
 
-[Get in touch](https://matrix.to/#/!eaupsjLNPYSluWFJOC:matrix.slashdev.space?via=matrix.slashdev.space)!
+[Get in touch](https://matrix.to/#/#antimony:matrix.slashdev.space?via=matrix.slashdev.space)!
 
 ## License
 
