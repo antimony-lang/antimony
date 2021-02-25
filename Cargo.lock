@@ -20,7 +20,7 @@ dependencies = [
 
 [[package]]
 name = "antimony-lang"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "inkwell",
  "rust-embed",
