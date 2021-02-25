@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.5.1 (2021-02-25)
+
+Sabre is now Antimony!
+
+**Changes**
+
+- "sabre" was replaced with "sb" (E.g. run `sb run main.sb` to run a program)
+
 ## v0.5.0 (2021-02-23)
 
 **Features**
