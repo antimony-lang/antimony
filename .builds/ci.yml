@@ -1,11 +1,12 @@
 image: archlinux
 packages:
   - rust
-  - node
+  - nodejs
 sources:
   - https://git.sr.ht/~garritfra/antimony
 tasks:
   - build: |
+      cd antimony
       cargo build
       cargo test
       cargo clippy --all-targets --all-features -- -D warnings
