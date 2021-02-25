@@ -8,7 +8,7 @@ Here’s a simple comment:
 // I'm a comment!
 ```
 
-In Sabre, the idiomatic comment style starts a comment with two slashes, and the comment continues until the end of the line. For comments that extend beyond a single line, you’ll need to include `//` on each line, like this:
+In Antimony, the idiomatic comment style starts a comment with two slashes, and the comment continues until the end of the line. For comments that extend beyond a single line, you’ll need to include `//` on each line, like this:
 
 ```
 // So we’re doing something complicated here, long enough that we need

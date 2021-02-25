@@ -1,10 +1,10 @@
 # Maintainer: Garrit Franke <garrit@slashdev.space>
 # Contributor: Alexey Yerin <yyp@disroot.org>
-pkgname="sabre-git"
+pkgname="antimony-git"
 pkgver=v0.4.0.r7.fe7b035
 pkgrel=1
 pkgdesc="The bullshit-free programming language"
-url="https://github.com/garritfra/sabre"
+url="https://github.com/garritfra/antimony"
 license=("Apache")
 arch=("x86_64" "pentium4" "i686")
 makedepends=("git" "cargo")
@@ -12,32 +12,32 @@ optdepends=(
 	"node: Node.js backend"
 	"llvm: LLVM backend"
 )
-provides=("sabre")
+provides=("antimony")
 source=(
-	"sabre::git+https://github.com/garritfra/sabre"
+	"antimony::git+https://github.com/garritfra/antimony"
 )
 sha256sums=("SKIP")
 
 pkgver() {
-	cd "${srcdir}/sabre"
+	cd "${srcdir}/antimony"
 
 	printf "%s" "$(git describe --long | sed 's/\([^-]*-\)g/r\1/;s/-/./g')"
 }
 
 build() {
-	cd "${srcdir}/sabre"
+	cd "${srcdir}/antimony"
 
 	cargo build --release
 }
 
 check() {
-	cd "${srcdir}/sabre"
+	cd "${srcdir}/antimony"
 
 	cargo test
 }
 
 package() {
-	cd "${srcdir}/sabre"
+	cd "${srcdir}/antimony"
 
-	install -Dm755 target/release/sabre "${pkgdir}/usr/bin/sabre"
+	install -Dm755 target/release/antimony "${pkgdir}/usr/bin/antimony"
 }

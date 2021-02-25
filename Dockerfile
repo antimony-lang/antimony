@@ -7,7 +7,7 @@ RUN rustup target add x86_64-unknown-linux-musl
 # Create a dummy project and build the app's dependencies.
 # If the Cargo.toml or Cargo.lock files have not changed,
 # we can use the docker build cache and skip these (typically slow) steps.
-WORKDIR /usr/src/sabre
+WORKDIR /usr/src/antimony
 COPY Cargo.toml Cargo.lock ./
 
 # Copy the source and build the application.
@@ -23,8 +23,8 @@ FROM alpine:3.13
 
 LABEL maintainer="Garrit Franke <garrit@slashdev.space>"
 
-COPY --from=build /usr/local/cargo/bin/sabre /bin
+COPY --from=build /usr/local/cargo/bin/antimony /bin
 
-RUN sabre --version
+RUN antimony --version
 
-ENTRYPOINT ["sabre"]
+ENTRYPOINT ["antimony"]

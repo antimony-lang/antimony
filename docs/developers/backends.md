@@ -1,6 +1,6 @@
 # Backends
 
-Sabre currently implements a JavaScript backend, but a C backend is in development. WASM, ARM and x86 are planned.
+Antimony currently implements a JavaScript backend, but a C backend is in development. WASM, ARM and x86 are planned.
 The backend can be specified in the `Cargo.toml` file in the root of the project:
 
 ```toml

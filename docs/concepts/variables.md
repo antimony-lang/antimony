@@ -1,6 +1,6 @@
 # Variables
 
-If you are familiar with some other programming language, the way Sabre handles variables won't surprise you.
+If you are familiar with some other programming language, the way Antimony handles variables won't surprise you.
 
 To declare a variable, the `let` keyword is used. The type of the variable is infered, but can be specified explicitly.
 
@@ -15,9 +15,9 @@ fn main() {
 }
 ```
 
-Run this code using the sabre CLI:
+Run this code using the antimony CLI:
 
 ```
-$ sabre run variables.sb
+$ sb run variables.sb
 15
 ```

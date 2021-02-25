@@ -3,7 +3,7 @@ packages:
   - rust
   - node
 sources:
-  - https://git.sr.ht/~garritfra/sabre
+  - https://git.sr.ht/~garritfra/antimony
 tasks:
   - build: |
       cargo build

@@ -1,6 +1,6 @@
 # Control Flow
 
-Deciding whether or not to run some code depending on if a condition is true and deciding to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Sabre code are `if` expressions and loops.
+Deciding whether or not to run some code depending on if a condition is true and deciding to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Antimony code are `if` expressions and loops.
 
 ## `if` Expressions
 
@@ -27,7 +27,7 @@ Optionally, we can also include an `else` expression, which we chose to do here,
 Try running this code; You should see the following output:
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 condition was true
 ```
 
@@ -40,7 +40,7 @@ let number = 7
 Run the program again, and look at the output:
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 condition was false
 ```
 
@@ -69,11 +69,11 @@ fn main() {
 This program has four possible paths it can take. After running it, you should see the following output:
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 number is divisible by 3
 ```
 
-When this program executes, it checks each `if` expression in turn and executes the first body for which the condition holds true. Note that even though 6 is divisible by 2, we don’t see the output `number is divisible by 2`, nor do we see the `number is not divisible by 4, 3, or 2` text from the else block. That’s because Sabre only executes the block for the first true condition, and once it finds one, it doesn’t even check the rest.
+When this program executes, it checks each `if` expression in turn and executes the first body for which the condition holds true. Note that even though 6 is divisible by 2, we don’t see the output `number is divisible by 2`, nor do we see the `number is not divisible by 4, 3, or 2` text from the else block. That’s because Antimony only executes the block for the first true condition, and once it finds one, it doesn’t even check the rest.
 
 ### Value matching
 
@@ -113,9 +113,9 @@ Keep in mind that excessive use of this could hurt the readability of your code.
 
 ## Loops
 
-It's often useful to execute a block of code more than once. For this task, Sabre provides different kind of _loops_. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.
+It's often useful to execute a block of code more than once. For this task, Antimony provides different kind of _loops_. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.
 
-Sabre has two types of loops: `while` and `for`. Let's go through each of them.
+Antimony has two types of loops: `while` and `for`. Let's go through each of them.
 
 ### Conditional Loops with `while`
 
@@ -157,7 +157,7 @@ fn main() {
 Here, the code counts up through the elements in the array. It starts at index `0`, and then loops until it reaches the final index in the array (that is, when `index < 5` is no longer true). Running this code will print every element in the array:
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 the value is: 10
 the value is: 20
 the value is: 30

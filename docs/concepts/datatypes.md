@@ -1,10 +1,10 @@
 # Datatypes
 
-Sabre comes with some generic data types.
+Antimony comes with some generic data types.
 
 ## The Boolean type
 
-As in most other programming languages, a Boolean type in Sabre has two possible values: `true` and `false`. Booleans are one byte in size. The Boolean type in Sabre is specified using `bool`. For example:
+As in most other programming languages, a Boolean type in Antimony has two possible values: `true` and `false`. Booleans are one byte in size. The Boolean type in Antimony is specified using `bool`. For example:
 
 ```
 fn main() {
@@ -27,7 +27,7 @@ fn main() {
 ```
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 1 + 2 is 3
 ```
 
@@ -43,7 +43,7 @@ fn main() {
 ```
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 Hello Jon
 ```
 
@@ -62,7 +62,7 @@ fn main() {
 ```
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 Banana
 Apple
 Pineapple
@@ -85,7 +85,7 @@ fn print_anything(x: any) {
 ```
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 5
 Hello
 ```
@@ -104,7 +104,7 @@ fn main() {
 ```
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 1
 Two
 3

@@ -4,7 +4,7 @@ Projects naturally grow over time, and digging through 10.000 lines of code in a
 
 The programs we've written so far have been in one file. As a project grows, you can organize code by splitting it into multiple modules with a clear name.
 
-In Sabre, every file is also a module. Let's take a look at a project structure and identify its modules.
+In Antimony, every file is also a module. Let's take a look at a project structure and identify its modules.
 
 ```
 .
@@ -37,7 +37,7 @@ In the `foo` directory, there is another directory called `baz`, containing a si
 import "foo/baz/module"
 ```
 
-we can simply import the module containing this file, and Sabre will import the contained `module.sb` instead.
+we can simply import the module containing this file, and Antimony will import the contained `module.sb` instead.
 
 ```
 // main.sb
@@ -58,9 +58,9 @@ fn main() {
 }
 ```
 
-If we run `main.sb`, we should see the expected output. Sabre has imported the `add` function from the `math` module.
+If we run `main.sb`, we should see the expected output. Antimony has imported the `add` function from the `math` module.
 
 ```
-$ sabre run main.sb
+$ sb run main.sb
 3
 ```

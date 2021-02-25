@@ -19,6 +19,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "antimony-lang"
+version = "0.5.0"
+dependencies = [
+ "inkwell",
+ "rust-embed",
+ "structopt",
+ "tempfile",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -361,16 +371,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a512219132473ab0a77b52077059f1c47ce4af7fbdc94503e9862a34422876d"
 dependencies = [
  "walkdir",
-]
-
-[[package]]
-name = "sabre-lang"
-version = "0.5.0"
-dependencies = [
- "inkwell",
- "rust-embed",
- "structopt",
- "tempfile",
 ]
 
 [[package]]

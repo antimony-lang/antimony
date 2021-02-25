@@ -39,7 +39,7 @@ None
 
 ## v0.3.0 (2021-02-12)
 
-This release adds type inference to Sabre. There are also a lot of improvements in terms of documentation. The docs are now at a state that can be considered "usable".
+This release adds type inference to Antimony. There are also a lot of improvements in terms of documentation. The docs are now at a state that can be considered "usable".
 
 **Features**
 
@@ -77,7 +77,7 @@ This version introduces a lot of improvements regarding loops and arrays.
 **Documentation**
 
 - Link to our matrix channel in README
-- Install Sabre via Cargo
+- Install Antimony via Cargo
 
 ## v0.1.1 (2021-02-06)
 
@@ -85,7 +85,7 @@ Follow-up release that fixes some issues with the published crate.
 
 ## v0.1.0 (2021-02-06)
 
-This release is the first to be published to crates.io. The crate is called [sabre-lang](https://crates.io/crates/sabre-lang).
+This release is the first to be published to crates.io. The crate is called [antimony-lang](https://crates.io/crates/antimony-lang).
 
 **Features**
 
@@ -157,7 +157,7 @@ Garrit Franke (74):
       Implement returning variables
       Pretty print AST output
       Add strings
-      Rename flex -> sabre
+      Rename flex -> antimony
       Fix example filename
       Add parser tests
       Add multiple functions test

@@ -1,17 +1,17 @@
 [package]
-name = "sabre-lang"
+name = "antimony-lang"
 version = "0.5.0"
 authors = ["Garrit Franke <garrit@slashdev.space>"]
-description = "The sabre programming language"
+description = "The Antimony programming language"
 license = "Apache-2.0"
-documentation = "https://garritfra.github.io/sabre"
-repository = "https://github.com/garritfra/sabre"
+documentation = "https://garritfra.github.io/antimony"
+repository = "https://github.com/garritfra/antimony"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-name = "sabre"
+name = "sb"
 path = "src/main.rs"
 
 [features]

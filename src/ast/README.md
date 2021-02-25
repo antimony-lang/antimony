@@ -1,5 +1,5 @@
 # AST
 
-This module contains the node types of the Sabre AST.
+This module contains the node types of the Antimony AST.
 
-The most important node is `Module`, which is the abstract representation of a Sabre file.
+The most important node is `Module`, which is the abstract representation of a Antimony file.
