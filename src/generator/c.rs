@@ -75,7 +75,7 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
             Type::Str => "char *".into(),
             Type::Any => "void *".into(),
             Type::Bool => "bool".into(),
-            Type::Struct(_) => todo!(),
+            Type::Struct(name) => format!("struct {}", name),
             Type::Array(t) => match name {
                 Some(n) => format!(
                     "{T} {N}[]",
