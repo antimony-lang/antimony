@@ -49,6 +49,10 @@ impl Builder {
         let in_file = self.in_file.clone();
         // Resolve path deltas between working directory and entrypoint
         let base_directory = self.get_base_path()?;
+
+        // During building, we change the environment directory.
+        // After we're done, we have to set it back to the initial directory.
+        let initial_directory = env::current_dir().expect("Current directory does not exist");
         if let Ok(resolved_delta) = in_file.strip_prefix(&base_directory) {
             // TODO: This error could probably be handled better
             let _ = env::set_current_dir(base_directory);
@@ -58,6 +62,9 @@ impl Builder {
 
         // Append standard library
         self.build_stdlib();
+
+        // Change back to the initial directory
+        env::set_current_dir(initial_directory).expect("Could not set current directory");
         Ok(())
     }
 
