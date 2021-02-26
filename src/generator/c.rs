@@ -287,7 +287,7 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
 }
 
 fn generate_struct_initialization(fields: HashMap<String, Box<Expression>>) -> String {
-    let mut buf: String = format!("{{");
+    let mut buf: String = String::from("{");
 
     fields.iter().for_each(|(k, v)| {
         buf += &format!(".{} = {},", k, generate_expression(*v.clone()));
