@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::ast::types::Type;
 use crate::ast::*;
 /**
@@ -151,7 +153,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Array(els) => generate_array(els),
         Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
-        Expression::StructInitialization(_, _) => todo!(),
+        Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
         Expression::FieldAccess(_, _) => todo!(),
     }
 }
@@ -245,7 +247,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Str(s) | Expression::Variable(s) => s,
             Expression::Array(_) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
-            Expression::StructInitialization(_, _) => todo!(),
+            Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
             Expression::FieldAccess(_, _) => todo!(),
         })
         .collect::<Vec<String>>()
@@ -286,6 +288,18 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         op = op_str,
         r = generate_expression(right)
     )
+}
+
+fn generate_struct_initialization(fields: HashMap<String, Box<Expression>>) -> String {
+    let mut buf: String = format!("{{");
+
+    fields.iter().for_each(|(k, v)| {
+        buf += &format!(".{} = {},", k, generate_expression(*v.clone()));
+    });
+
+    buf += "}";
+
+    buf
 }
 
 fn generate_assign(name: Expression, expr: Expression) -> String {
