@@ -65,9 +65,10 @@ impl FromStr for Target {
             #[cfg(feature = "backend_llvm")]
             "llvm" => Ok(Target::LLVM),
 
-            _ => Err(
-                format!("no target {T} found, maybe you forgot to enable backend_{T} feature?", T = s),
-            ),
+            _ => Err(format!(
+                "no target {T} found, maybe you forgot to enable backend_{T} feature?",
+                T = s
+            )),
         }
     }
 }
