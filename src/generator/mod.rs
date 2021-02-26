@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 use crate::ast::*;
+use std::str::FromStr;
 
 #[cfg(feature = "backend_c")]
 pub mod c;
@@ -25,21 +26,37 @@ pub mod llvm;
 mod tests;
 pub mod x86;
 
-pub trait Generator {
-    fn generate(prog: Module) -> String;
+#[derive(Debug)]
+pub enum Target {
+    C,
+    JS,
+    LLVM,
 }
 
-// Since we're using multiple features,
-// "unreachable" statements are okay
-#[allow(unreachable_code)]
-pub fn generate(prog: Module) -> String {
-    #[cfg(feature = "backend_llvm")]
-    return llvm::LLVMGenerator::generate(prog);
-    #[cfg(feature = "backend_c")]
-    return c::CGenerator::generate(prog);
+impl FromStr for Target {
+    type Err = String;
 
-    #[cfg(feature = "backend_node")]
-    return js::JsGenerator::generate(prog);
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.to_lowercase();
 
-    panic!("No backend specified");
+        match s.as_str() {
+            #[cfg(feature = "backend_c")]
+            "c" => Ok(Target::C),
+
+            #[cfg(feature = "backend_node")]
+            "js" => Ok(Target::JS),
+
+            #[cfg(feature = "backend_llvm")]
+            "llvm" => Ok(Target::LLVM),
+
+            _ => Err(format!(
+                "no target {T} found, maybe you forgot to enable backend_{T} feature?",
+                T = s
+            )),
+        }
+    }
+}
+
+pub trait Generator {
+    fn generate(prog: Module) -> String;
 }

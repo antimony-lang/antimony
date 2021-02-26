@@ -20,8 +20,8 @@ extern crate structopt;
 extern crate tempfile;
 
 use std::path::PathBuf;
-use std::str::FromStr;
 use structopt::StructOpt;
+use generator::Target;
 
 mod ast;
 mod builder;
@@ -41,37 +41,6 @@ pub struct Lib;
 #[derive(RustEmbed)]
 #[folder = "builtin/"]
 pub struct Builtins;
-
-#[derive(Debug)]
-enum Target {
-    C,
-    JS,
-    LLVM,
-}
-
-impl FromStr for Target {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.to_lowercase();
-
-        match s.as_str() {
-            #[cfg(feature = "backend_c")]
-            "c" => Ok(Target::C),
-
-            #[cfg(feature = "backend_node")]
-            "js" => Ok(Target::JS),
-
-            #[cfg(feature = "backend_llvm")]
-            "llvm" => Ok(Target::LLVM),
-
-            _ => Err(format!(
-                "no target {T} found, maybe you forgot to enable backend_{T} feature?",
-                T = s
-            )),
-        }
-    }
-}
 
 #[derive(StructOpt, Debug)]
 enum Command {
