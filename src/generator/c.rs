@@ -29,6 +29,10 @@ impl Generator for CGenerator {
         code += std::str::from_utf8(raw_builtins.as_ref())
             .expect("Unable to interpret builtin functions");
 
+        let structs: String = prog.structs.into_iter().map(generate_struct).collect();
+
+        code += &structs;
+
         for func in &prog.func {
             code += &format!("{};\n", &generate_function_signature(func.clone()));
         }
@@ -39,6 +43,25 @@ impl Generator for CGenerator {
 
         code
     }
+}
+
+pub fn generate_struct(def: StructDef) -> String {
+    // struct name {
+    let mut buf = format!("struct {} {{\n", def.name);
+
+    def.fields.iter().for_each(|f| {
+        // int counter;
+        buf += &format!(
+            "{} {};\n",
+            generate_type(Either::Left(f.clone())),
+            f.name,
+        );
+    });
+
+    // };
+    buf += "};\n";
+
+    buf
 }
 
 pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
