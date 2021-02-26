@@ -20,6 +20,7 @@ extern crate structopt;
 extern crate tempfile;
 
 use std::path::PathBuf;
+use std::str::FromStr;
 use structopt::StructOpt;
 
 mod ast;
@@ -41,8 +42,38 @@ pub struct Lib;
 #[folder = "builtin/"]
 pub struct Builtins;
 
+#[derive(Debug)]
+enum Target {
+    C,
+    JS,
+    LLVM,
+}
+
+impl FromStr for Target {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.to_lowercase();
+
+        match s.as_str() {
+            #[cfg(feature = "backend_c")]
+            "c" => Ok(Target::C),
+
+            #[cfg(feature = "backend_node")]
+            "js" => Ok(Target::JS),
+
+            #[cfg(feature = "backend_llvm")]
+            "llvm" => Ok(Target::LLVM),
+
+            _ => Err(
+                format!("no target {T} found, maybe you forgot to enable backend_{T} feature?", T = s),
+            ),
+        }
+    }
+}
+
 #[derive(StructOpt, Debug)]
-enum Opt {
+enum Command {
     #[structopt()]
     Build {
         in_file: PathBuf,
@@ -53,12 +84,22 @@ enum Opt {
     Run { in_file: PathBuf },
 }
 
+#[derive(StructOpt, Debug)]
+struct Opt {
+    #[structopt(subcommand)]
+    command: Command,
+
+    /// Target language. Options: c, js, llvm
+    #[structopt(long, short, parse(try_from_str))]
+    target: Target,
+}
+
 fn main() -> Result<(), String> {
     let opts = Opt::from_args();
 
-    match opts {
-        Opt::Build { in_file, out_file } => command::build::build(&in_file, &out_file)?,
-        Opt::Run { in_file } => command::run::run(in_file)?,
+    match opts.command {
+        Command::Build { in_file, out_file } => command::build::build(&in_file, &out_file)?,
+        Command::Run { in_file } => command::run::run(in_file)?,
     };
 
     Ok(())
