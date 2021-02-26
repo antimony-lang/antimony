@@ -9,4 +9,4 @@ tasks:
       cd antimony
       cargo build
       cargo test
-      cargo clippy --all-targets --all-features -- -D warnings
+      cargo clippy --all-targets -- -D warnings

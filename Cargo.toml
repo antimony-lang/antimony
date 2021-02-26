@@ -15,13 +15,7 @@ name = "sb"
 path = "src/main.rs"
 
 [features]
-backend_c = []
-backend_node = []
-backend_llvm = ["inkwell"]
-
-# To change, use the --featues flag:
-# cargo run --no-default-features --features backend_llvm
-default = ["backend_node"]
+llvm = ["inkwell"]
 
 [dependencies]
 structopt = "0.3.21"

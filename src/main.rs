@@ -19,6 +19,7 @@ extern crate rust_embed;
 extern crate structopt;
 extern crate tempfile;
 
+use generator::Target;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -42,7 +43,7 @@ pub struct Lib;
 pub struct Builtins;
 
 #[derive(StructOpt, Debug)]
-enum Opt {
+enum Command {
     #[structopt()]
     Build {
         in_file: PathBuf,
@@ -53,12 +54,24 @@ enum Opt {
     Run { in_file: PathBuf },
 }
 
+#[derive(StructOpt, Debug)]
+struct Opt {
+    #[structopt(subcommand)]
+    command: Command,
+
+    /// Target language. Options: c, js, llvm
+    #[structopt(long, short, default_value = "js", parse(try_from_str))]
+    target: Target,
+}
+
 fn main() -> Result<(), String> {
     let opts = Opt::from_args();
 
-    match opts {
-        Opt::Build { in_file, out_file } => command::build::build(&in_file, &out_file)?,
-        Opt::Run { in_file } => command::run::run(in_file)?,
+    match opts.command {
+        Command::Build { in_file, out_file } => {
+            command::build::build(opts.target, &in_file, &out_file)?
+        }
+        Command::Run { in_file } => command::run::run(opts.target, in_file)?,
     };
 
     Ok(())
