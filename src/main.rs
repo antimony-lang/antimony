@@ -91,7 +91,7 @@ struct Opt {
     command: Command,
 
     /// Target language. Options: c, js, llvm
-    #[structopt(long, short, parse(try_from_str))]
+    #[structopt(long, short, default_value = "js", parse(try_from_str))]
     target: Target,
 }
 
