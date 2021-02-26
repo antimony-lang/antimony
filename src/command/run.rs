@@ -27,7 +27,8 @@ pub fn run(in_file: PathBuf) -> Result<(), String> {
         .into_path();
 
     let intermediate_out_file_path = out_dir.join("intermediate.c");
-    build::build(&in_file, &intermediate_out_file_path)?;
+    // TODO
+    build::build(crate::generator::Target::JS, &in_file, &intermediate_out_file_path)?;
     let out_file = out_dir.join("out");
     if cfg!(feature = "backend_c") {
         Command::new("/usr/bin/cc")

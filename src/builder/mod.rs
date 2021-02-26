@@ -1,5 +1,6 @@
 use crate::ast::Module;
 use crate::generator;
+use generator::Generator;
 use crate::lexer;
 use crate::parser;
 use crate::Lib;
@@ -101,7 +102,7 @@ impl Builder {
         Ok(module)
     }
 
-    pub(crate) fn generate(&mut self, out_file: PathBuf) -> Result<(), String> {
+    pub(crate) fn generate(&mut self, target: generator::Target, out_file: PathBuf) -> Result<(), String> {
         let mut mod_iter = self.modules.iter();
 
         // TODO: We shouldn't clone here
@@ -109,7 +110,20 @@ impl Builder {
         for module in mod_iter {
             condensed.merge_with(module.clone());
         }
-        let output = generator::generate(condensed);
+
+        let output = match target {
+            #[cfg(feature = "backend_node")]
+            generator::Target::JS => generator::js::JsGenerator::generate(condensed),
+
+            #[cfg(feature = "backend_c")]
+            generator::Target::C => generator::c::CGenerator::generate(condensed),
+
+            #[cfg(feature = "backend_llvm")]
+            generator::Target::LLVM => generator::llvm::LLVMGenerator::generate(condensed),
+
+            _ => panic!("No applicable backend"),
+        };
+
         let mut file = std::fs::File::create(out_file).expect("create failed");
         file.write_all(output.as_bytes()).expect("write failed");
         file.flush().map_err(|_| "Could not flush file".into())

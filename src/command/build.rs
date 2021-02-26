@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::generator;
 use crate::builder;
 use std::path::Path;
 
-pub fn build(in_file: &Path, out_file: &Path) -> Result<(), String> {
+pub fn build(target: generator::Target, in_file: &Path, out_file: &Path) -> Result<(), String> {
     let mut b = builder::Builder::new(in_file.to_path_buf());
     b.build()?;
-    b.generate(out_file.to_path_buf())
+    b.generate(target, out_file.to_path_buf())
 }

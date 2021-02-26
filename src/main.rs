@@ -68,7 +68,7 @@ fn main() -> Result<(), String> {
     let opts = Opt::from_args();
 
     match opts.command {
-        Command::Build { in_file, out_file } => command::build::build(&in_file, &out_file)?,
+        Command::Build { in_file, out_file } => command::build::build(opts.target, &in_file, &out_file)?,
         Command::Run { in_file } => command::run::run(in_file)?,
     };
 
