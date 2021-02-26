@@ -21,6 +21,7 @@ extern crate tempfile;
 
 use generator::Target;
 use std::path::PathBuf;
+use std::process;
 use structopt::StructOpt;
 
 mod ast;
@@ -60,8 +61,8 @@ struct Opt {
     command: Command,
 
     /// Target language. Options: c, js, llvm
-    #[structopt(long, short, default_value = "js", parse(try_from_str))]
-    target: Target,
+    #[structopt(long, short, parse(try_from_str))]
+    target: Option<Target>,
 }
 
 fn main() -> Result<(), String> {
@@ -69,9 +70,20 @@ fn main() -> Result<(), String> {
 
     match opts.command {
         Command::Build { in_file, out_file } => {
-            command::build::build(opts.target, &in_file, &out_file)?
+            let target = match opts.target {
+                Some(t) => t,
+                None => Target::from_extension(&out_file).unwrap_or_else(|| {
+                    println!(
+                        "Cannot detect target from output file {}, use --target option to set it explicitly",
+                        &out_file.to_string_lossy(),
+                    );
+                    process::exit(1);
+                }),
+            };
+
+            command::build::build(target, &in_file, &out_file)?
         }
-        Command::Run { in_file } => command::run::run(opts.target, in_file)?,
+        Command::Run { in_file } => command::run::run(opts.target.unwrap_or(Target::JS), in_file)?,
     };
 
     Ok(())

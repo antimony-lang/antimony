@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 use crate::ast::*;
+use std::path;
 use std::str::FromStr;
 
 pub mod c;
@@ -29,6 +30,20 @@ pub enum Target {
     C,
     JS,
     LLVM,
+}
+
+impl Target {
+    /// Constructs target based on provided output filename, returns
+    /// None if target can't be detected
+    pub fn from_extension(file: &path::Path) -> Option<Self> {
+        let ext = file.extension()?;
+
+        match &*ext.to_string_lossy() {
+            "c" => Some(Self::C),
+            "js" => Some(Self::JS),
+            _ => None,
+        }
+    }
 }
 
 impl FromStr for Target {
