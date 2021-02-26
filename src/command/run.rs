@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 use crate::command::build;
+use crate::generator::Target;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process;
@@ -21,14 +22,13 @@ use std::process::Command;
 use std::process::Stdio;
 use tempfile::tempdir;
 
-pub fn run(in_file: PathBuf) -> Result<(), String> {
+pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
     let out_dir = tempdir()
         .expect("Could not create temporary file")
         .into_path();
 
     let intermediate_out_file_path = out_dir.join("intermediate.c");
-    // TODO
-    build::build(crate::generator::Target::JS, &in_file, &intermediate_out_file_path)?;
+    build::build(target, &in_file, &intermediate_out_file_path)?;
     let out_file = out_dir.join("out");
     if cfg!(feature = "backend_c") {
         Command::new("/usr/bin/cc")
