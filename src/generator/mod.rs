@@ -18,6 +18,7 @@ use std::str::FromStr;
 
 pub mod c;
 pub mod js;
+#[cfg(feature = "llvm")]
 pub mod llvm;
 #[cfg(test)]
 mod tests;

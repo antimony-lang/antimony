@@ -118,7 +118,13 @@ impl Builder {
         let output = match target {
             generator::Target::JS => generator::js::JsGenerator::generate(condensed),
             generator::Target::C => generator::c::CGenerator::generate(condensed),
-            generator::Target::LLVM => generator::llvm::LLVMGenerator::generate(condensed),
+            generator::Target::LLVM => {
+                #[cfg(feature = "llvm")]
+                return generator::llvm::LLVMGenerator::generate(condensed);
+
+                #[cfg(not(feature = "llvm"))]
+                panic!("'llvm' feature should be enabled to use LLVM target");
+            }
         };
 
         let mut file = std::fs::File::create(out_file).expect("create failed");

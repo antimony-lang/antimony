@@ -5,7 +5,7 @@ Antimony currently implements a JavaScript backend, but a C backend is in develo
 Backend can be specified when running on building with `--target` (`-t`) option, default is `js`:
 
 ```sh
-sb -t llvm build in.sb --out-file out
+sb -t c build in.sb --out-file out
 ```
 
 ## Available Backends
@@ -15,3 +15,9 @@ sb -t llvm build in.sb --out-file out
 | Node.js         | `js`           | mostly stable    |
 | LLVM            | `llvm`         | unstable         |
 | C               | `c`            | unstable         |
+
+LLVM also requires to enable `llvm` feature when building:
+
+```sh
+cargo build --features llvm
+```
