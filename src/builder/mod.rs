@@ -116,16 +116,9 @@ impl Builder {
         }
 
         let output = match target {
-            #[cfg(feature = "backend_node")]
             generator::Target::JS => generator::js::JsGenerator::generate(condensed),
-
-            #[cfg(feature = "backend_c")]
             generator::Target::C => generator::c::CGenerator::generate(condensed),
-
-            #[cfg(feature = "backend_llvm")]
             generator::Target::LLVM => generator::llvm::LLVMGenerator::generate(condensed),
-
-            _ => panic!("No applicable backend"),
         };
 
         let mut file = std::fs::File::create(out_file).expect("create failed");

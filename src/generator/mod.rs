@@ -16,11 +16,8 @@
 use crate::ast::*;
 use std::str::FromStr;
 
-#[cfg(feature = "backend_c")]
 pub mod c;
-#[cfg(feature = "backend_node")]
 pub mod js;
-#[cfg(feature = "backend_llvm")]
 pub mod llvm;
 #[cfg(test)]
 mod tests;
@@ -40,19 +37,11 @@ impl FromStr for Target {
         let s = s.to_lowercase();
 
         match s.as_str() {
-            #[cfg(feature = "backend_c")]
             "c" => Ok(Target::C),
-
-            #[cfg(feature = "backend_node")]
             "js" => Ok(Target::JS),
-
-            #[cfg(feature = "backend_llvm")]
             "llvm" => Ok(Target::LLVM),
 
-            _ => Err(format!(
-                "no target {T} found, maybe you forgot to enable backend_{T} feature?",
-                T = s
-            )),
+            _ => Err(format!("no target {} found", s)),
         }
     }
 }
