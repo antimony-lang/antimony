@@ -53,11 +53,7 @@ pub fn generate_struct(def: StructDef) -> String {
 
     def.fields.iter().for_each(|f| {
         // int counter;
-        buf += &format!(
-            "{} {};\n",
-            generate_type(Either::Left(f.clone())),
-            f.name,
-        );
+        buf += &format!("{} {};\n", generate_type(Either::Left(f.clone())), f.name,);
     });
 
     // };
@@ -248,7 +244,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Array(_) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
-            Expression::FieldAccess(expr, field) => generate_field_access(*expr, field)
+            Expression::FieldAccess(expr, field) => generate_field_access(*expr, field),
         })
         .collect::<Vec<String>>()
         .join(",");
