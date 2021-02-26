@@ -53,13 +53,13 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
             Type::Any => "void *".into(),
             Type::Bool => "bool".into(),
             Type::Struct(_) => todo!(),
-            Type::Array(_) => match name {
+            Type::Array(t) => match name {
                 Some(n) => format!(
                     "{T} {N}[]",
-                    T = generate_type(Either::Right(Some(t))),
+                    T = generate_type(Either::Right(Some(*t))),
                     N = n
                 ),
-                None => format!("{}[]", generate_type(Either::Right(Some(t)))),
+                None => format!("{}[]", generate_type(Either::Right(Some(*t)))),
             },
         },
         None => "void".into(),
