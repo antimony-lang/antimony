@@ -1,10 +1,10 @@
 use crate::ast::Module;
 use crate::generator;
-use generator::Generator;
 use crate::lexer;
 use crate::parser;
 use crate::Lib;
 use crate::PathBuf;
+use generator::Generator;
 use std::env;
 /**
  * Copyright 2021 Garrit Franke
@@ -102,7 +102,11 @@ impl Builder {
         Ok(module)
     }
 
-    pub(crate) fn generate(&mut self, target: generator::Target, out_file: PathBuf) -> Result<(), String> {
+    pub(crate) fn generate(
+        &mut self,
+        target: generator::Target,
+        out_file: PathBuf,
+    ) -> Result<(), String> {
         let mut mod_iter = self.modules.iter();
 
         // TODO: We shouldn't clone here

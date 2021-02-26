@@ -19,9 +19,9 @@ extern crate rust_embed;
 extern crate structopt;
 extern crate tempfile;
 
+use generator::Target;
 use std::path::PathBuf;
 use structopt::StructOpt;
-use generator::Target;
 
 mod ast;
 mod builder;

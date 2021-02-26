@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::generator;
 use crate::builder;
+use crate::generator;
 use std::path::Path;
 
 pub fn build(target: generator::Target, in_file: &Path, out_file: &Path) -> Result<(), String> {
