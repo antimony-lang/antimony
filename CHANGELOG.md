@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Feature flags for backends (`backend_c`, etc.) have been replaced by `--target` (`-t`) command-line option:
+
+  ```sh
+  sb -t c run examples/hello_world.sb
+  ```
+
 ## v0.5.1 (2021-02-25)
 
 Sabre is now Antimony!
