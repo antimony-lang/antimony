@@ -126,11 +126,11 @@ impl Builder {
             generator::Target::JS => generator::js::JsGenerator::generate(condensed),
             generator::Target::C => generator::c::CGenerator::generate(condensed),
             generator::Target::LLVM => {
-                #[cfg(feature = "llvm")]
-                return generator::llvm::LLVMGenerator::generate(condensed);
-
                 #[cfg(not(feature = "llvm"))]
                 panic!("'llvm' feature should be enabled to use LLVM target");
+
+                #[cfg(feature = "llvm")]
+                generator::llvm::LLVMGenerator::generate(condensed)
             }
         };
 
