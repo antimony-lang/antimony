@@ -780,15 +780,15 @@ fn test_array_as_argument() {
 fn test_struct_initialization() {
     let raw = "
     struct User {
-        username: string,
-        first_name: string,
+        username: string
+        first_name: string
         last_name: string
     }
     
     fn main() {
         let foo = new User {
-            username: 'foobar',
-            first_name: 'Foo',
+            username: 'foobar'
+            first_name: 'Foo'
             last_name: 'Bar'
         }
     }

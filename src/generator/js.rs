@@ -32,32 +32,12 @@ impl Generator for JsGenerator {
             .structs
             .clone()
             .into_iter()
-            .map(|struct_def| {
-                let methods: Vec<Function> = prog
-                    .func
-                    .iter()
-                    .filter(|f| {
-                        if let FunctionType::Method(subject) = &f.function_type {
-                            *subject == struct_def.name
-                        } else {
-                            false
-                        }
-                    })
-                    .cloned()
-                    .collect();
-
-                generate_struct_definition(struct_def, methods)
-            })
+            .map(generate_struct_definition)
             .collect();
 
         code += &structs;
 
-        let funcs: String = prog
-            .func
-            .into_iter()
-            .filter(|f| matches!(f.function_type, FunctionType::Function))
-            .map(generate_function)
-            .collect();
+        let funcs: String = prog.func.into_iter().map(generate_function).collect();
 
         code += &funcs;
 
@@ -77,35 +57,43 @@ fn generate_arguments(args: Vec<Variable>) -> String {
 fn generate_function(func: Function) -> String {
     let arguments: String = generate_arguments(func.arguments);
 
-    let mut raw = match func.function_type {
-        FunctionType::Function => format!("function {N}({A})", N = func.name, A = arguments),
-        FunctionType::Method(subject) => format!(
-            "{}.prototype.{} = function({}) ",
-            subject, func.name, arguments
-        ),
-    };
+    let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
 
     raw += &generate_block(func.body, None);
     raw += "\n";
     raw
 }
 
-fn generate_struct_definition(struct_def: StructDef, methods: Vec<Function>) -> String {
+fn generate_method(subject: String, func: Function) -> String {
+    let mut buf = format!(
+        "{}.prototype.{} = function({})",
+        subject,
+        func.name,
+        generate_arguments(func.arguments)
+    );
+
+    buf += &generate_block(func.body, None);
+    buf += "\n";
+
+    buf
+}
+
+fn generate_struct_definition(struct_def: StructDef) -> String {
     // JS doesn't care about field declaration
 
     // Constructor signature
-    let mut buf = format!("function {}(args) {{\n", struct_def.name);
+    let mut buf = format!("function {}(args) {{\n", &struct_def.name);
 
     // Field constructor fields
-    for field in struct_def.fields {
+    for field in &struct_def.fields {
         buf += &format!("this.{N} = args.{N};\n", N = field.name);
     }
     // Constructor end
     buf += "}\n";
 
     // Methods
-    for method in methods {
-        buf += &generate_function(method.to_owned());
+    for method in &struct_def.methods {
+        buf += &generate_method(struct_def.name.clone(), method.to_owned());
     }
 
     buf

@@ -1,6 +1,5 @@
 use super::parser::Parser;
 use crate::ast::types::Type;
-use crate::ast::FunctionType;
 use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
@@ -33,17 +32,12 @@ impl Parser {
         while self.has_more() {
             let next = self.peek()?;
             match next.kind {
-                TokenKind::Keyword(Keyword::Function) => {
-                    functions.push(self.parse_function(FunctionType::Function)?)
-                }
+                TokenKind::Keyword(Keyword::Function) => functions.push(self.parse_function()?),
                 TokenKind::Keyword(Keyword::Import) => {
                     imports.insert(self.parse_import()?);
                 }
                 TokenKind::Keyword(Keyword::Struct) => {
                     structs.push(self.parse_struct_definition()?)
-                }
-                TokenKind::Keyword(Keyword::Impl) => {
-                    functions.push(self.parse_method_definition()?)
                 }
                 _ => return Err(format!("Unexpected token: {}", next.raw)),
             }
@@ -65,19 +59,28 @@ impl Parser {
         let name = self.match_identifier()?;
 
         self.match_token(TokenKind::CurlyBracesOpen)?;
-        let fields = self.parse_typed_variable_list()?;
+        let mut fields = Vec::new();
+        let mut methods = Vec::new();
+        while self.peek_token(TokenKind::CurlyBracesClose).is_err() {
+            let next = self.peek()?;
+            match next.kind {
+                TokenKind::Keyword(Keyword::Function) => {
+                    methods.push(self.parse_function()?);
+                }
+                TokenKind::Identifier(_) => fields.push(self.parse_typed_variable()?),
+                _ => {
+                    return Err(
+                        self.make_error_msg(next.pos, "Expected struct field or method".into())
+                    )
+                }
+            }
+        }
         self.match_token(TokenKind::CurlyBracesClose)?;
-
-        Ok(StructDef { name, fields })
-    }
-
-    fn parse_method_definition(&mut self) -> Result<Function, String> {
-        self.match_keyword(Keyword::Impl)?;
-        let subject = self.match_identifier()?;
-        self.match_token(TokenKind::Dot)?;
-        let function = self.parse_function(FunctionType::Method(subject))?;
-
-        Ok(function)
+        Ok(StructDef {
+            name,
+            fields,
+            methods,
+        })
     }
 
     fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
@@ -138,10 +141,8 @@ impl Parser {
     /// To reduce code duplication, this method can be either be used to parse a function or a method.
     /// If a function is parsed, the `fn` keyword is matched.
     /// If a method is parsed, `fn` will be omitted
-    fn parse_function(&mut self, function_type: FunctionType) -> Result<Function, String> {
-        if let FunctionType::Function = function_type {
-            self.match_keyword(Keyword::Function)?;
-        }
+    fn parse_function(&mut self) -> Result<Function, String> {
+        self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
 
         self.match_token(TokenKind::BraceOpen)?;
@@ -161,7 +162,6 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Function {
-            function_type,
             name,
             arguments,
             body,
@@ -411,8 +411,7 @@ impl Parser {
             map.insert(name, expr);
             // Then continue to parse fields
             // as long as a comma token is found
-            while self.peek_token(TokenKind::Comma).is_ok() {
-                self.match_token(TokenKind::Comma)?;
+            while matches!(self.peek()?.kind, TokenKind::Identifier(_)) {
                 let (name, expr) = self.parse_struct_field()?;
                 map.insert(name, expr);
             }
