@@ -139,19 +139,19 @@ fn test_tokenizing_without_whitespace() {
 }
 
 #[test]
-fn test_booleans() {
-    let mut tokens = tokenize("true false").into_iter();
+fn test_string() {
+    let mut tokens = tokenize("'aaa' \"bbb\"").into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
         Token {
-            len: 4,
-            kind: TokenKind::Keyword(Keyword::Boolean),
-            raw: "true".to_owned(),
+            len: 5,
+            kind: TokenKind::Literal(Value::Str),
+            raw: "'aaa'".to_owned(),
             pos: Position {
-                raw: 3,
+                raw: 4,
                 line: 1,
-                offset: 3
+                offset: 4
             }
         }
     );
@@ -160,12 +160,45 @@ fn test_booleans() {
         tokens.nth(1).unwrap(),
         Token {
             len: 5,
-            kind: TokenKind::Keyword(Keyword::Boolean),
-            raw: "false".to_owned(),
+            kind: TokenKind::Literal(Value::Str),
+            raw: "\"bbb\"".to_owned(),
             pos: Position {
-                raw: 9,
+                raw: 10,
                 line: 1,
-                offset: 9
+                offset: 10
+            }
+        }
+    );
+}
+
+#[test]
+fn test_string_markers_within_string() {
+    let mut tokens = tokenize("'\"aaa' \"'bbb\"").into_iter();
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 6,
+            kind: TokenKind::Literal(Value::Str),
+            raw: "'\"aaa'".to_owned(),
+            pos: Position {
+                raw: 5,
+                line: 1,
+                offset: 5
+            }
+        }
+    );
+
+    assert_eq!(
+        tokens.nth(1).unwrap(),
+        Token {
+            len: 6,
+            kind: TokenKind::Literal(Value::Str),
+            raw: "\"'bbb\"".to_owned(),
+            pos: Position {
+                raw: 12,
+                line: 1,
+                offset: 12
             }
         }
     );

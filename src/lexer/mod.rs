@@ -209,7 +209,7 @@ impl Cursor<'_> {
         let token_kind = match first_char {
             c if is_whitespace(c) => self.whitespace(),
             '0'..='9' => self.number(),
-            '"' | '\'' => self.string(),
+            '"' | '\'' => self.string(first_char),
             '.' => Dot,
             '+' => match self.first() {
                 '=' => {
@@ -348,8 +348,8 @@ impl Cursor<'_> {
         TokenKind::Literal(Value::Int)
     }
 
-    fn string(&mut self) -> TokenKind {
-        self.eat_string();
+    fn string(&mut self, end: char) -> TokenKind {
+        self.eat_string(end);
 
         TokenKind::Literal(Value::Str)
     }
@@ -410,12 +410,10 @@ impl Cursor<'_> {
         has_digits
     }
 
-    fn eat_string(&mut self) {
-        // FIXME: double quoted strings could probably be ended by single quoted, and vice versa.
-        // Possible fix: Pass the token of the string beginning down to this method and check against it.
+    fn eat_string(&mut self, end: char) {
         loop {
             match self.first() {
-                '"' | '\'' => break,
+                ch if ch == end => break,
                 '\n' => panic!(
                     "String does not end on same line. At {}:{}",
                     self.pos().line,
