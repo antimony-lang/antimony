@@ -59,7 +59,7 @@ impl Builder {
             let _ = env::set_current_dir(base_directory);
             self.in_file = resolved_delta.to_path_buf();
         }
-        self.build_module(self.in_file.clone())?;
+        self.build_module(self.in_file.clone(), &mut Vec::new())?;
 
         // Append standard library
         self.build_stdlib();
@@ -69,7 +69,11 @@ impl Builder {
         Ok(())
     }
 
-    fn build_module(&mut self, file_path: PathBuf) -> Result<Module, String> {
+    fn build_module(
+        &mut self,
+        file_path: PathBuf,
+        seen: &mut Vec<String>,
+    ) -> Result<Module, String> {
         // TODO: This method can probably cleaned up quite a bit
 
         // In case the module is a directory, we have to append the filename of the entrypoint
@@ -91,6 +95,12 @@ impl Builder {
             resolved_file_path.display().to_string(),
         )?;
         for import in &module.imports {
+            // Prevent circular imports
+            if seen.contains(import) {
+                continue;
+            } else {
+                &seen.push(import.to_string());
+            }
             // Build module relative to the current file
             let mut import_path = resolved_file_path
                 .parent()
@@ -103,7 +113,7 @@ impl Builder {
                 import_path.set_extension("sb");
             }
 
-            self.build_module(import_path)?;
+            self.build_module(import_path, seen)?;
         }
         self.modules.push(module.clone());
         Ok(module)
