@@ -50,7 +50,7 @@ impl QBEGenerator {
 
     /// Adds a block label to the generated code
     fn add_block_label(&mut self, name: &str) {
-        self.code.push_str(&format!("@{}", name));
+        self.code.push_str(&format!("@{}\n", name));
     }
 
     fn add_function(&mut self, func: &Function) {
@@ -62,7 +62,7 @@ impl QBEGenerator {
 
         // export function w $myfunc(w %age) {
         self.code.push_str(&format!(
-            "export function {return_type} ${name}({params}) {{",
+            "export function {return_type} ${name}({params}) {{\n",
             return_type = return_type,
             name = func.name,
             params = params,
