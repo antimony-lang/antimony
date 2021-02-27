@@ -94,10 +94,7 @@ fn generate_struct_definition(struct_def: StructDef, methods: &Vec<Function>) ->
     // JS doesn't care about field declaration
 
     // Constructor signature
-    let mut buf = format!(
-        "function {}(args) {{\n",
-        struct_def.name,
-    );
+    let mut buf = format!("function {}(args) {{\n", struct_def.name);
 
     // Field constructor fields
     for field in struct_def.fields {
