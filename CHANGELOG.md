@@ -4,12 +4,8 @@
 
 **Features**
 
-- Struct methods
-- Feature flags for backends (`backend_c`, etc.) have been replaced by `--target` (`-t`) command-line option:
-
-  ```sh
-  sb -t c run examples/hello_world.sb
-  ```
+- Struct methods (#19)
+- Compile-backend will be determined based on file extension (#20, #21)
 
 **Changes**
 
