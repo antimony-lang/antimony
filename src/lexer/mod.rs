@@ -150,6 +150,7 @@ pub enum Keyword {
     Match,
     Import,
     Unknown,
+    Impl,
 }
 
 /// Creates an iterator that produces tokens from the input string.
@@ -378,6 +379,7 @@ impl Cursor<'_> {
             c if c == "new" => Keyword::New,
             c if c == "match" => Keyword::Match,
             c if c == "import" => Keyword::Import,
+            c if c == "impl" => Keyword::Impl,
             _ => Keyword::Unknown,
         }
     }

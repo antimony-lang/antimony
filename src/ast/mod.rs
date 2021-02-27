@@ -50,8 +50,17 @@ impl Module {
     }
 }
 
+/// Used to determine the parsing type of a function
+#[derive(Debug, Clone)]
+pub enum FunctionType {
+    Function,
+    /// string describes struct subject
+    Method(String),
+}
+
 #[derive(Debug, Clone)]
 pub struct Function {
+    pub function_type: FunctionType,
     pub name: String,
     pub arguments: Vec<Variable>,
     pub body: Statement,

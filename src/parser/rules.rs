@@ -1,5 +1,6 @@
 use super::parser::Parser;
 use crate::ast::types::Type;
+use crate::ast::FunctionType;
 use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
@@ -32,12 +33,17 @@ impl Parser {
         while self.has_more() {
             let next = self.peek()?;
             match next.kind {
-                TokenKind::Keyword(Keyword::Function) => functions.push(self.parse_function()?),
+                TokenKind::Keyword(Keyword::Function) => {
+                    functions.push(self.parse_function(FunctionType::Function)?)
+                }
                 TokenKind::Keyword(Keyword::Import) => {
                     imports.insert(self.parse_import()?);
                 }
                 TokenKind::Keyword(Keyword::Struct) => {
                     structs.push(self.parse_struct_definition()?)
+                }
+                TokenKind::Keyword(Keyword::Impl) => {
+                    functions.push(self.parse_method_definition()?)
                 }
                 _ => return Err(format!("Unexpected token: {}", next.raw)),
             }
@@ -63,6 +69,15 @@ impl Parser {
         self.match_token(TokenKind::CurlyBracesClose)?;
 
         Ok(StructDef { name, fields })
+    }
+
+    fn parse_method_definition(&mut self) -> Result<Function, String> {
+        self.match_keyword(Keyword::Impl)?;
+        let subject = self.match_identifier()?;
+        self.match_token(TokenKind::Dot)?;
+        let function = self.parse_function(FunctionType::Method(subject))?;
+
+        Ok(function)
     }
 
     fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
@@ -120,8 +135,13 @@ impl Parser {
         Ok(Statement::Block(statements, scope))
     }
 
-    fn parse_function(&mut self) -> Result<Function, String> {
-        self.match_keyword(Keyword::Function)?;
+    /// To reduce code duplication, this method can be either be used to parse a function or a method.
+    /// If a function is parsed, the `fn` keyword is matched.
+    /// If a method is parsed, `fn` will be omitted
+    fn parse_function(&mut self, function_type: FunctionType) -> Result<Function, String> {
+        if let FunctionType::Function = function_type {
+            self.match_keyword(Keyword::Function)?;
+        }
         let name = self.match_identifier()?;
 
         self.match_token(TokenKind::BraceOpen)?;
@@ -141,6 +161,7 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Function {
+            function_type,
             name,
             arguments,
             body,
