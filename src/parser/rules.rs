@@ -310,6 +310,8 @@ impl Parser {
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
+
+        // TODO: Move binop logic out of here
         let expr = match token.kind {
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
@@ -330,6 +332,10 @@ impl Parser {
             TokenKind::Literal(Value::Str) => match BinOp::try_from(self.peek()?.kind) {
                 Ok(_) => self.parse_bin_op(None)?,
                 Err(_) => Expression::Str(token.raw),
+            },
+            TokenKind::Keyword(Keyword::Selff) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Selff,
             },
             TokenKind::Identifier(val) => {
                 let next = self.peek()?;

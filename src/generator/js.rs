@@ -161,6 +161,7 @@ fn generate_statement(statement: Statement) -> String {
 fn generate_expression(expr: Expression) -> String {
     match expr {
         Expression::Int(val) => val.to_string(),
+        Expression::Selff => "this".to_string(),
         Expression::Variable(val) | Expression::Str(val) => val,
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
@@ -295,6 +296,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
         .map(|arg| match arg {
             Expression::Int(i) => i.to_string(),
             Expression::Bool(v) => v.to_string(),
+            Expression::Selff => "this".to_string(),
             Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
