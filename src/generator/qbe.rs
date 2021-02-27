@@ -34,23 +34,18 @@ impl QBEGenerator {
     }
 
     fn generate_function_params(arguments: &Vec<Variable>) -> String {
-        let mut buf = String::new();
-
-        let len = arguments.len();
-        for (i, arg) in arguments.into_iter().enumerate() {
-            buf.push_str(&format!(
-                "{type} %{ident}",
-                // Types for parameters are required
-                type = Self::generate_type(arg.ty.as_ref().unwrap()),
-                ident = arg.name,
-            ));
-
-            if i < len - 1 {
-                buf.push_str(", ");
-            }
-        }
-
-        buf
+        arguments.
+            into_iter().
+            map(|arg| {
+                // w %apple
+                format!(
+                    "{type} %{name}",
+                    type = Self::generate_type(&arg.ty.as_ref().unwrap()),
+                    name = arg.name,
+                )
+            }).
+            collect::<Vec<String>>().
+            join(", ")
     }
 
     /// Adds a block label to the generated code
