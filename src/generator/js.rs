@@ -30,13 +30,34 @@ impl Generator for JsGenerator {
 
         let structs: String = prog
             .structs
+            .clone()
             .into_iter()
-            .map(generate_struct_definition)
+            .map(|struct_def| {
+                let methods = &prog
+                    .func
+                    .iter()
+                    .filter(|f| {
+                        if let FunctionType::Method(subject) = &f.function_type {
+                            *subject == struct_def.name
+                        } else {
+                            false
+                        }
+                    })
+                    .map(|f| f.clone())
+                    .collect();
+
+                generate_struct_definition(struct_def, methods)
+            })
             .collect();
 
         code += &structs;
 
-        let funcs: String = prog.func.into_iter().map(generate_function).collect();
+        let funcs: String = prog
+            .func
+            .into_iter()
+            .filter(|f| matches!(f.function_type, FunctionType::Function))
+            .map(generate_function)
+            .collect();
 
         code += &funcs;
 
@@ -46,23 +67,51 @@ impl Generator for JsGenerator {
     }
 }
 
-fn generate_function(func: Function) -> String {
-    let arguments: String = func
-        .arguments
-        .into_iter()
+fn generate_arguments(args: Vec<Variable>) -> String {
+    args.into_iter()
         .map(|var| var.name)
         .collect::<Vec<String>>()
-        .join(", ");
-    let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
+        .join(", ")
+}
+
+fn generate_function(func: Function) -> String {
+    let arguments: String = generate_arguments(func.arguments);
+
+    let mut raw = match func.function_type {
+        FunctionType::Function => format!("function {N}({A})", N = func.name, A = arguments),
+        FunctionType::Method(subject) => format!(
+            "{}.prototype.{} = function({}) ",
+            subject, func.name, arguments
+        ),
+    };
 
     raw += &generate_block(func.body, None);
-
+    raw += "\n";
     raw
 }
 
-fn generate_struct_definition(struct_def: StructDef) -> String {
+fn generate_struct_definition(struct_def: StructDef, methods: &Vec<Function>) -> String {
     // JS doesn't care about field declaration
-    format!("class {} {{}}\n", struct_def.name)
+
+    // Constructor signature
+    let mut buf = format!(
+        "function {}(args) {{\n",
+        struct_def.name,
+    );
+
+    // Field constructor fields
+    for field in struct_def.fields {
+        buf += &format!("this.{N} = args.{N};\n", N = field.name);
+    }
+    // Constructor end
+    buf += "}\n";
+
+    // Methods
+    for method in methods {
+        buf += &generate_function(method.to_owned());
+    }
+
+    buf
 }
 
 /// prepend is used to pass optional statements, that will be put in front of the regular block
@@ -297,15 +346,15 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
 }
 
 fn generate_struct_initialization(
-    _name: String,
+    name: String,
     fields: HashMap<String, Box<Expression>>,
 ) -> String {
-    let mut out_str = "{".to_string();
+    let mut out_str = format!("new {}({{", name);
     for (key, value) in fields {
         out_str += &format!("{}: {},", key, generate_expression(*value));
     }
 
-    out_str += "}";
+    out_str += "})";
 
     out_str
 }
