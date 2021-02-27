@@ -18,6 +18,7 @@ use std::path;
 use std::str::FromStr;
 
 pub mod c;
+pub mod qbe;
 pub mod js;
 #[cfg(feature = "llvm")]
 pub mod llvm;
@@ -29,6 +30,7 @@ pub mod x86;
 pub enum Target {
     C,
     JS,
+    QBE,
     LLVM,
 }
 
@@ -41,6 +43,7 @@ impl Target {
         match &*ext.to_string_lossy() {
             "c" => Some(Self::C),
             "js" => Some(Self::JS),
+            "ssa" => Some(Self::QBE),
             _ => None,
         }
     }
@@ -55,6 +58,7 @@ impl FromStr for Target {
         match s.as_str() {
             "c" => Ok(Target::C),
             "js" => Ok(Target::JS),
+            "qbe" => Ok(Target::QBE),
             "llvm" => Ok(Target::LLVM),
 
             _ => Err(format!("no target {} found", s)),

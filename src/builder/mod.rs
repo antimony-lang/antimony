@@ -125,6 +125,7 @@ impl Builder {
         let output = match target {
             generator::Target::JS => generator::js::JsGenerator::generate(condensed),
             generator::Target::C => generator::c::CGenerator::generate(condensed),
+            generator::Target::QBE => generator::qbe::QBEGenerator::generate(condensed),
             generator::Target::LLVM => {
                 #[cfg(not(feature = "llvm"))]
                 panic!("'llvm' feature should be enabled to use LLVM target");
