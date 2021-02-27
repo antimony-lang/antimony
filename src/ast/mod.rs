@@ -100,6 +100,7 @@ pub enum Expression {
     Int(u32),
     Str(String),
     Bool(bool),
+    /// Represents "self" keyword
     Selff,
     Array(Vec<Expression>),
     FunctionCall(String, Vec<Expression>),

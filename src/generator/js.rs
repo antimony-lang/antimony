@@ -33,7 +33,7 @@ impl Generator for JsGenerator {
             .clone()
             .into_iter()
             .map(|struct_def| {
-                let methods = &prog
+                let methods: Vec<Function> = prog
                     .func
                     .iter()
                     .filter(|f| {
@@ -43,7 +43,7 @@ impl Generator for JsGenerator {
                             false
                         }
                     })
-                    .map(|f| f.clone())
+                    .cloned()
                     .collect();
 
                 generate_struct_definition(struct_def, methods)
@@ -90,7 +90,7 @@ fn generate_function(func: Function) -> String {
     raw
 }
 
-fn generate_struct_definition(struct_def: StructDef, methods: &Vec<Function>) -> String {
+fn generate_struct_definition(struct_def: StructDef, methods: Vec<Function>) -> String {
     // JS doesn't care about field declaration
 
     // Constructor signature
