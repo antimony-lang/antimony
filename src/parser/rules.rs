@@ -376,8 +376,8 @@ impl Parser {
 
     fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
         self.match_token(TokenKind::Dot)?;
-        let field = self.match_identifier()?;
-        let expr = Expression::FieldAccess(Box::new(lhs), field);
+        let field = self.parse_expression()?;
+        let expr = Expression::FieldAccess(Box::new(lhs), Box::new(field));
         if self.peek_token(TokenKind::Dot).is_ok() {
             self.parse_field_access(expr)
         } else {

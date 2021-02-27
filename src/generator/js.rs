@@ -121,7 +121,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::StructInitialization(name, fields) => {
             generate_struct_initialization(name, fields)
         }
-        Expression::FieldAccess(expr, field) => generate_field_access(*expr, field),
+        Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
     }
 }
 
@@ -254,7 +254,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::StructInitialization(name, fields) => {
                 generate_struct_initialization(name, fields)
             }
-            Expression::FieldAccess(expr, field) => generate_field_access(*expr, field),
+            Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
         })
         .collect::<Vec<String>>()
         .join(",");
@@ -289,7 +289,7 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::DivideAssign => "/=",
     };
     format!(
-        "({l} {op} {r})",
+        "{l} {op} {r}",
         l = generate_expression(left),
         op = op_str,
         r = generate_expression(right)
@@ -310,8 +310,12 @@ fn generate_struct_initialization(
     out_str
 }
 
-fn generate_field_access(expr: Expression, field: String) -> String {
-    format!("{}.{}", generate_expression(expr), field)
+fn generate_field_access(expr: Expression, field: Expression) -> String {
+    format!(
+        "{}.{}",
+        generate_expression(expr),
+        generate_expression(field)
+    )
 }
 
 fn generate_assign(name: Expression, expr: Expression) -> String {
