@@ -30,6 +30,7 @@ impl Generator for JsGenerator {
 
         let structs: String = prog
             .structs
+            .clone()
             .into_iter()
             .map(generate_struct_definition)
             .collect();
@@ -46,23 +47,56 @@ impl Generator for JsGenerator {
     }
 }
 
-fn generate_function(func: Function) -> String {
-    let arguments: String = func
-        .arguments
-        .into_iter()
+fn generate_arguments(args: Vec<Variable>) -> String {
+    args.into_iter()
         .map(|var| var.name)
         .collect::<Vec<String>>()
-        .join(", ");
+        .join(", ")
+}
+
+fn generate_function(func: Function) -> String {
+    let arguments: String = generate_arguments(func.arguments);
+
     let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
 
     raw += &generate_block(func.body, None);
-
+    raw += "\n";
     raw
+}
+
+fn generate_method(subject: String, func: Function) -> String {
+    let mut buf = format!(
+        "{}.prototype.{} = function({})",
+        subject,
+        func.name,
+        generate_arguments(func.arguments)
+    );
+
+    buf += &generate_block(func.body, None);
+    buf += "\n";
+
+    buf
 }
 
 fn generate_struct_definition(struct_def: StructDef) -> String {
     // JS doesn't care about field declaration
-    format!("class {} {{}}\n", struct_def.name)
+
+    // Constructor signature
+    let mut buf = format!("function {}(args) {{\n", &struct_def.name);
+
+    // Field constructor fields
+    for field in &struct_def.fields {
+        buf += &format!("this.{N} = args.{N};\n", N = field.name);
+    }
+    // Constructor end
+    buf += "}\n";
+
+    // Methods
+    for method in &struct_def.methods {
+        buf += &generate_method(struct_def.name.clone(), method.to_owned());
+    }
+
+    buf
 }
 
 /// prepend is used to pass optional statements, that will be put in front of the regular block
@@ -112,6 +146,7 @@ fn generate_statement(statement: Statement) -> String {
 fn generate_expression(expr: Expression) -> String {
     match expr {
         Expression::Int(val) => val.to_string(),
+        Expression::Selff => "this".to_string(),
         Expression::Variable(val) | Expression::Str(val) => val,
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
@@ -121,7 +156,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::StructInitialization(name, fields) => {
             generate_struct_initialization(name, fields)
         }
-        Expression::FieldAccess(expr, field) => generate_field_access(*expr, field),
+        Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
     }
 }
 
@@ -246,6 +281,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
         .map(|arg| match arg {
             Expression::Int(i) => i.to_string(),
             Expression::Bool(v) => v.to_string(),
+            Expression::Selff => "this".to_string(),
             Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
@@ -254,7 +290,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::StructInitialization(name, fields) => {
                 generate_struct_initialization(name, fields)
             }
-            Expression::FieldAccess(expr, field) => generate_field_access(*expr, field),
+            Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
         })
         .collect::<Vec<String>>()
         .join(",");
@@ -289,7 +325,7 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::DivideAssign => "/=",
     };
     format!(
-        "({l} {op} {r})",
+        "{l} {op} {r}",
         l = generate_expression(left),
         op = op_str,
         r = generate_expression(right)
@@ -297,21 +333,25 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
 }
 
 fn generate_struct_initialization(
-    _name: String,
+    name: String,
     fields: HashMap<String, Box<Expression>>,
 ) -> String {
-    let mut out_str = "{".to_string();
+    let mut out_str = format!("new {}({{", name);
     for (key, value) in fields {
         out_str += &format!("{}: {},", key, generate_expression(*value));
     }
 
-    out_str += "}";
+    out_str += "})";
 
     out_str
 }
 
-fn generate_field_access(expr: Expression, field: String) -> String {
-    format!("{}.{}", generate_expression(expr), field)
+fn generate_field_access(expr: Expression, field: Expression) -> String {
+    format!(
+        "{}.{}",
+        generate_expression(expr),
+        generate_expression(field)
+    )
 }
 
 fn generate_assign(name: Expression, expr: Expression) -> String {

@@ -2,11 +2,18 @@
 
 ## Unreleased
 
+**Features**
+
+- Struct methods
 - Feature flags for backends (`backend_c`, etc.) have been replaced by `--target` (`-t`) command-line option:
 
   ```sh
   sb -t c run examples/hello_world.sb
   ```
+
+**Changes**
+
+- Comma separation for struct fields has been removed
 
 ## v0.5.1 (2021-02-25)
 

@@ -8,10 +8,10 @@ To define a struct, we enter the keyword `struct` and name the entire struct. A 
 
 ```
 struct User {
-    username: string,
-    email: string,
-    sign_in_count: int,
-    active: bool,
+    username: string
+    email: string
+    sign_in_count: int
+    active: bool
 }
 ```
 
@@ -19,15 +19,15 @@ Structs can be nested as a type inside other structs. For example, we could assi
 
 ```
 struct Address {
-    street: string,
+    street: string
     number: int
-    postal_code: string,
+    postal_code: string
     city: string
 }
 
 struct User {
-    username: string,
-    email: string,
+    username: string
+    email: string
     address: Address
 }
 ```
@@ -38,16 +38,16 @@ To use a struct after we’ve defined it, we create an _instance_ of that struct
 
 ```
 struct User {
-    username: string,
-    email: string,
-    sign_in_count: int,
-    active: bool,
+    username: string
+    email: string
+    sign_in_count: int
+    active: bool
 }
 
 let alice = new User {
-    email: "alice@example.com",
-    username: "alice",
-    sign_in_count: 1,
+    email: "alice@example.com"
+    username: "alice"
+    sign_in_count: 1
     active: true
 }
 ```
@@ -56,11 +56,46 @@ To get a specific value from a struct, we can use dot notation. If we wanted jus
 
 ```
 let alice = new User {
-    email: "alice@example.com",
-    username: "alice",
-    sign_in_count: 1,
+    email: "alice@example.com"
+    username: "alice"
+    sign_in_count: 1
     active: true
 }
 
 alice.sign_in_count = 2
 ```
+
+## Struct methods
+
+Antimony supports the concept of methods. A method can be described as a function on a struct. Let's take a look at a struct implementing a method.
+
+```
+struct User {
+    first_name: string
+    last_name: string
+
+    fn full_name(): string {
+        return self.first_name + " " + self.last_name
+    }
+}
+```
+
+Every instance of the `User` struct can now call `full_name()`. Note the usage of the word `self`. `self` is a special keyword referencing the struct instance the method was called on. Say we had the following instance of `User`, and called the `full_name()` method on it.
+
+```
+let alice = new User {
+    first_name: "Jon"
+    last_name: "Doe"
+}
+
+println(alice.full_name())
+```
+
+The `full_name` method described above will return the first name, a space and the last name of the user. If we run this code, we should see the expected output:
+
+```
+$ sb run main.sb
+Jon Doe
+```
+
+Methods behave just like functions. They can return a value and take parameters. The only difference is the `self` keyword, which allows you to execute it on a specific instance of a struct.

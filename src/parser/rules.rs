@@ -59,10 +59,28 @@ impl Parser {
         let name = self.match_identifier()?;
 
         self.match_token(TokenKind::CurlyBracesOpen)?;
-        let fields = self.parse_typed_variable_list()?;
+        let mut fields = Vec::new();
+        let mut methods = Vec::new();
+        while self.peek_token(TokenKind::CurlyBracesClose).is_err() {
+            let next = self.peek()?;
+            match next.kind {
+                TokenKind::Keyword(Keyword::Function) => {
+                    methods.push(self.parse_function()?);
+                }
+                TokenKind::Identifier(_) => fields.push(self.parse_typed_variable()?),
+                _ => {
+                    return Err(
+                        self.make_error_msg(next.pos, "Expected struct field or method".into())
+                    )
+                }
+            }
+        }
         self.match_token(TokenKind::CurlyBracesClose)?;
-
-        Ok(StructDef { name, fields })
+        Ok(StructDef {
+            name,
+            fields,
+            methods,
+        })
     }
 
     fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
@@ -120,6 +138,9 @@ impl Parser {
         Ok(Statement::Block(statements, scope))
     }
 
+    /// To reduce code duplication, this method can be either be used to parse a function or a method.
+    /// If a function is parsed, the `fn` keyword is matched.
+    /// If a method is parsed, `fn` will be omitted
     fn parse_function(&mut self) -> Result<Function, String> {
         self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
@@ -289,6 +310,8 @@ impl Parser {
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
+
+        // TODO: Move binop logic out of here
         let expr = match token.kind {
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
@@ -309,6 +332,10 @@ impl Parser {
             TokenKind::Literal(Value::Str) => match BinOp::try_from(self.peek()?.kind) {
                 Ok(_) => self.parse_bin_op(None)?,
                 Err(_) => Expression::Str(token.raw),
+            },
+            TokenKind::Keyword(Keyword::Selff) => match BinOp::try_from(self.peek()?.kind) {
+                Ok(_) => self.parse_bin_op(None)?,
+                Err(_) => Expression::Selff,
             },
             TokenKind::Identifier(val) => {
                 let next = self.peek()?;
@@ -355,8 +382,8 @@ impl Parser {
 
     fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
         self.match_token(TokenKind::Dot)?;
-        let field = self.match_identifier()?;
-        let expr = Expression::FieldAccess(Box::new(lhs), field);
+        let field = self.parse_expression()?;
+        let expr = Expression::FieldAccess(Box::new(lhs), Box::new(field));
         if self.peek_token(TokenKind::Dot).is_ok() {
             self.parse_field_access(expr)
         } else {
@@ -384,8 +411,7 @@ impl Parser {
             map.insert(name, expr);
             // Then continue to parse fields
             // as long as a comma token is found
-            while self.peek_token(TokenKind::Comma).is_ok() {
-                self.match_token(TokenKind::Comma)?;
+            while matches!(self.peek()?.kind, TokenKind::Identifier(_)) {
                 let (name, expr) = self.parse_struct_field()?;
                 map.insert(name, expr);
             }

@@ -149,6 +149,7 @@ pub enum Keyword {
     New,
     Match,
     Import,
+    Selff, // "self"
     Unknown,
 }
 
@@ -378,6 +379,7 @@ impl Cursor<'_> {
             c if c == "new" => Keyword::New,
             c if c == "match" => Keyword::Match,
             c if c == "import" => Keyword::Import,
+            c if c == "self" => Keyword::Selff,
             _ => Keyword::Unknown,
         }
     }

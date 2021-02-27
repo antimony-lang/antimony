@@ -62,6 +62,7 @@ pub struct Function {
 pub struct StructDef {
     pub name: String,
     pub fields: Vec<Variable>,
+    pub methods: Vec<Function>,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -91,6 +92,8 @@ pub enum Expression {
     Int(u32),
     Str(String),
     Bool(bool),
+    /// Represents "self" keyword
+    Selff,
     Array(Vec<Expression>),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
@@ -98,7 +101,7 @@ pub enum Expression {
     ArrayAccess(String, Box<Expression>),
     BinOp(Box<Expression>, BinOp, Box<Expression>),
     StructInitialization(String, HashMap<String, Box<Expression>>),
-    FieldAccess(Box<Expression>, String),
+    FieldAccess(Box<Expression>, Box<Expression>),
 }
 
 impl TryFrom<Token> for Expression {
