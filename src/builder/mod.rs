@@ -99,7 +99,7 @@ impl Builder {
             if seen.contains(import) {
                 continue;
             } else {
-                &seen.push(import.to_string());
+                seen.push(import.to_string());
             }
             // Build module relative to the current file
             let mut import_path = resolved_file_path
