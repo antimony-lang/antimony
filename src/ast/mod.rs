@@ -36,6 +36,7 @@ pub struct Module {
 impl Module {
     pub fn merge_with(&mut self, mut other: Module) {
         self.func.append(&mut other.func);
+        self.structs.append(&mut other.structs);
         self.globals.append(&mut other.globals)
     }
 
