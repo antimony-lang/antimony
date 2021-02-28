@@ -1,6 +1,6 @@
 [package]
 name = "antimony-lang"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Garrit Franke <garrit@slashdev.space>"]
 description = "The Antimony programming language"
 license = "Apache-2.0"
