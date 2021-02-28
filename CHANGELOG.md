@@ -2,14 +2,20 @@
 
 ## Unreleased
 
+**Changes**
+
+- Comma separation for struct fields has been removed
+
 **Features**
 
 - Struct methods (#19)
 - Compile-backend will be determined based on file extension (#20, #21)
 
-**Changes**
+**Fixes**
 
-- Comma separation for struct fields has been removed
+- Fixed a bug where strings were terminated using both `"` and `'`
+- Fixed circular imports for modules
+- Fixed structs not being imported from other modules
 
 ## v0.5.1 (2021-02-25)
 
