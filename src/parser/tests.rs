@@ -809,7 +809,7 @@ fn test_arithmetic() {
     let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
     assert!(tree.is_ok());
 
-    let raw = "fn main() {(2+2)*3}"; // TODO: Fix!
+    let raw = "fn main() {(2+2)*3}";
     let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
     assert!(tree.is_ok());
 

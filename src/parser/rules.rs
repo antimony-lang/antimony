@@ -311,71 +311,52 @@ impl Parser {
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
 
-        // TODO: Move binop logic out of here
         let expr = match token.kind {
+            // (1 + 2)
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
                 self.match_token(TokenKind::BraceClose)?;
-                match BinOp::try_from(self.peek()?.kind) {
-                    Ok(_) => self.parse_bin_op(Some(expr))?,
-                    Err(_) => expr,
-                }
+                expr
             }
-            TokenKind::Keyword(Keyword::Boolean) => match BinOp::try_from(self.peek()?.kind) {
-                Ok(_) => self.parse_bin_op(None)?,
-                Err(_) => Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?),
-            },
-            TokenKind::Literal(Value::Int) => match BinOp::try_from(self.peek()?.kind) {
-                Ok(_) => self.parse_bin_op(None)?,
-                Err(_) => Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?),
-            },
-            TokenKind::Literal(Value::Str) => match BinOp::try_from(self.peek()?.kind) {
-                Ok(_) => self.parse_bin_op(None)?,
-                Err(_) => Expression::Str(token.raw),
-            },
-            TokenKind::Keyword(Keyword::Selff) => match BinOp::try_from(self.peek()?.kind) {
-                Ok(_) => self.parse_bin_op(None)?,
-                Err(_) => Expression::Selff,
-            },
+            // true | false
+            TokenKind::Keyword(Keyword::Boolean) => {
+                Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
+            }
+            // 5
+            TokenKind::Literal(Value::Int) => {
+                Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?)
+            }
+            // "A string"
+            TokenKind::Literal(Value::Str) => Expression::Str(token.raw),
+            // self
+            TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
             TokenKind::Identifier(val) => {
                 let next = self.peek()?;
                 match &next.kind {
-                    TokenKind::BraceOpen => {
-                        let func_call = self.parse_function_call(Some(val))?;
-                        match BinOp::try_from(self.peek()?.kind) {
-                            Ok(_) => self.parse_bin_op(Some(func_call))?,
-                            Err(_) => func_call,
-                        }
-                    }
-                    TokenKind::SquareBraceOpen => {
-                        let arr = self.parse_array_access(Some(val))?;
-                        match BinOp::try_from(self.peek()?.kind) {
-                            Ok(_) => self.parse_bin_op(Some(arr))?,
-                            Err(_) => arr,
-                        }
-                    }
-                    TokenKind::Dot => {
-                        let lhs = Expression::Variable(val);
-                        let expr = self.parse_field_access(lhs)?;
-                        match BinOp::try_from(self.peek()?.kind) {
-                            Ok(_) => self.parse_bin_op(Some(expr))?,
-                            Err(_) => expr,
-                        }
-                    }
-                    _ => match BinOp::try_from(self.peek()?.kind) {
-                        Ok(_) => self.parse_bin_op(Some(Expression::Variable(token.raw)))?,
-                        Err(_) => Expression::Variable(val),
-                    },
+                    // foo()
+                    TokenKind::BraceOpen => self.parse_function_call(Some(val))?,
+                    // arr[0]
+                    TokenKind::SquareBraceOpen => self.parse_array_access(Some(val))?,
+                    // some_var
+                    _ => Expression::Variable(val),
                 }
             }
+            // [1, 2, 3]
             TokenKind::SquareBraceOpen => self.parse_array()?,
+            // new Foo {}
             TokenKind::Keyword(Keyword::New) => self.parse_struct_initialization()?,
             other => return Err(format!("Expected Expression, found {:?}", other)),
         };
 
+        // Check if the parsed expression continues
         if self.peek_token(TokenKind::Dot).is_ok() {
+            // foo.bar
             self.parse_field_access(expr)
+        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
+            // 1 + 2
+            self.parse_bin_op(Some(expr))
         } else {
+            // Nope, the expression was fully parsed
             Ok(expr)
         }
     }
