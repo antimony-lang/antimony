@@ -89,3 +89,9 @@ whitespace_char = (/* the Unicode code point U+000D */ | newline) |
                   (/* the Unicode code point U+0009 */ | " ")
 whitespace      = { whitespace_char }
 ```
+
+_Identifiers_, formed from letters and `_`, are names of variables, functions, struct fields, etc. The first character of an identifier is not allowed to be a number to be able to distinguish them from number literals.
+
+```
+identifier = letter { letter | unicode_digit }
+```
