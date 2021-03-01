@@ -46,7 +46,7 @@ impl Builder {
             .to_path_buf())
     }
 
-    pub fn build(&mut self) -> Result<(), String> {
+    pub fn build(&mut self, target: &generator::Target) -> Result<(), String> {
         let in_file = self.in_file.clone();
         // Resolve path deltas between working directory and entrypoint
         let base_directory = self.get_base_path()?;
@@ -62,7 +62,10 @@ impl Builder {
         self.build_module(self.in_file.clone(), &mut Vec::new())?;
 
         // Append standard library
-        self.build_stdlib();
+        // NOTE: C is currently still unstable, so stdlib has to be disabled
+        if !matches!(target, generator::Target::C) {
+            self.build_stdlib();
+        }
 
         // Change back to the initial directory
         env::set_current_dir(initial_directory).expect("Could not set current directory");

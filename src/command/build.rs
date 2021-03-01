@@ -19,6 +19,6 @@ use std::path::Path;
 
 pub fn build(target: generator::Target, in_file: &Path, out_file: &Path) -> Result<(), String> {
     let mut b = builder::Builder::new(in_file.to_path_buf());
-    b.build()?;
+    b.build(&target)?;
     b.generate(target, out_file.to_path_buf())
 }
