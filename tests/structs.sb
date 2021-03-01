@@ -75,6 +75,14 @@ fn test_method_call() {
     assert(full_name, "FooBar")
 }
 
+fn assert_bar_y(bar: Bar) {
+    assert(bar.y == "ABC")
+}
+
+fn test_function_call_with_constructor() {
+    assert_bar_y(new Bar { y: "ABC" })
+}
+
 fn main() {
     test_initialization()
     test_simple_field_access()
@@ -82,4 +90,5 @@ fn main() {
     test_field_access_on_function()
     test_nested_structs()
     test_method_call()
+    test_function_call_with_constructor()
 }
