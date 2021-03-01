@@ -201,7 +201,9 @@ impl Parser {
         let token = self.peek()?;
         match &token.kind {
             TokenKind::CurlyBracesOpen => self.parse_block(),
-            TokenKind::BraceOpen => Ok(Statement::Exp(self.parse_expression()?)),
+            TokenKind::BraceOpen | TokenKind::Keyword(Keyword::Selff) => {
+                Ok(Statement::Exp(self.parse_expression()?))
+            }
             TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
             TokenKind::Keyword(Keyword::Return) => self.parse_return(),
             TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
