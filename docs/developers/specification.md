@@ -74,6 +74,10 @@ Comments serve as program documentation. A comment starts with the character seq
 
 A comment cannot start inside a string literal, or inside a comment.
 
+```
+comment = "//" { unicode_char }
+```
+
 ### Tokens
 
 Tokens form the vocabulary of the Antimony programming language. There are four classes: _identifiers_, _keywords_, _operators and punctuation_, and _literals_. _White space_, formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns (U+000D), and newlines (U+000A), is ignored except as it separates tokens that would otherwise combine into a single token.
