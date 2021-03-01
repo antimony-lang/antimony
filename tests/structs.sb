@@ -83,6 +83,20 @@ fn test_function_call_with_constructor() {
     assert_bar_y(new Bar { y: "ABC" })
 }
 
+struct Self_test_struct {
+    a: int
+
+    fn bar() {
+        self.a += 1 // <-- This caused problems (See #34)
+        assert(true)
+    }
+}
+
+fn test_method_with_self_statement() {
+    let foo = new Self_test_struct { a: 5 }
+    foo.bar()
+}
+
 fn main() {
     test_initialization()
     test_simple_field_access()
@@ -91,4 +105,5 @@ fn main() {
     test_nested_structs()
     test_method_call()
     test_function_call_with_constructor()
+    test_method_with_self_statement()
 }
