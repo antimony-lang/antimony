@@ -49,7 +49,7 @@ impl Generator for CGenerator {
 
 pub fn generate_struct(def: StructDef) -> String {
     // struct name {
-    let mut buf = format!("struct {} {{\n", def.name);
+    let mut buf = format!("struct {} {{\n", &def.name);
 
     def.fields.iter().for_each(|f| {
         // int counter;
@@ -58,6 +58,19 @@ pub fn generate_struct(def: StructDef) -> String {
 
     // };
     buf += "};\n";
+
+    for mut method in def.methods {
+        // name method <struct-name>_<method-name>
+        method.name = format!("{}_{}", def.name, method.name);
+        // prepend "self" as argument
+        let this = Variable {
+            name: "self".to_string(),
+            ty: Some(Type::Struct(def.name.clone())),
+        };
+        method.arguments.insert(0, this);
+
+        buf += &generate_function(method);
+    }
 
     buf
 }
@@ -151,7 +164,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
         Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
-        Expression::Selff => todo!(),
+        Expression::Selff => "self".to_string(),
     }
 }
 
@@ -246,7 +259,9 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
             Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
-            Expression::Selff => todo!(),
+            Expression::Selff => {
+                todo!("You can't call 'self' as a function. TODO: handle as check.")
+            }
         })
         .collect::<Vec<String>>()
         .join(",");
