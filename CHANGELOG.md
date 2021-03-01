@@ -5,6 +5,7 @@
 **Fixes**
 
 - Allow constructor expressions as function arguments
+- Fix `self` keyword inside statement
 
 ## v0.6.0 (2021-02-28)
 
