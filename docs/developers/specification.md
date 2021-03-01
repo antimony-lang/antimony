@@ -10,13 +10,13 @@ Antimony is a general-purpose language designed with simplicity in mind. It is s
 
 ## Notation
 
-The syntax is specified using Extended Backus-Naur Form (EBNF):
+The syntax is specified using altered Extended Backus-Naur Form (EBNF):
 
 ```
 Production  = production_name "=" [ Expression ] "." .
 Expression  = Alternative { "|" Alternative } .
 Alternative = Term { Term } .
-Term        = production_name | token [ "…" token ] | Group | Option | Repetition .
+Term        = production_name | token [ "..." token ] | Group | Option | Repetition .
 Group       = "(" Expression ")" .
 Option      = "[" Expression "]" .
 Repetition  = "{" Expression "}" .
@@ -31,9 +31,9 @@ Productions are expressions constructed from terms and the following operators, 
 {}  repetition (0 to n times)
 ```
 
-Lower-case production names are used to identify lexical tokens. Non-terminals are in CamelCase. Lexical tokens are enclosed in double quotes "" or back quotes ``.
+Lower-case production names are used to identify lexical tokens. Non-terminals are in CamelCase. Lexical tokens are enclosed in double quotes `""` or single quotes `''`.
 
-The form a … b represents the set of characters from a through b as alternatives. The horizontal ellipsis … is also used elsewhere in the spec to informally denote various enumerations or code snippets that are not further specified. The character … (as opposed to the three characters ...) is not a token of the Antimony language.
+The form `a ... b` represents the set of characters from `a` through `b` as alternatives. The horizontal ellipsis `...` is also used elsewhere in the spec to informally denote various enumerations or code snippets that are not further specified. The character `…` (as opposed to the three characters `...`) is not a token of the Antimony language.
 
 ## Source Code Representation
 
@@ -56,14 +56,14 @@ unicode_digit  = /* a Unicode code point classified as "Number, decimal digit" *
 
 ### Letters and digits
 
-The underscore character \_ (U+005F) is considered a letter.
+The underscore character `_` (U+005F) is considered a letter.
 
 ```
 letter        = unicode_letter | "_" .
-decimal_digit = "0" … "9" .
+decimal_digit = "0" ... "9" .
 binary_digit  = "0" | "1" .
-octal_digit   = "0" … "7" .
-hex_digit     = "0" … "9" | "A" … "F" | "a" … "f" .
+octal_digit   = "0" ... "7" .
+hex_digit     = "0" ... "9" | "A" ... "F" | "a" ... "f" .
 ```
 
 ## Lexical elements
