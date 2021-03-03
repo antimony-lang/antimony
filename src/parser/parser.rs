@@ -28,6 +28,9 @@ pub struct Parser {
     tokens: Peekable<IntoIter<Token>>,
     peeked: Vec<Token>,
     current: Option<Token>,
+    /// Can hold a context of the struct the parser is currently looking at.
+    /// Used to resolve `self` statements, by storing the name of the referenced struct.
+    pub struct_context: Option<String>,
     prev: Option<Token>,
     raw: Option<String>,
 }
@@ -44,6 +47,7 @@ impl Parser {
             peeked: vec![],
             current: None,
             prev: None,
+            struct_context: None,
             raw,
         }
     }

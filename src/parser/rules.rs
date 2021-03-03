@@ -57,6 +57,7 @@ impl Parser {
     fn parse_struct_definition(&mut self) -> Result<StructDef, String> {
         self.match_keyword(Keyword::Struct)?;
         let name = self.match_identifier()?;
+        self.struct_context = Some(name.clone());
 
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let mut fields = Vec::new();
@@ -76,6 +77,7 @@ impl Parser {
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
+        self.struct_context = None;
         Ok(StructDef {
             name,
             fields,
@@ -315,7 +317,7 @@ impl Parser {
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
 
-        let expr = match token.kind {
+        let mut expr = match token.kind {
             // (1 + 2)
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
@@ -333,7 +335,15 @@ impl Parser {
             // "A string"
             TokenKind::Literal(Value::Str) => Expression::Str(token.raw),
             // self
-            TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
+            TokenKind::Keyword(Keyword::Selff) => match &self.struct_context {
+                Some(struct_name) => Expression::Selff(struct_name.to_string()),
+                None => {
+                    return Err(self.make_error_msg(
+                        token.pos,
+                        "Keyword 'self' used out of method context".to_string(),
+                    ))
+                }
+            },
             TokenKind::Identifier(val) => {
                 let next = self.peek()?;
                 match &next.kind {

@@ -164,7 +164,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
         Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
-        Expression::Selff => "self".to_string(),
+        Expression::Selff(_struct_context) => "self".to_string(),
     }
 }
 
@@ -259,7 +259,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
             Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
-            Expression::Selff => {
+            Expression::Selff(_) => {
                 todo!("You can't call 'self' as a function. TODO: handle as check.")
             }
         })
