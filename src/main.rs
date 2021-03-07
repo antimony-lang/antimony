@@ -81,7 +81,7 @@ fn main() -> Result<(), String> {
                 }),
             };
 
-            command::build::build(target, &in_file, &out_file)?
+            command::build::build(&target, &in_file, &out_file)?
         }
         Command::Run { in_file } => command::run::run(opts.target.unwrap_or(Target::JS), in_file)?,
     };

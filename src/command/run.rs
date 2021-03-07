@@ -28,7 +28,7 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
         .into_path();
 
     let intermediate_out_file_path = out_dir.join("intermediate.c");
-    build::build(target, &in_file, &intermediate_out_file_path)?;
+    build::build(&target, &in_file, &intermediate_out_file_path)?;
     let out_file = out_dir.join("out");
     match target {
         Target::C => {

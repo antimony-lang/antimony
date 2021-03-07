@@ -1,11 +1,3 @@
-use crate::ast::Module;
-use crate::generator;
-use crate::lexer;
-use crate::parser;
-use crate::Lib;
-use crate::PathBuf;
-use generator::Generator;
-use std::env;
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -21,6 +13,13 @@ use std::env;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::ast::Module;
+use crate::generator::{self, Generator, Target};
+use crate::lexer;
+use crate::parser;
+use crate::Lib;
+use crate::PathBuf;
+use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
@@ -119,11 +118,7 @@ impl Builder {
         Ok(module)
     }
 
-    pub(crate) fn generate(
-        &mut self,
-        target: generator::Target,
-        out_file: PathBuf,
-    ) -> Result<(), String> {
+    pub(crate) fn generate(&mut self, target: &Target, out_file: PathBuf) -> Result<(), String> {
         let mut mod_iter = self.modules.iter();
 
         // TODO: We shouldn't clone here
@@ -133,9 +128,9 @@ impl Builder {
         }
 
         let output = match target {
-            generator::Target::JS => generator::js::JsGenerator::generate(condensed),
-            generator::Target::C => generator::c::CGenerator::generate(condensed),
-            generator::Target::LLVM => {
+            Target::JS => generator::js::JsGenerator::generate(condensed),
+            Target::C => generator::c::CGenerator::generate(condensed),
+            Target::LLVM => {
                 #[cfg(not(feature = "llvm"))]
                 panic!("'llvm' feature should be enabled to use LLVM target");
 
