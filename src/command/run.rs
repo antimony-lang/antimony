@@ -36,11 +36,11 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
                 Ok(process) => process,
             };
 
-            &process
+            process
                 .stdin
                 .unwrap()
                 .write_all(&buf)
-                .map(|_| "Could not write to nodejs process".to_string());
+                .expect("Could not write to nodejs process");
 
             let mut s = Vec::new();
             process
