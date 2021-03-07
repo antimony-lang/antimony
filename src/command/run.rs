@@ -26,31 +26,28 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
     build::build_to_buffer(target, &in_file, &mut buf)?;
     match target {
         Target::JS => {
-            let process = match Command::new("node")
+            let process = Command::new("node")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .spawn()
-            {
-                Err(why) => panic!("couldn't spawn wc: {}", why),
-                Ok(process) => process,
-            };
+                .map_err(|e| format!("Could not spawn Node.js process: {}", e.to_string()))?;
 
             process
                 .stdin
                 .unwrap()
                 .write_all(&buf)
-                .expect("Could not write to nodejs process");
+                .map_err(|e| format!("Could not write to Node.js process: {}", e.to_string()))?;
 
             let mut s = Vec::new();
             process
                 .stdout
                 .unwrap()
                 .read_to_end(&mut s)
-                .expect("Could not read from child process");
+                .map_err(|e| format!("Could not read from child process: {}", e.to_string()))?;
             std::io::stdout()
                 .write_all(&s)
-                .expect("Could not write to stdout");
+                .map_err(|e| format!("Could not write to stdout: {}", e.to_string()))?;
         }
         _ => todo!(),
     }
