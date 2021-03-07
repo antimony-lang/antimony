@@ -1,5 +1,3 @@
-#![allow(unknown_lints)]
-
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -17,7 +15,6 @@
  */
 extern crate rust_embed;
 extern crate structopt;
-extern crate tempfile;
 
 use generator::Target;
 use std::path::PathBuf;

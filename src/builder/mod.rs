@@ -122,7 +122,7 @@ impl Builder {
     pub(crate) fn generate(
         &mut self,
         target: generator::Target,
-        out_file: PathBuf,
+        buffer: &mut std::boxed::Box<impl Write>,
     ) -> Result<(), String> {
         let mut mod_iter = self.modules.iter();
 
@@ -144,9 +144,8 @@ impl Builder {
             }
         };
 
-        let mut file = std::fs::File::create(out_file).expect("create failed");
-        file.write_all(output.as_bytes()).expect("write failed");
-        file.flush().map_err(|_| "Could not flush file".into())
+        buffer.write_all(output.as_bytes()).expect("write failed");
+        buffer.flush().map_err(|_| "Could not flush file".into())
     }
 
     fn build_stdlib(&mut self) {
