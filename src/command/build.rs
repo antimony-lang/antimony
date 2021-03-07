@@ -1,7 +1,3 @@
-use crate::builder;
-use crate::generator;
-use std::fs::File;
-use std::io::Read;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -17,16 +13,20 @@ use std::io::Read;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::builder;
+use crate::generator;
+use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
 pub fn build(target: generator::Target, in_file: &Path, out_file: &Path) -> Result<(), String> {
     let mut buf = Box::new(Vec::new());
-    File::open(out_file)
-        .expect("Could not open file for writing")
-        .read_to_end(&mut buf)
-        .expect("Could not read from file");
-    build_to_buffer(target, in_file, &mut buf)
+    build_to_buffer(target, in_file, &mut buf)?;
+
+    File::create(out_file)
+        .map_err(|e| format!("Could not create output file: {}", e.to_string()))?
+        .write_all(&buf)
+        .map_err(|e| format!("Could not write to file: {}", e.to_string()))
 }
 
 pub fn build_to_buffer(
