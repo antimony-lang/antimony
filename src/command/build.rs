@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 use crate::builder;
-use crate::generator;
+use crate::generator::Target;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-pub fn build(target: generator::Target, in_file: &Path, out_file: &Path) -> Result<(), String> {
+pub fn build(target: &Target, in_file: &Path, out_file: &Path) -> Result<(), String> {
     let mut buf = Box::new(Vec::new());
     build_to_buffer(target, in_file, &mut buf)?;
 
@@ -30,7 +30,7 @@ pub fn build(target: generator::Target, in_file: &Path, out_file: &Path) -> Resu
 }
 
 pub fn build_to_buffer(
-    target: generator::Target,
+    target: &Target,
     in_file: &Path,
     buf: &mut Box<impl Write>,
 ) -> Result<(), String> {
