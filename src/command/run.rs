@@ -32,23 +32,23 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .spawn()
-                .map_err(|e| format!("Could not spawn Node.js process: {}", e.to_string()))?;
+                .map_err(|e| format!("Could not spawn Node.js process: {}", e))?;
 
             process
                 .stdin
                 .unwrap()
                 .write_all(&buf)
-                .map_err(|e| format!("Could not write to Node.js process: {}", e.to_string()))?;
+                .map_err(|e| format!("Could not write to Node.js process: {}", e))?;
 
             let mut s = Vec::new();
             process
                 .stdout
                 .unwrap()
                 .read_to_end(&mut s)
-                .map_err(|e| format!("Could not read from child process: {}", e.to_string()))?;
+                .map_err(|e| format!("Could not read from child process: {}", e))?;
             std::io::stdout()
                 .write_all(&s)
-                .map_err(|e| format!("Could not write to stdout: {}", e.to_string()))?;
+                .map_err(|e| format!("Could not write to stdout: {}", e))?;
         }
         _ => todo!(),
     }

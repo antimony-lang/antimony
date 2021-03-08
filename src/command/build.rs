@@ -24,9 +24,9 @@ pub fn build(target: &Target, in_file: &Path, out_file: &Path) -> Result<(), Str
     build_to_buffer(target, in_file, &mut buf)?;
 
     File::create(out_file)
-        .map_err(|e| format!("Could not create output file: {}", e.to_string()))?
+        .map_err(|e| format!("Could not create output file: {}", e))?
         .write_all(&buf)
-        .map_err(|e| format!("Could not write to file: {}", e.to_string()))
+        .map_err(|e| format!("Could not write to file: {}", e))
 }
 
 pub fn build_to_buffer(
