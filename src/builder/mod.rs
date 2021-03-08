@@ -121,7 +121,7 @@ impl Builder {
     pub(crate) fn generate(
         &mut self,
         target: &Target,
-        buffer: &mut std::boxed::Box<impl Write>,
+        buffer: &mut Box<impl Write>,
     ) -> Result<(), String> {
         let mut mod_iter = self.modules.iter();
 
