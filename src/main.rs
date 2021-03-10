@@ -1,5 +1,3 @@
-#![allow(unknown_lints)]
-
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -17,11 +15,9 @@
  */
 extern crate rust_embed;
 extern crate structopt;
-extern crate tempfile;
 
 use generator::Target;
 use std::path::PathBuf;
-use std::process;
 use structopt::StructOpt;
 
 mod ast;
@@ -72,16 +68,15 @@ fn main() -> Result<(), String> {
         Command::Build { in_file, out_file } => {
             let target = match opts.target {
                 Some(t) => t,
-                None => Target::from_extension(&out_file).unwrap_or_else(|| {
-                    println!(
+                None => Target::from_extension(&out_file).ok_or_else(|| {
+                    format!(
                         "Cannot detect target from output file {}, use --target option to set it explicitly",
                         &out_file.to_string_lossy(),
-                    );
-                    process::exit(1);
-                }),
+                    )
+                })?,
             };
 
-            command::build::build(target, &in_file, &out_file)?
+            command::build::build(&target, &in_file, &out_file)?
         }
         Command::Run { in_file } => command::run::run(opts.target.unwrap_or(Target::JS), in_file)?,
     };

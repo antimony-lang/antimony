@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- Instead of a temporary directory, heap memory is used for compilation
+
 **Fixes**
 
 - Allow constructor expressions as function arguments

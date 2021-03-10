@@ -25,7 +25,7 @@ pub mod llvm;
 mod tests;
 pub mod x86;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub enum Target {
     C,
     JS,
