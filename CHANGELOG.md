@@ -6,6 +6,7 @@
 
 - Instead of a temporary directory, heap memory is used for compilation
 - Support for binary, hexadecimal and octal number notations
+- Support for `_` character in integers (E.g. `1_000_000`)
 
 **Fixes**
 
