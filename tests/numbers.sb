@@ -1,4 +1,8 @@
 fn main() {
+    // Test the "_" character
+    let one_billion = 1_000_000_000
+
+    // Test number systems 
     let dec = 255
     let hex = 0xFf
     let binary = 0b11111111

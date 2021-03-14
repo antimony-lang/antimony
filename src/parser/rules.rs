@@ -328,7 +328,9 @@ impl Parser {
             }
             // 5
             TokenKind::Literal(Value::Int) => {
-                let val = match &token.raw {
+                // Ignore spacing character (E.g. 1_000_000)
+                let clean_str = token.raw.replace('_', "");
+                let val = match clean_str {
                     c if c.starts_with("0b") => {
                         usize::from_str_radix(token.raw.trim_start_matches("0b"), 2)
                             .map_err(|e| e.to_string())?
