@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- Support for binary, hexadecimal and octal number notations
+
 **Fixes**
 
 - Allow constructor expressions as function arguments
