@@ -31,6 +31,21 @@ $ sb run main.sb
 1 + 2 is 3
 ```
 
+Decimal, binary, hexadecimal and octal number systems are supported. The number `255` can be written in these formats:
+
+```
+let binary = 0b11111111
+let octal = 0o37
+let decimal = 255
+let hexadecimal = 0xFF
+```
+
+To make large numbers more readable, you can insert `_` characters at arbitrary places. These characters will be ignored by the compiler.
+
+```
+let one_billion = 1_000_000_000
+```
+
 ## The String type
 
 A string is a sequence of characters.
