@@ -118,7 +118,11 @@ impl Builder {
         Ok(module)
     }
 
-    pub(crate) fn generate(&mut self, target: &Target, out_file: PathBuf) -> Result<(), String> {
+    pub(crate) fn generate(
+        &mut self,
+        target: &Target,
+        buffer: &mut Box<impl Write>,
+    ) -> Result<(), String> {
         let mut mod_iter = self.modules.iter();
 
         // TODO: We shouldn't clone here
@@ -139,9 +143,8 @@ impl Builder {
             }
         };
 
-        let mut file = std::fs::File::create(out_file).expect("create failed");
-        file.write_all(output.as_bytes()).expect("write failed");
-        file.flush().map_err(|_| "Could not flush file".into())
+        buffer.write_all(output.as_bytes()).expect("write failed");
+        buffer.flush().map_err(|_| "Could not flush file".into())
     }
 
     fn build_stdlib(&mut self) {
