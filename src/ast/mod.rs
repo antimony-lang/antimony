@@ -90,7 +90,7 @@ pub enum Statement {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Expression {
-    Int(u32),
+    Int(usize),
     Str(String),
     Bool(bool),
     /// Represents "self" keyword

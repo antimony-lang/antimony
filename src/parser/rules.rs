@@ -328,7 +328,13 @@ impl Parser {
             }
             // 5
             TokenKind::Literal(Value::Int) => {
-                Expression::Int(token.raw.parse::<u32>().map_err(|e| e.to_string())?)
+                let val = match &token.raw {
+                    c if c.starts_with("0b")  => usize::from_str_radix(token.raw.trim_start_matches("0b"), 2).map_err(|e| e.to_string())?,
+                    c if c.starts_with("0o")  => usize::from_str_radix(token.raw.trim_start_matches("0o"), 8).map_err(|e| e.to_string())?,
+                    c if c.starts_with("0x") => usize::from_str_radix(token.raw.trim_start_matches("0x"), 16).map_err(|e| e.to_string())?,
+                    c => c.parse::<usize>().map_err(|e| e.to_string())?,
+                };
+                Expression::Int(val)
             }
             // "A string"
             TokenKind::Literal(Value::Str) => Expression::Str(token.raw),
@@ -433,7 +439,7 @@ impl Parser {
             match next.kind {
                 TokenKind::SquareBraceClose => {}
                 TokenKind::Literal(Value::Int) => {
-                    let value = self.next()?.raw.parse::<u32>().map_err(|e| e.to_string())?;
+                    let value = self.next()?.raw.parse::<usize>().map_err(|e| e.to_string())?;
                     elements.push(Expression::Int(value));
                 }
                 _ => {

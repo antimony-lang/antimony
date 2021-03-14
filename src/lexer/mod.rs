@@ -344,6 +344,12 @@ impl Cursor<'_> {
     }
 
     fn number(&mut self) -> TokenKind {
+        match self.first() {
+            'b' | 'x' | 'o' => {
+                self.bump();
+            }
+            _ => {}
+        };
         self.eat_digits();
         TokenKind::Literal(Value::Int)
     }
@@ -400,7 +406,7 @@ impl Cursor<'_> {
                 '_' => {
                     self.bump();
                 }
-                '0'..='9' => {
+                '0'..='9' | 'a'..='f' | 'A'..='F' => {
                     has_digits = true;
                     self.bump();
                 }
