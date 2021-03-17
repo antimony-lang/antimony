@@ -478,8 +478,6 @@ impl Parser {
         self.match_token(TokenKind::SquareBraceClose)?;
         let length = elements.len();
 
-        dbg!("Array length", length, &elements);
-
         Ok(Expression::Array(length, elements))
     }
 

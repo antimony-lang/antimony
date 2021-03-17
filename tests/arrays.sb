@@ -1,5 +1,5 @@
 fn main() {
-    let foo: int[5] = []
+    let foo: int[5]
 
     foo[0] = 1
     foo[1] = 2
