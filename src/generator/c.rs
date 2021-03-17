@@ -81,7 +81,7 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
                     N = n,
                     C = capacity
                         .map(|val| val.to_string())
-                        .unwrap_or("".to_string()),
+                        .unwrap_or_else(|| "".to_string()),
                 ),
                 None => format!("{}[]", generate_type(Either::Right(Some(*t)))),
             },
