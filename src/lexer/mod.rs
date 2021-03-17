@@ -345,12 +345,22 @@ impl Cursor<'_> {
 
     fn number(&mut self) -> TokenKind {
         match self.first() {
-            'b' | 'x' | 'o' => {
+            'b' => {
                 self.bump();
+                self.eat_binary_digits();
             }
-            _ => {}
+            'o' => {
+                self.bump();
+                self.eat_octal_digits();
+            }
+            'x' => {
+                self.bump();
+                self.eat_hex_digits();
+            }
+            _ => {
+                self.eat_digits();
+            }
         };
-        self.eat_digits();
         TokenKind::Literal(Value::Int)
     }
 
@@ -400,6 +410,57 @@ impl Cursor<'_> {
     }
 
     fn eat_digits(&mut self) -> bool {
+        let mut has_digits = false;
+        loop {
+            match self.first() {
+                '_' => {
+                    self.bump();
+                }
+                '0'..='9' => {
+                    has_digits = true;
+                    self.bump();
+                }
+                _ => break,
+            }
+        }
+        has_digits
+    }
+
+    fn eat_binary_digits(&mut self) -> bool {
+        let mut has_digits = false;
+        loop {
+            match self.first() {
+                '_' => {
+                    self.bump();
+                }
+                '0' | '1' => {
+                    has_digits = true;
+                    self.bump();
+                }
+                _ => break,
+            }
+        }
+        has_digits
+    }
+
+    fn eat_octal_digits(&mut self) -> bool {
+        let mut has_digits = false;
+        loop {
+            match self.first() {
+                '_' => {
+                    self.bump();
+                }
+                '0'..='7' => {
+                    has_digits = true;
+                    self.bump();
+                }
+                _ => break,
+            }
+        }
+        has_digits
+    }
+
+    fn eat_hex_digits(&mut self) -> bool {
         let mut has_digits = false;
         loop {
             match self.first() {
