@@ -205,6 +205,82 @@ fn test_string_markers_within_string() {
 }
 
 #[test]
+fn test_numbers() {
+    let mut tokens = tokenize("42").into_iter();
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 2,
+            kind: TokenKind::Literal(Value::Int),
+            raw: "42".to_owned(),
+            pos: Position {
+                raw: 1,
+                line: 1,
+                offset: 1
+            }
+        }
+    );
+}
+
+#[test]
+fn test_binary_numbers() {
+    let mut tokens = tokenize("0b101010").into_iter();
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 8,
+            kind: TokenKind::Literal(Value::Int),
+            raw: "0b101010".to_owned(),
+            pos: Position {
+                raw: 7,
+                line: 1,
+                offset: 7
+            }
+        }
+    );
+}
+
+#[test]
+fn test_octal_numbers() {
+    let mut tokens = tokenize("0o52").into_iter();
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 4,
+            kind: TokenKind::Literal(Value::Int),
+            raw: "0o52".to_owned(),
+            pos: Position {
+                raw: 3,
+                line: 1,
+                offset: 3
+            }
+        }
+    );
+}
+
+#[test]
+fn test_hex_numbers() {
+    let mut tokens = tokenize("0x2A").into_iter();
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 4,
+            kind: TokenKind::Literal(Value::Int),
+            raw: "0x2A".to_owned(),
+            pos: Position {
+                raw: 3,
+                line: 1,
+                offset: 3
+            }
+        }
+    );
+}
+
+#[test]
 fn test_functions() {
     let mut tokens = tokenize("fn fib() {}").into_iter();
 
