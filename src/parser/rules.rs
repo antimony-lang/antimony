@@ -469,8 +469,11 @@ impl Parser {
         }
 
         self.match_token(TokenKind::SquareBraceClose)?;
+        let length = elements.len();
 
-        Ok(Expression::Array(elements))
+        dbg!("Array length", length, &elements);
+
+        Ok(Expression::Array(length, elements))
     }
 
     fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {
