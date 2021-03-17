@@ -21,7 +21,7 @@ pub enum Type {
     Int,
     Str,
     Bool,
-    Array(Box<Type>),
+    Array(Box<Type>, Option<usize>),
     Struct(String),
 }
 

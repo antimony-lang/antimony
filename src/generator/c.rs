@@ -74,11 +74,14 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
             Type::Any => "void *".into(),
             Type::Bool => "bool".into(),
             Type::Struct(name) => format!("struct {}", name),
-            Type::Array(t) => match name {
+            Type::Array(t, capacity) => match name {
                 Some(n) => format!(
-                    "{T} {N}[]",
+                    "{T} {N}[{C}]",
                     T = generate_type(Either::Right(Some(*t))),
-                    N = n
+                    N = n,
+                    C = capacity
+                        .map(|val| val.to_string())
+                        .unwrap_or("".to_string()),
                 ),
                 None => format!("{}[]", generate_type(Either::Right(Some(*t)))),
             },
