@@ -826,3 +826,18 @@ fn test_arithmetic() {
     let tree = parse(tokenize(raw), Some(raw.to_string()), raw.into());
     assert!(tree.is_err());
 }
+
+#[test]
+fn test_array_capacity() {
+    let raw = "
+    fn main() {
+        let arr: int[5]
+        arr[0] = 1
+        let arr2 = [1, 2, 3]
+        let arr3: int[5] = [1, 2, 3, 4, 5]
+    }
+    ";
+    let tokens = tokenize(raw);
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_ok());
+}
