@@ -190,8 +190,15 @@ impl Parser {
         }?;
         if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
             self.match_token(TokenKind::SquareBraceOpen)?;
+            let capacity = match self.peek_token(TokenKind::Literal(Value::Int)) {
+                Ok(val) => {
+                    self.next()?;
+                    val.raw.parse().ok()
+                }
+                Err(_) => None,
+            };
             self.match_token(TokenKind::SquareBraceClose)?;
-            Ok(Type::Array(Box::new(typ)))
+            Ok(Type::Array(Box::new(typ), capacity))
         } else {
             Ok(typ)
         }
@@ -469,8 +476,9 @@ impl Parser {
         }
 
         self.match_token(TokenKind::SquareBraceClose)?;
+        let length = elements.len();
 
-        Ok(Expression::Array(elements))
+        Ok(Expression::Array(length, elements))
     }
 
     fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {

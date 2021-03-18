@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Changes**
+
+- Arrays now have a fixed capacity
+
 **Features**
 
 - Instead of a temporary directory, heap memory is used for compilation

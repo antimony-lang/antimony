@@ -74,11 +74,14 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
             Type::Any => "void *".into(),
             Type::Bool => "bool".into(),
             Type::Struct(name) => format!("struct {}", name),
-            Type::Array(t) => match name {
+            Type::Array(t, capacity) => match name {
                 Some(n) => format!(
-                    "{T} {N}[]",
+                    "{T} {N}[{C}]",
                     T = generate_type(Either::Right(Some(*t))),
-                    N = n
+                    N = n,
+                    C = capacity
+                        .map(|val| val.to_string())
+                        .unwrap_or_else(|| "".to_string()),
                 ),
                 None => format!("{}[]", generate_type(Either::Right(Some(*t)))),
             },
@@ -146,7 +149,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Variable(val) | Expression::Str(val) => val,
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
-        Expression::Array(els) => generate_array(els),
+        Expression::Array(size, els) => generate_array(size, els),
         Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
@@ -167,7 +170,7 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
     out_str
 }
 
-fn generate_array(elements: Vec<Expression>) -> String {
+fn generate_array(_size: usize, elements: Vec<Expression>) -> String {
     let mut out_str = String::from("[");
 
     out_str += &elements
@@ -242,7 +245,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
-            Expression::Array(_) => todo!(),
+            Expression::Array(_, _) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
             Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),

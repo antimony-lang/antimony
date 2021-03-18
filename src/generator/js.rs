@@ -16,6 +16,7 @@ use crate::ast::*;
  */
 use crate::generator::Generator;
 use std::collections::HashMap;
+use types::Type;
 
 pub struct JsGenerator;
 
@@ -126,7 +127,7 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
 fn generate_statement(statement: Statement) -> String {
     let state = match statement {
         Statement::Return(ret) => generate_return(ret),
-        Statement::Declare(name, val) => generate_declare(name.name, val),
+        Statement::Declare(ident, val) => generate_declare(ident, val),
         Statement::Exp(val) => generate_expression(val),
         Statement::If(expr, if_state, else_state) => {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
@@ -150,7 +151,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Variable(val) | Expression::Str(val) => val,
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
-        Expression::Array(els) => generate_array(els),
+        Expression::Array(_, els) => generate_array(els),
         Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         Expression::StructInitialization(name, fields) => {
@@ -171,14 +172,15 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
 
 fn generate_for_loop(ident: Variable, expr: Expression, body: Statement) -> String {
     // Assign expression to variable to access it from within the loop
-    let expr_name = format!("loop_orig_{}", ident.name);
-    let mut out_str = format!("{};\n", generate_declare(expr_name.clone(), Some(expr)));
+    let mut expr_ident = ident.clone();
+    expr_ident.name = format!("loop_orig_{}", ident.name);
+    let mut out_str = format!("{};\n", generate_declare(&expr_ident, Some(expr)));
 
     // Loop signature
     out_str += &format!(
         "for (let iter_{I} = 0; iter_{I} < {E}.length; iter_{I}++)",
         I = ident.name,
-        E = expr_name
+        E = expr_ident.name
     );
 
     // Block with prepended declaration of the actual variable
@@ -187,7 +189,7 @@ fn generate_for_loop(ident: Variable, expr: Expression, body: Statement) -> Stri
         Some(format!(
             "let {I} = {E}[iter_{I}];\n",
             I = ident.name,
-            E = expr_name
+            E = expr_ident.name,
         )),
     );
     out_str
@@ -266,12 +268,27 @@ fn generate_conditional(
     outcome
 }
 
-fn generate_declare(name: String, val: Option<Expression>) -> String {
+fn generate_declare<V: AsRef<Variable>>(identifier: V, val: Option<Expression>) -> String {
+    // AsRef prevents unnecessary cloning here
+    let ident = identifier.as_ref();
     // var is used here to not collide with scopes.
     // TODO: Can let be used instead?
     match val {
-        Some(expr) => format!("var {} = {}", name, generate_expression(expr)),
-        None => format!("var {}", name),
+        Some(expr) => format!("var {} = {}", ident.name, generate_expression(expr)),
+        None => match ident.ty {
+            // Accessing an array that has not been initialized will throw an error,
+            // So we have to initialize it as an empty array.
+            //
+            // This crashes:
+            // var x;
+            // x[0] = 1;
+            //
+            // But this works:
+            // var x = [];
+            // x[0] = 1;
+            Some(Type::Array(_, _)) => format!("var {} = []", ident.name),
+            _ => format!("var {}", ident.name),
+        },
     }
 }
 
@@ -285,7 +302,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) | Expression::Variable(s) => s,
-            Expression::Array(elements) => generate_array(elements),
+            Expression::Array(_, elements) => generate_array(elements),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(name, fields) => {
                 generate_struct_initialization(name, fields)

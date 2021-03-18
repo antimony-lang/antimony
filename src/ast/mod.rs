@@ -72,6 +72,12 @@ pub struct Variable {
     pub ty: Option<Type>,
 }
 
+impl AsRef<Variable> for Variable {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Statement {
     /// (Statements, Scoped variables)
@@ -95,7 +101,7 @@ pub enum Expression {
     Bool(bool),
     /// Represents "self" keyword
     Selff,
-    Array(Vec<Expression>),
+    Array(usize, Vec<Expression>),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
     /// (name, index)

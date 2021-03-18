@@ -51,7 +51,7 @@ fn infer_expression(expr: &Expression, table: &SymbolTable) -> Option<Type> {
         Expression::Str(_) => Some(Type::Str),
         Expression::StructInitialization(name, _) => Some(Type::Struct(name.to_string())),
         Expression::FunctionCall(name, _) => infer_function_call(name, table),
-        Expression::Array(els) => infer_array(els, table),
+        Expression::Array(_, els) => infer_array(els, table),
         _ => None,
     }
 }
@@ -65,7 +65,7 @@ fn infer_array(elements: &[Expression], table: &SymbolTable) -> Option<Type> {
     // TODO: This approach only relies on the first element.
     // It will not catch that types are possibly inconsistent.
     match types.first().and_then(|ty| ty.to_owned()) {
-        Some(ty) => Some(Type::Array(Box::new(ty))),
+        Some(ty) => Some(Type::Array(Box::new(ty), Some(types.len()))),
         None => None,
     }
 }
