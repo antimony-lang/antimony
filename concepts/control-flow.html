@@ -1,0 +1,365 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Control Flow - The Antimony Programming Language</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction/SUMMARY.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../introduction/installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="../introduction/hello-world.html"><strong aria-hidden="true">1.2.</strong> Hello World!</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts/SUMMARY.html"><strong aria-hidden="true">2.</strong> Common language concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/variables.html"><strong aria-hidden="true">2.1.</strong> Variables</a></li><li class="chapter-item expanded "><a href="../concepts/datatypes.html"><strong aria-hidden="true">2.2.</strong> Data Types</a></li><li class="chapter-item expanded "><a href="../concepts/functions.html"><strong aria-hidden="true">2.3.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../concepts/comments.html"><strong aria-hidden="true">2.4.</strong> Comments</a></li><li class="chapter-item expanded "><a href="../concepts/control-flow.html" class="active"><strong aria-hidden="true">2.5.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="../concepts/structured-data.html"><strong aria-hidden="true">2.6.</strong> Structured Data</a></li></ol></li><li class="chapter-item expanded "><a href="../modules/SUMMARY.html"><strong aria-hidden="true">3.</strong> Modules and Imports</a></li><li class="chapter-item expanded "><a href="../developers/SUMMARY.html"><strong aria-hidden="true">4.</strong> Developer Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../developers/specification.html"><strong aria-hidden="true">4.1.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../developers/backends.html"><strong aria-hidden="true">4.2.</strong> Compiler Backends</a></li><li class="chapter-item expanded "><a href="../developers/releasing.html"><strong aria-hidden="true">4.3.</strong> Release Workflow</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">The Antimony Programming Language</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
+<p>Deciding whether or not to run some code depending on if a condition is true and deciding to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Antimony code are <code>if</code> expressions and loops.</p>
+<h2 id="if-expressions"><a class="header" href="#if-expressions"><code>if</code> Expressions</a></h2>
+<p>An <code>if</code> expression allows you to branch your code depending on conditions. You provide a condition and then state, &quot;If this condition is met, run this block of code. If the condition is not met, do not run this block of code.&quot;</p>
+<p>Here is a basic example of an <code>if</code> expression:</p>
+<pre><code>fn main() {
+    let number = 3
+
+    if number &lt; 5 {
+        println(&quot;condition was true&quot;)
+    } else {
+        println(&quot;condition was false&quot;)
+    }
+}
+</code></pre>
+<p>All <code>if</code> Statements start with the keyword <code>if</code>, followed by a condition. In this case, the condition checks if the number has a value less than 5. The block of code we want to execute if the condition is true is placed immediately after the condition inside curly braces.</p>
+<p>Optionally, we can also include an <code>else</code> expression, which we chose to do here, to give the program an alternative block of code to execute should the condition evaluate to false. If you don’t provide an <code>else</code> expression and the condition is false, the program will just skip the <code>if</code> block and move on to the next bit of code.</p>
+<p>Try running this code; You should see the following output:</p>
+<pre><code>$ sb run main.sb
+condition was true
+</code></pre>
+<p>Let’s try changing the value of <code>number</code> to a value that makes the condition false to see what happens:</p>
+<pre><code>let number = 7
+</code></pre>
+<p>Run the program again, and look at the output:</p>
+<pre><code>$ sb run main.sb
+condition was false
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: It's worth noting that the condition in this code must be a bool. At the current state of the project, this is not the case, but it is subject to change at any time. <strong>TODO</strong>: Discuss this behavior.</p>
+</blockquote>
+<h3 id="handling-multiple-conditions-with-else-if"><a class="header" href="#handling-multiple-conditions-with-else-if">Handling multiple conditions with <code>else if</code></a></h3>
+<p>You can have multiple conditions by combining <code>if</code> and <code>else</code> in an <code>else if</code> expression. For example:</p>
+<pre><code>fn main() {
+    let number = 6
+
+    if number % 4 == 0 {
+        println(&quot;number is divisible by 4&quot;)
+    } else if number % 3 == 0 {
+        println(&quot;number is divisible by 3&quot;)
+    } else if number % 2 == 0 {
+        println(&quot;number is divisible by 2&quot;)
+    } else {
+        println(&quot;number is not divisible by 4, 3, or 2&quot;)
+    }
+}
+</code></pre>
+<p>This program has four possible paths it can take. After running it, you should see the following output:</p>
+<pre><code>$ sb run main.sb
+number is divisible by 3
+</code></pre>
+<p>When this program executes, it checks each <code>if</code> expression in turn and executes the first body for which the condition holds true. Note that even though 6 is divisible by 2, we don’t see the output <code>number is divisible by 2</code>, nor do we see the <code>number is not divisible by 4, 3, or 2</code> text from the else block. That’s because Antimony only executes the block for the first true condition, and once it finds one, it doesn’t even check the rest.</p>
+<h3 id="value-matching"><a class="header" href="#value-matching">Value matching</a></h3>
+<p>Working with <code>if</code> statements with multiple <code>else</code> branches can become tedious. <code>match</code> statements provide a cleaner syntax for this case. You can compare <code>match</code> statements to <code>switch</code> in many other languages. Let's look at a very simple match statement.</p>
+<pre><code>    let x = 42
+
+    match x {
+        1 =&gt; println(&quot;x is 1&quot;)
+        2 =&gt; println(&quot;x is 2&quot;)
+        42 =&gt; println(&quot;The answer to the universe and everything!&quot;)
+        else =&gt; println(&quot;This will not be called&quot;)
+    }
+</code></pre>
+<p>In this example, we check the value of <code>x</code>, and execute some code based on the value. Instead of having to type <code>x == 1</code>, <code>x == 2</code> and so on, we instead provide the value only once, and decide what to do for each case. We can optionally provide a <code>else</code> case, which will be executed if no other case was triggered.</p>
+<p>You can execute multiple statements inside a single case. A common case would be to log some debug output and then return a value.</p>
+<pre><code>fn invert(x: bool): bool {
+    match x {
+        true =&gt; {
+            println(&quot;The value is true&quot;)
+            return false
+        }
+        false =&gt; {
+            println(&quot;The value is false&quot;)
+            return true
+        }
+    }
+}
+</code></pre>
+<p>Keep in mind that excessive use of this could hurt the readability of your code. Instead, you could try to outsource those statements into a function and call that instead.</p>
+<h2 id="loops"><a class="header" href="#loops">Loops</a></h2>
+<p>It's often useful to execute a block of code more than once. For this task, Antimony provides different kind of <em>loops</em>. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.</p>
+<p>Antimony has two types of loops: <code>while</code> and <code>for</code>. Let's go through each of them.</p>
+<h3 id="conditional-loops-with-while"><a class="header" href="#conditional-loops-with-while">Conditional Loops with <code>while</code></a></h3>
+<p>It’s often useful for a program to evaluate a condition within a loop. While the condition is true, the loop runs. When the condition ceases to be true, the program calls <code>break</code>, stopping the loop.</p>
+<p>The example below loops three times, counting down each time, and then, after the loop, it prints another message and exits.</p>
+<pre><code>fn main() {
+    let number = 3
+
+    while number != 0 {
+        println(number)
+
+        number = number - 1
+    }
+
+    println(&quot;LIFTOFF!!!&quot;)
+}
+</code></pre>
+<h3 id="looping-through-a-collection-with-for"><a class="header" href="#looping-through-a-collection-with-for">Looping Through a Collection with <code>for</code></a></h3>
+<p>You could use the <code>while</code> construct to loop over the elements of a collection, such as an array. For example:</p>
+<pre><code>fn main() {
+    let a = [10, 20, 30, 40, 50]
+    let index = 0
+
+    while index &lt; 5 {
+        println(&quot;the value is: &quot; + a[index])
+
+        index += 1
+    }
+}
+</code></pre>
+<p>Here, the code counts up through the elements in the array. It starts at index <code>0</code>, and then loops until it reaches the final index in the array (that is, when <code>index &lt; 5</code> is no longer true). Running this code will print every element in the array:</p>
+<pre><code>$ sb run main.sb
+the value is: 10
+the value is: 20
+the value is: 30
+the value is: 40
+the value is: 50
+</code></pre>
+<p>All five array values appear in the terminal, as expected. Even though index will reach a value of 5 at some point, the loop stops executing before trying to fetch a sixth value from the array.</p>
+<p>But this approach is error prone; we could cause the program to crash if the index length is incorrect. It's also slow, because the compiler adds runtime code to perform the conditional check on every element on every iteration through the loop.</p>
+<p>As a more concise alternative, you can use a <code>for</code> loop and execute some code for each item in a collection. A <code>for</code> loop looks like the following:</p>
+<pre><code>fn main() {
+    let a = [10, 20, 30, 40, 50]
+
+    for element in a {
+        println(&quot;the value is: &quot; + element)
+    }
+}
+</code></pre>
+<p>When we run this code, we’ll see the same output as in the previous example. More importantly, the code is faster and less prone to errors.</p>
+<p>For example, in the code in the previous example, if you changed the definition of the a array to have four elements but forgot to update the condition to <code>while index &lt; 4</code>, the program would crash. Using the <code>for</code> loop, you wouldn’t need to remember to change any other code if you changed the number of values in the array.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../concepts/comments.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../concepts/structured-data.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../concepts/comments.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../concepts/structured-data.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

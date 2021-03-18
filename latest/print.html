@@ -1,0 +1,778 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The Antimony Programming Language</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction/SUMMARY.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="introduction/installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="introduction/hello-world.html"><strong aria-hidden="true">1.2.</strong> Hello World!</a></li></ol></li><li class="chapter-item expanded "><a href="concepts/SUMMARY.html"><strong aria-hidden="true">2.</strong> Common language concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="concepts/variables.html"><strong aria-hidden="true">2.1.</strong> Variables</a></li><li class="chapter-item expanded "><a href="concepts/datatypes.html"><strong aria-hidden="true">2.2.</strong> Data Types</a></li><li class="chapter-item expanded "><a href="concepts/functions.html"><strong aria-hidden="true">2.3.</strong> Functions</a></li><li class="chapter-item expanded "><a href="concepts/comments.html"><strong aria-hidden="true">2.4.</strong> Comments</a></li><li class="chapter-item expanded "><a href="concepts/control-flow.html"><strong aria-hidden="true">2.5.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="concepts/structured-data.html"><strong aria-hidden="true">2.6.</strong> Structured Data</a></li></ol></li><li class="chapter-item expanded "><a href="modules/SUMMARY.html"><strong aria-hidden="true">3.</strong> Modules and Imports</a></li><li class="chapter-item expanded "><a href="developers/SUMMARY.html"><strong aria-hidden="true">4.</strong> Developer Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="developers/specification.html"><strong aria-hidden="true">4.1.</strong> Specification</a></li><li class="chapter-item expanded "><a href="developers/backends.html"><strong aria-hidden="true">4.2.</strong> Compiler Backends</a></li><li class="chapter-item expanded "><a href="developers/releasing.html"><strong aria-hidden="true">4.3.</strong> Release Workflow</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">The Antimony Programming Language</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p>Antimony is a bullshit-free (©) programming language that gets out of your way.
+It is meant to &quot;just work&quot;, without adding unnecessary and bloated language features.</p>
+<p>To get started with Antimony, continue with the <a href="introduction/introduction/installation.html">installation</a>.</p>
+<blockquote>
+<p><strong>Note</strong>: Some parts of this documentation have been copied from the <a href="https://doc.rust-lang.org/book/">Rust book</a>.</p>
+</blockquote>
+<blockquote>
+<p><strong>Note</strong>: I consider this documentation <em>usable</em>, but it may be incomplete in some places. If you feel like that a feature or behavior should be documented, feel free to contact the maintainers. You can search for the word <em>TODO</em>, if you want to help improving this documentation but don't know where to start. Any help is always welcome!</p>
+</blockquote>
+<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<blockquote>
+<p><strong>Note:</strong> An installation of the Rust programming language is needed to compile Antimony.</p>
+</blockquote>
+<h2 id="cargo"><a class="header" href="#cargo">Cargo</a></h2>
+<p>The fastest way to get up and running is to install the <a href="https://crates.io/crates/antimony-lang">latest published version</a> via cargo:</p>
+<pre><code class="language-sh">cargo install antimony-lang
+</code></pre>
+<h2 id="git"><a class="header" href="#git">Git</a></h2>
+<p>To get the current development version, you can clone the Git <a href="https://github.com/antimony-lang/antimony">repository</a> and run the following command:</p>
+<pre><code class="language-sh">cargo install --path .
+</code></pre>
+<h2 id="docker"><a class="header" href="#docker">Docker</a></h2>
+<p>Antimony provides a <a href="https://hub.docker.com/r/antimony-lang/antimony">Docker image</a>. It currently only supports the x64 architecture. Please reach out if you need a ARM variant (needed for Raspberry Pi). If you don't want to wait, you can build the image yourself by running this command in the root of the project:</p>
+<pre><code>docker build . -t antimony
+</code></pre>
+<h1 id="the-command-line-interface"><a class="header" href="#the-command-line-interface">The command line interface</a></h1>
+<p>Now that you have installed Antimony, it is time to write our first program. This is a program that will simply print a string to the screen.</p>
+<h1 id="creating-a-project-directory"><a class="header" href="#creating-a-project-directory">Creating a project directory</a></h1>
+<p>Let's begin by setting up our development workspace. Antimony really doesn't care where you store the code, so feel free to choose a different directory, than the one in this example.</p>
+<pre><code>mkdir ~/sources
+cd ~/sources
+mkdir hello_world
+cd hello_world
+</code></pre>
+<h1 id="writing-and-running-a-program"><a class="header" href="#writing-and-running-a-program">Writing and running a program</a></h1>
+<p>Next, make a new source file and call it <code>main.sb</code>. Antimony files should always end with <code>.sb</code> by convention.</p>
+<p>Now open the main.sb file you just created and enter the following code:</p>
+<pre><code>fn main() {
+    println(&quot;Hello, world!&quot;)
+}
+</code></pre>
+<p>Save the file and go back to your terminal window. Now, run the following command to compile and run your program:</p>
+<pre><code>$ sb run main.sb
+</code></pre>
+<p>You should see the string <code>Hello World!</code> on the screen. Congrats! You have officially written a Antimony Program!</p>
+<h1 id="common-language-concepts"><a class="header" href="#common-language-concepts">Common language concepts</a></h1>
+<p>This chapter covers concepts that appear in almost every programming language and how they work in Antimony. Many programming languages have much in common at their core.</p>
+<p>Specifically, you’ll learn about variables, basic types, functions, comments, and control flow. These foundations will be in every Antimony program, and learning them early will give you a strong core to start from.</p>
+<h1 id="variables"><a class="header" href="#variables">Variables</a></h1>
+<p>If you are familiar with some other programming language, the way Antimony handles variables won't surprise you.</p>
+<p>To declare a variable, the <code>let</code> keyword is used. The type of the variable is infered, but can be specified explicitly.</p>
+<blockquote>
+<p><strong>Note</strong>: Type inference currently only works when using the node-backend. For most other backends, the types need to be specified, until proper type inference is implemented.</p>
+</blockquote>
+<pre><code>// variables.sb
+fn main() {
+    let x = 10
+    let y: int = 5
+    println(x + y)
+}
+</code></pre>
+<p>Run this code using the antimony CLI:</p>
+<pre><code>$ sb run variables.sb
+15
+</code></pre>
+<h1 id="datatypes"><a class="header" href="#datatypes">Datatypes</a></h1>
+<p>Antimony comes with some generic data types.</p>
+<h2 id="the-boolean-type"><a class="header" href="#the-boolean-type">The Boolean type</a></h2>
+<p>As in most other programming languages, a Boolean type in Antimony has two possible values: <code>true</code> and <code>false</code>. Booleans are one byte in size. The Boolean type in Antimony is specified using <code>bool</code>. For example:</p>
+<pre><code>fn main() {
+    let t = true
+    let f: bool = false // with explicit type annotation
+}
+</code></pre>
+<p>The main way to use Boolean values is through conditionals, such as an <code>if</code> expression. We’ll cover how <code>if</code> expressions work in the <a href="concepts/introduction/control-flow.html">&quot;Control Flow&quot;</a> section.</p>
+<h2 id="the-integer-type"><a class="header" href="#the-integer-type">The Integer type</a></h2>
+<p>The <code>integer</code> datatype represents a 4 byte decimal number.</p>
+<pre><code>fn main() {
+    let sum: int = 1 + 2
+    println(&quot;1 + 2 is &quot;, sum)
+}
+</code></pre>
+<pre><code>$ sb run main.sb
+1 + 2 is 3
+</code></pre>
+<p>Decimal, binary, hexadecimal and octal number systems are supported. The number <code>255</code> can be written in these formats:</p>
+<pre><code>let binary = 0b11111111
+let octal = 0o37
+let decimal = 255
+let hexadecimal = 0xFF
+</code></pre>
+<p>To make large numbers more readable, you can insert <code>_</code> characters at arbitrary places. These characters will be ignored by the compiler.</p>
+<pre><code>let one_billion = 1_000_000_000
+</code></pre>
+<h2 id="the-string-type"><a class="header" href="#the-string-type">The String type</a></h2>
+<p>A string is a sequence of characters.</p>
+<pre><code>fn main() {
+    let name: string = &quot;Jon&quot;
+    println(&quot;Hello &quot; + name)
+}
+</code></pre>
+<pre><code>$ sb run main.sb
+Hello Jon
+</code></pre>
+<h2 id="the-array-type"><a class="header" href="#the-array-type">The Array type</a></h2>
+<p>Arrays represent a sequence of values. They can hold any number of values of a specific type.</p>
+<pre><code>fn main() {
+    let fruits: string[] = [&quot;Banana&quot;, &quot;Apple&quot;, &quot;Pineapple&quot;]
+
+    for fruit in fruits {
+        println(fruit)
+    }
+}
+</code></pre>
+<pre><code>$ sb run main.sb
+Banana
+Apple
+Pineapple
+</code></pre>
+<p>Arrays have a fixed capacity. In most cases, the capacity of an array can be infered. In the example above, the compiler knows that three elements are in the array, so it can be inferred. If the capacity can't be inferred by the compiler, it is necessary to mark it explicitely. This is the case for uninitialized arrays:</p>
+<pre><code>let arr: int[3]
+arr[0] = 1
+arr[1] = 2
+arr[2] = 3
+
+for element in arr {
+    println(element)
+}
+</code></pre>
+<h2 id="the-any-type"><a class="header" href="#the-any-type">The Any type</a></h2>
+<p><code>any</code> can be used to specify that any type can be used in this place. This should be used with caution, as it might cause undefined behavior.</p>
+<pre><code>fn main() {
+
+    print_anything(5)
+    print_anything(&quot;Hello&quot;)
+}
+
+fn print_anything(x: any) {
+    println(x)
+}
+</code></pre>
+<pre><code>$ sb run main.sb
+5
+Hello
+</code></pre>
+<p><code>any</code> can also be used in conjunction with the array notation to allow a mixture of types within an array.</p>
+<pre><code>fn main() {
+
+    let arr = [1, &quot;Two&quot;, 3]
+
+    for x in arr {
+        println(x)
+    }
+}
+</code></pre>
+<pre><code>$ sb run main.sb
+1
+Two
+3
+</code></pre>
+<h1 id="functions"><a class="header" href="#functions">Functions</a></h1>
+<p>Functions are pervasive in Antimony code. You’ve already seen one of the most important functions in the language: the <code>main</code> function, which is the entry point of many programs. You've also seen the <code>fn</code> keyword, which allows you to declare new functions.</p>
+<p>Antimony code uses snake_case as the conventional style for function and variable names. In snake case, all letters are lowercase and underscores separate words. Here’s a program that contains an example function definition:</p>
+<pre><code>fn main() {
+    println(&quot;Hello, world!&quot;)
+    another_function()
+}
+
+fn another_function() {
+    println(&quot;Another function.&quot;)
+}
+</code></pre>
+<p>We can call any function we’ve defined by entering its name followed by a set of parentheses. Because <code>another_function</code> is defined in the program, it can be called from inside the main function. Note that we defined <code>another_function</code> after the <code>main</code> function in the source code; we could have defined it before as well. Antimony doesn’t care where you define your functions, only that they’re defined somewhere.</p>
+<h2 id="function-parameters"><a class="header" href="#function-parameters">Function parameters</a></h2>
+<p>Functions can also be defined to have parameters, which are special variables that are part of a function’s signature. When a function has parameters, you can provide it with concrete values for those parameters. Technically, the concrete values are called arguments, but in casual conversation, people tend to use the words parameter and argument interchangeably for either the variables in a function’s definition or the concrete values passed in when you call a function.</p>
+<p>The following rewritten version of <code>another_function</code> shows what parameters look like in Antimony:</p>
+<pre><code>fn main() {
+    another_function(5)
+}
+
+fn another_function(x: int) {
+    println(x)
+}
+</code></pre>
+<h2 id="return-types"><a class="header" href="#return-types">Return types</a></h2>
+<p>Functions can optionally return a value. To specify the return type, it is added to the function signature, similar to how variables and parameters do. Here's a simple example of a function that returns an integer:</p>
+<pre><code>fn add_one(x: int): int {}
+</code></pre>
+<p>Note that this function won't compile, since it doesn't actually return anything. Let's fix that by adding a <code>return</code> statement with an expression:</p>
+<pre><code>fn add_one(x: int): int {
+    return x + 1
+}
+</code></pre>
+<p>Now, if you call the function with <code>1</code> as its argument and read its value, you will see the computed result:</p>
+<pre><code>fn main() {
+    let result = add_one(1)
+    println(result)
+}
+
+fn add_one(x: int): int {
+    return x + 1
+}
+</code></pre>
+<pre><code>$ sb run main.sb
+2
+</code></pre>
+<h1 id="comments"><a class="header" href="#comments">Comments</a></h1>
+<p>All programmers strive to make their code easy to understand, but sometimes extra explanation is warranted. In these cases, programmers leave notes, or comments, in their source code that the compiler will ignore but people reading the source code may find useful.</p>
+<p>Here’s a simple comment:</p>
+<pre><code>// I'm a comment!
+</code></pre>
+<p>In Antimony, the idiomatic comment style starts a comment with two slashes, and the comment continues until the end of the line. For comments that extend beyond a single line, you’ll need to include <code>//</code> on each line, like this:</p>
+<pre><code>// So we’re doing something complicated here, long enough that we need
+// multiple lines of comments to do it! Whew! Hopefully, this comment will
+// explain what’s going on.
+</code></pre>
+<p>Comments can also be placed at the end of lines containing code:</p>
+<pre><code>fn main() {
+    let lucky_number = 7 // I’m feeling lucky today
+}
+</code></pre>
+<p>But you’ll more often see them used in this format, with the comment on a separate line above the code it’s annotating:</p>
+<pre><code>fn main() {
+    // I’m feeling lucky today
+    let lucky_number = 7
+}
+</code></pre>
+<h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
+<p>Deciding whether or not to run some code depending on if a condition is true and deciding to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Antimony code are <code>if</code> expressions and loops.</p>
+<h2 id="if-expressions"><a class="header" href="#if-expressions"><code>if</code> Expressions</a></h2>
+<p>An <code>if</code> expression allows you to branch your code depending on conditions. You provide a condition and then state, &quot;If this condition is met, run this block of code. If the condition is not met, do not run this block of code.&quot;</p>
+<p>Here is a basic example of an <code>if</code> expression:</p>
+<pre><code>fn main() {
+    let number = 3
+
+    if number &lt; 5 {
+        println(&quot;condition was true&quot;)
+    } else {
+        println(&quot;condition was false&quot;)
+    }
+}
+</code></pre>
+<p>All <code>if</code> Statements start with the keyword <code>if</code>, followed by a condition. In this case, the condition checks if the number has a value less than 5. The block of code we want to execute if the condition is true is placed immediately after the condition inside curly braces.</p>
+<p>Optionally, we can also include an <code>else</code> expression, which we chose to do here, to give the program an alternative block of code to execute should the condition evaluate to false. If you don’t provide an <code>else</code> expression and the condition is false, the program will just skip the <code>if</code> block and move on to the next bit of code.</p>
+<p>Try running this code; You should see the following output:</p>
+<pre><code>$ sb run main.sb
+condition was true
+</code></pre>
+<p>Let’s try changing the value of <code>number</code> to a value that makes the condition false to see what happens:</p>
+<pre><code>let number = 7
+</code></pre>
+<p>Run the program again, and look at the output:</p>
+<pre><code>$ sb run main.sb
+condition was false
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: It's worth noting that the condition in this code must be a bool. At the current state of the project, this is not the case, but it is subject to change at any time. <strong>TODO</strong>: Discuss this behavior.</p>
+</blockquote>
+<h3 id="handling-multiple-conditions-with-else-if"><a class="header" href="#handling-multiple-conditions-with-else-if">Handling multiple conditions with <code>else if</code></a></h3>
+<p>You can have multiple conditions by combining <code>if</code> and <code>else</code> in an <code>else if</code> expression. For example:</p>
+<pre><code>fn main() {
+    let number = 6
+
+    if number % 4 == 0 {
+        println(&quot;number is divisible by 4&quot;)
+    } else if number % 3 == 0 {
+        println(&quot;number is divisible by 3&quot;)
+    } else if number % 2 == 0 {
+        println(&quot;number is divisible by 2&quot;)
+    } else {
+        println(&quot;number is not divisible by 4, 3, or 2&quot;)
+    }
+}
+</code></pre>
+<p>This program has four possible paths it can take. After running it, you should see the following output:</p>
+<pre><code>$ sb run main.sb
+number is divisible by 3
+</code></pre>
+<p>When this program executes, it checks each <code>if</code> expression in turn and executes the first body for which the condition holds true. Note that even though 6 is divisible by 2, we don’t see the output <code>number is divisible by 2</code>, nor do we see the <code>number is not divisible by 4, 3, or 2</code> text from the else block. That’s because Antimony only executes the block for the first true condition, and once it finds one, it doesn’t even check the rest.</p>
+<h3 id="value-matching"><a class="header" href="#value-matching">Value matching</a></h3>
+<p>Working with <code>if</code> statements with multiple <code>else</code> branches can become tedious. <code>match</code> statements provide a cleaner syntax for this case. You can compare <code>match</code> statements to <code>switch</code> in many other languages. Let's look at a very simple match statement.</p>
+<pre><code>    let x = 42
+
+    match x {
+        1 =&gt; println(&quot;x is 1&quot;)
+        2 =&gt; println(&quot;x is 2&quot;)
+        42 =&gt; println(&quot;The answer to the universe and everything!&quot;)
+        else =&gt; println(&quot;This will not be called&quot;)
+    }
+</code></pre>
+<p>In this example, we check the value of <code>x</code>, and execute some code based on the value. Instead of having to type <code>x == 1</code>, <code>x == 2</code> and so on, we instead provide the value only once, and decide what to do for each case. We can optionally provide a <code>else</code> case, which will be executed if no other case was triggered.</p>
+<p>You can execute multiple statements inside a single case. A common case would be to log some debug output and then return a value.</p>
+<pre><code>fn invert(x: bool): bool {
+    match x {
+        true =&gt; {
+            println(&quot;The value is true&quot;)
+            return false
+        }
+        false =&gt; {
+            println(&quot;The value is false&quot;)
+            return true
+        }
+    }
+}
+</code></pre>
+<p>Keep in mind that excessive use of this could hurt the readability of your code. Instead, you could try to outsource those statements into a function and call that instead.</p>
+<h2 id="loops"><a class="header" href="#loops">Loops</a></h2>
+<p>It's often useful to execute a block of code more than once. For this task, Antimony provides different kind of <em>loops</em>. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.</p>
+<p>Antimony has two types of loops: <code>while</code> and <code>for</code>. Let's go through each of them.</p>
+<h3 id="conditional-loops-with-while"><a class="header" href="#conditional-loops-with-while">Conditional Loops with <code>while</code></a></h3>
+<p>It’s often useful for a program to evaluate a condition within a loop. While the condition is true, the loop runs. When the condition ceases to be true, the program calls <code>break</code>, stopping the loop.</p>
+<p>The example below loops three times, counting down each time, and then, after the loop, it prints another message and exits.</p>
+<pre><code>fn main() {
+    let number = 3
+
+    while number != 0 {
+        println(number)
+
+        number = number - 1
+    }
+
+    println(&quot;LIFTOFF!!!&quot;)
+}
+</code></pre>
+<h3 id="looping-through-a-collection-with-for"><a class="header" href="#looping-through-a-collection-with-for">Looping Through a Collection with <code>for</code></a></h3>
+<p>You could use the <code>while</code> construct to loop over the elements of a collection, such as an array. For example:</p>
+<pre><code>fn main() {
+    let a = [10, 20, 30, 40, 50]
+    let index = 0
+
+    while index &lt; 5 {
+        println(&quot;the value is: &quot; + a[index])
+
+        index += 1
+    }
+}
+</code></pre>
+<p>Here, the code counts up through the elements in the array. It starts at index <code>0</code>, and then loops until it reaches the final index in the array (that is, when <code>index &lt; 5</code> is no longer true). Running this code will print every element in the array:</p>
+<pre><code>$ sb run main.sb
+the value is: 10
+the value is: 20
+the value is: 30
+the value is: 40
+the value is: 50
+</code></pre>
+<p>All five array values appear in the terminal, as expected. Even though index will reach a value of 5 at some point, the loop stops executing before trying to fetch a sixth value from the array.</p>
+<p>But this approach is error prone; we could cause the program to crash if the index length is incorrect. It's also slow, because the compiler adds runtime code to perform the conditional check on every element on every iteration through the loop.</p>
+<p>As a more concise alternative, you can use a <code>for</code> loop and execute some code for each item in a collection. A <code>for</code> loop looks like the following:</p>
+<pre><code>fn main() {
+    let a = [10, 20, 30, 40, 50]
+
+    for element in a {
+        println(&quot;the value is: &quot; + element)
+    }
+}
+</code></pre>
+<p>When we run this code, we’ll see the same output as in the previous example. More importantly, the code is faster and less prone to errors.</p>
+<p>For example, in the code in the previous example, if you changed the definition of the a array to have four elements but forgot to update the condition to <code>while index &lt; 4</code>, the program would crash. Using the <code>for</code> loop, you wouldn’t need to remember to change any other code if you changed the number of values in the array.</p>
+<h1 id="structured-data"><a class="header" href="#structured-data">Structured data</a></h1>
+<p>When working with data, you often find yourself needing to group information together. This is where a <code>struct</code> could come into play. A <em>struct</em>, or <em>structure</em>, is a custom data type that lets you name and package together multiple related values that make up a meaningful group. If you’re familiar with an object-oriented language, a struct is like an object’s data attributes.</p>
+<h2 id="defining-structs"><a class="header" href="#defining-structs">Defining structs</a></h2>
+<p>To define a struct, we enter the keyword <code>struct</code> and name the entire struct. A struct’s name should describe the significance of the pieces of data being grouped together. Then, inside curly brackets, we define the names and types of the pieces of data, which we call fields. The following example shows a struct that stores information about a user account.</p>
+<pre><code>struct User {
+    username: string
+    email: string
+    sign_in_count: int
+    active: bool
+}
+</code></pre>
+<p>Structs can be nested as a type inside other structs. For example, we could assign each user an address, which itself is a struct.</p>
+<pre><code>struct Address {
+    street: string
+    number: int
+    postal_code: string
+    city: string
+}
+
+struct User {
+    username: string
+    email: string
+    address: Address
+}
+</code></pre>
+<h2 id="instantiating-structs"><a class="header" href="#instantiating-structs">Instantiating structs</a></h2>
+<p>To use a struct after we’ve defined it, we create an <em>instance</em> of that struct by specifying concrete values for each of the fields. We create an instance by stating the name of the struct and then add curly brackets containing <code>key: value</code> pairs, where the keys are the names of the fields and the values are the data we want to store in those fields. We don’t have to specify the fields in the same order in which we declared them in the struct. In other words, the struct definition is like a general template for the type, and instances fill in that template with particular data to create values of the type. Let's use our <code>User</code> struct from a previous example and create an user called <code>alice</code>.</p>
+<pre><code>struct User {
+    username: string
+    email: string
+    sign_in_count: int
+    active: bool
+}
+
+let alice = new User {
+    email: &quot;alice@example.com&quot;
+    username: &quot;alice&quot;
+    sign_in_count: 1
+    active: true
+}
+</code></pre>
+<p>To get a specific value from a struct, we can use dot notation. If we wanted just alice's email address, we could use <code>alice.email</code> wherever we wanted to use this value. Fields of structs can also be reassigned using the dot notation:</p>
+<pre><code>let alice = new User {
+    email: &quot;alice@example.com&quot;
+    username: &quot;alice&quot;
+    sign_in_count: 1
+    active: true
+}
+
+alice.sign_in_count = 2
+</code></pre>
+<h2 id="struct-methods"><a class="header" href="#struct-methods">Struct methods</a></h2>
+<p>Antimony supports the concept of methods. A method can be described as a function on a struct. Let's take a look at a struct implementing a method.</p>
+<pre><code>struct User {
+    first_name: string
+    last_name: string
+
+    fn full_name(): string {
+        return self.first_name + &quot; &quot; + self.last_name
+    }
+}
+</code></pre>
+<p>Every instance of the <code>User</code> struct can now call <code>full_name()</code>. Note the usage of the word <code>self</code>. <code>self</code> is a special keyword referencing the struct instance the method was called on. Say we had the following instance of <code>User</code>, and called the <code>full_name()</code> method on it.</p>
+<pre><code>let alice = new User {
+    first_name: &quot;Jon&quot;
+    last_name: &quot;Doe&quot;
+}
+
+println(alice.full_name())
+</code></pre>
+<p>The <code>full_name</code> method described above will return the first name, a space and the last name of the user. If we run this code, we should see the expected output:</p>
+<pre><code>$ sb run main.sb
+Jon Doe
+</code></pre>
+<p>Methods behave just like functions. They can return a value and take parameters. The only difference is the <code>self</code> keyword, which allows you to execute it on a specific instance of a struct.</p>
+<h1 id="modules-and-imports"><a class="header" href="#modules-and-imports">Modules and Imports</a></h1>
+<p>Projects naturally grow over time, and digging through 10.000 lines of code in a single file can be cumbersome. By grouping related functionality and separating code with distinct features, you’ll clarify where to find code that implements a particular feature and where to go to change how a feature works.</p>
+<p>The programs we've written so far have been in one file. As a project grows, you can organize code by splitting it into multiple modules with a clear name.</p>
+<p>In Antimony, every file is also a module. Let's take a look at a project structure and identify its modules.</p>
+<pre><code>.
+├── foo
+│   ├── bar.sb
+│   └── baz
+│       └── module.sb
+├── main.sb
+└── some_logic.sb
+</code></pre>
+<p>As per convention, the entrypoint for this project is the <code>main.sb</code> file in the root directory.</p>
+<p>There is a child-module called <code>some_logic</code> at the same directory-level.</p>
+<p>Below it, there is a directory called <code>foo</code>, containing the submodule <code>bar</code>. To address the <code>bar</code> module from our entrypoint, we'd import the following:</p>
+<pre><code>import &quot;foo/bar&quot;
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: File extensions in imports are optional. Importing <code>foo/bar.sb</code> would yield the same result as importing <code>foo/bar</code>.</p>
+</blockquote>
+<h2 id="module-entrypoints"><a class="header" href="#module-entrypoints">Module entrypoints</a></h2>
+<p>In the <code>foo</code> directory, there is another directory called <code>baz</code>, containing a single file named <code>module.sb</code>. This file is treated as a special file, since it serves as the entrypoint for that module. So, instead of importing the file explicitely:</p>
+<pre><code>// main.sb
+import &quot;foo/baz/module&quot;
+</code></pre>
+<p>we can simply import the module containing this file, and Antimony will import the contained <code>module.sb</code> instead.</p>
+<pre><code>// main.sb
+import &quot;foo/baz&quot;
+</code></pre>
+<h2 id="using-imported-modules"><a class="header" href="#using-imported-modules">Using imported modules</a></h2>
+<p>To use code defined in a separate module, we first need to import it. This is usually done at the top of the file, but it technically doesn't make a difference where in the document the import is defined. Once the module is imported, we can use the code inside it, as if it were in the current file.</p>
+<p>Let's say we have a module named <code>math.sb</code> in the same directory as out <code>main.sb</code>, and it defines the function <code>add(x: int, y: int): int</code>. To call it in our <code>main.sb</code>, we'd do the following:</p>
+<pre><code>import &quot;math&quot;
+
+fn main() {
+    println(add(1, 2))
+}
+</code></pre>
+<p>If we run <code>main.sb</code>, we should see the expected output. Antimony has imported the <code>add</code> function from the <code>math</code> module.</p>
+<pre><code>$ sb run main.sb
+3
+</code></pre>
+<p>This chapter includes resources that might be helpful for developers hacking on the Antimony compiler.</p>
+<h1 id="specification"><a class="header" href="#specification">Specification</a></h1>
+<blockquote>
+<p><strong>Note</strong>: This specification is a work in progress.</p>
+</blockquote>
+<h2 id="introduction-1"><a class="header" href="#introduction-1">Introduction</a></h2>
+<p>This is a reference manual for the Antimony programming language.</p>
+<p>Antimony is a general-purpose language designed with simplicity in mind. It is strongly typed and supports multiple compile-targets. Programs are constructed from modules, whose properties allow efficient management of dependencies.</p>
+<h2 id="notation"><a class="header" href="#notation">Notation</a></h2>
+<p>The syntax is specified using altered Extended Backus-Naur Form (EBNF):</p>
+<pre><code>Production  = production_name &quot;=&quot; [ Expression ] &quot;.&quot; .
+Expression  = Alternative { &quot;|&quot; Alternative } .
+Alternative = Term { Term } .
+Term        = production_name | token [ &quot;...&quot; token ] | Group | Option | Repetition .
+Group       = &quot;(&quot; Expression &quot;)&quot; .
+Option      = &quot;[&quot; Expression &quot;]&quot; .
+Repetition  = &quot;{&quot; Expression &quot;}&quot; .
+</code></pre>
+<p>Productions are expressions constructed from terms and the following operators, in increasing precedence:</p>
+<pre><code>|   alternation
+()  grouping
+[]  option (0 or 1 times)
+{}  repetition (0 to n times)
+</code></pre>
+<p>Lower-case production names are used to identify lexical tokens. Non-terminals are in CamelCase. Lexical tokens are enclosed in double quotes <code>&quot;&quot;</code> or single quotes <code>''</code>.</p>
+<p>The form <code>a ... b</code> represents the set of characters from <code>a</code> through <code>b</code> as alternatives. The horizontal ellipsis <code>...</code> is also used elsewhere in the spec to informally denote various enumerations or code snippets that are not further specified. The character <code>…</code> (as opposed to the three characters <code>...</code>) is not a token of the Antimony language.</p>
+<h2 id="source-code-representation"><a class="header" href="#source-code-representation">Source Code Representation</a></h2>
+<p>Source code is Unicode text encoded in <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>. The text is not canonicalized, so a single accented code point is distinct from the same character constructed from combining an accent and a letter; those are treated as two code points. For simplicity, this document will use the unqualified term <em>character</em> to refer to a Unicode code point in the source text.</p>
+<p>Each code point is distinct; for instance, upper and lower case letters are different characters.</p>
+<p>Implementation restriction: For compatibility with other tools, a compiler may disallow the NUL character (U+0000) in the source text.</p>
+<h3 id="characters"><a class="header" href="#characters">Characters</a></h3>
+<p>The following terms are used to denote specific Unicode character classes:</p>
+<pre><code>newline        = /* the Unicode code point U+000A */ .
+unicode_char   = /* an arbitrary Unicode code point except newline */ .
+unicode_letter = /* a Unicode code point classified as &quot;Letter&quot; */ .
+unicode_digit  = /* a Unicode code point classified as &quot;Number, decimal digit&quot; */ .
+</code></pre>
+<h3 id="letters-and-digits"><a class="header" href="#letters-and-digits">Letters and digits</a></h3>
+<p>The underscore character <code>_</code> (U+005F) is considered a letter.</p>
+<pre><code>letter        = unicode_letter | &quot;_&quot; .
+decimal_digit = &quot;0&quot; ... &quot;9&quot; .
+binary_digit  = &quot;0&quot; | &quot;1&quot; .
+octal_digit   = &quot;0&quot; ... &quot;7&quot; .
+hex_digit     = &quot;0&quot; ... &quot;9&quot; | &quot;A&quot; ... &quot;F&quot; | &quot;a&quot; ... &quot;f&quot; .
+</code></pre>
+<h2 id="lexical-elements"><a class="header" href="#lexical-elements">Lexical elements</a></h2>
+<h3 id="comments-1"><a class="header" href="#comments-1">Comments</a></h3>
+<p>Comments serve as program documentation. A comment starts with the character sequence // and stop at the end of the line.</p>
+<p>A comment cannot start inside a string literal, or inside a comment.</p>
+<h3 id="tokens"><a class="header" href="#tokens">Tokens</a></h3>
+<p>Tokens form the vocabulary of the Antimony programming language. There are four classes: <em>identifiers</em>, <em>keywords</em>, <em>operators and punctuation</em>, and <em>literals</em>. <em>White space</em>, formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns (U+000D), and newlines (U+000A), is ignored except as it separates tokens that would otherwise combine into a single token.</p>
+<h1 id="backends"><a class="header" href="#backends">Backends</a></h1>
+<p>Antimony currently implements a JavaScript backend, but a C backend is in development. WASM, ARM and x86 are planned.</p>
+<p>Backend can be specified when running on building with <code>--target</code> (<code>-t</code>) option, default is <code>js</code>:</p>
+<pre><code class="language-sh">sb -t c build in.sb --out-file out
+</code></pre>
+<h2 id="available-backends"><a class="header" href="#available-backends">Available Backends</a></h2>
+<table><thead><tr><th align="left">Target Language</th><th align="left">Identifier</th><th align="left">Stability notice</th></tr></thead><tbody>
+<tr><td align="left">Node.js</td><td align="left"><code>js</code></td><td align="left">mostly stable</td></tr>
+<tr><td align="left">LLVM</td><td align="left"><code>llvm</code></td><td align="left">unstable</td></tr>
+<tr><td align="left">C</td><td align="left"><code>c</code></td><td align="left">unstable</td></tr>
+</tbody></table>
+<p>LLVM also requires to enable <code>llvm</code> feature when building:</p>
+<pre><code class="language-sh">cargo build --features llvm
+</code></pre>
+<h1 id="release-workflow"><a class="header" href="#release-workflow">Release Workflow</a></h1>
+<ol>
+<li>Update version in <code>Cargo.toml</code></li>
+<li>Add entry in <code>CHANGELOG.md</code></li>
+<li>Commit change with semantic version number (<code>v0.1.1</code>)</li>
+<li>Tag commit using <code>git tag -a &lt;new release&gt; -m &quot;$(git shortlog &lt;last release&gt;..HEAD)&quot;</code></li>
+<li>Push the tag using <code>git push --tags</code></li>
+<li>Publish package using <code>cargo publish</code></li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>
