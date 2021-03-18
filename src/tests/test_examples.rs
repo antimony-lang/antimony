@@ -78,12 +78,12 @@ fn test_testcases() -> Result<(), Error> {
 
     let in_file = dir.join("tests/main.sb");
     let success = Command::new("cargo")
-            .arg("run")
-            .arg("run")
-            .arg(&in_file)
-            .spawn()?
-            .wait()?
-            .success();
-        assert_eq!(success, true, "{:?}", &in_file);
+        .arg("run")
+        .arg("run")
+        .arg(&in_file)
+        .spawn()?
+        .wait()?
+        .success();
+    assert_eq!(success, true, "{:?}", &in_file);
     Ok(())
 }
