@@ -19,7 +19,7 @@ fn main() {
     functions_main()
     imports_main() 
     numbers_main()
-    // structs_main()
+    structs_main()
     types_main()
 
     log_test_stage("Done!")
