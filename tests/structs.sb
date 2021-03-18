@@ -1,3 +1,15 @@
+fn functions_main() {
+    log_test_stage("Testing structs")
+    test_initialization()
+    test_simple_field_access()
+    test_field_access_in_function_call()
+    test_field_access_on_function()
+    test_nested_structs()
+    test_method_call()
+    test_function_call_with_constructor()
+    test_method_with_self_statement()
+}
+
 struct User {
     username: string
     first_name: string
@@ -69,8 +81,8 @@ fn test_nested_structs() {
 }
 
 fn test_method_call() {
-    let user = user_stub()
-    let full_name = user.full_name()
+    let user: User = user_stub()
+    let full_name: string = user.full_name()
 
     assert(full_name, "FooBar")
 }
@@ -95,15 +107,4 @@ struct Self_test_struct {
 fn test_method_with_self_statement() {
     let foo = new Self_test_struct { a: 5 }
     foo.bar()
-}
-
-fn main() {
-    test_initialization()
-    test_simple_field_access()
-    test_field_access_in_function_call()
-    test_field_access_on_function()
-    test_nested_structs()
-    test_method_call()
-    test_function_call_with_constructor()
-    test_method_with_self_statement()
 }

@@ -1,0 +1,6 @@
+fn log_test_stage(msg: string) {
+    println("")
+    println("-----------------------------")
+    println("--- " + msg + " ---")
+    println("-----------------------------")
+}

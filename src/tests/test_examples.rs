@@ -74,6 +74,16 @@ fn test_examples() -> Result<(), Error> {
 
 #[test]
 fn test_testcases() -> Result<(), Error> {
-    test_directory("tests")?;
+    let dir = std::env::current_dir().unwrap();
+
+    let in_file = dir.join("tests/main.sb");
+    let success = Command::new("cargo")
+        .arg("run")
+        .arg("run")
+        .arg(&in_file)
+        .spawn()?
+        .wait()?
+        .success();
+    assert_eq!(success, true, "{:?}", &in_file);
     Ok(())
 }

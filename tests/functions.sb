@@ -1,0 +1,14 @@
+fn functions_main() {
+    log_test_stage("Testing functions")
+    test_functions_basics()
+}
+
+fn test_functions_basics() {
+    let x = add_one(2)
+    assert(x == 3)
+    println(x)
+}
+
+fn add_one(x: int): int {
+    return x + 1
+}

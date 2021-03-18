@@ -1,9 +1,0 @@
-fn main() {
-    let x = add_one(2)
-    assert(x == 3)
-    println(x)
-}
-
-fn add_one(x: int): int {
-    return x + 1
-}

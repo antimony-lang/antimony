@@ -1,4 +1,7 @@
-fn main() {
+fn numbers_main() {
+    log_test_stage("Testing numbers")
+    // TODO: extract to functions
+
     // Test the "_" character
     let one_billion = 1_000_000_000
 
@@ -12,4 +15,16 @@ fn main() {
     assert(hex == 255)
     assert(binary == 255)
     assert(octal == 255)
+
+    test_operators()
+}
+
+fn test_operators() {
+    println("test_operators")
+    let x = 10
+    x += 1
+    x -= 2
+    x *= 2
+    x /= 2
+    assert(x == 9)
 }
