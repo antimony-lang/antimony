@@ -1,5 +1,6 @@
 import "importable_module"
 
-fn main() {
+fn imports_main() {
+    log_test_stage("Testing imports")
     external_function()
 }

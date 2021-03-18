@@ -1,4 +1,5 @@
-fn main() {
+fn types_main() {
+    log_test_stage("Testing types")
     print_any(5)
     print_any("Test")
 }

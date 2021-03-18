@@ -1,0 +1,76 @@
+fn conditionals_main() {
+    log_test_stage("Testing conditionals")
+    test_conditionals_basics()
+    test_conditionals_multiple_arms()
+
+    test_basic_match()
+    test_boolean_match()
+    test_match_with_block_statement()
+}
+
+fn test_conditionals_basics() {
+    let number = 3
+
+    if number < 5 {
+        println("condition was true")
+    } else {
+        println("condition was false")
+        // Should not be true
+    }
+}
+
+fn test_conditionals_multiple_arms() {
+    let number = 6
+
+    if number % 4 == 0 {
+        println("number is divisible by 4")
+    } else if number % 3 == 0 {
+        println("number is divisible by 3")
+    } else if number % 2 == 0 {
+        println("number is divisible by 2")
+    } else {
+        println("number is not divisible by 4, 3, or 2")
+    }
+}
+
+fn test_conditionals_non_boolean_condition() {
+    let number = 3
+
+    if number {
+        println("number was three")
+    } else {
+        assert(false)
+    }
+}
+
+fn test_basic_match() {
+    let x = 1
+
+    match x {
+        1 => assert(true)
+        2 => assert(false)
+    }
+}
+
+fn test_boolean_match() {
+    let x = true
+
+    match x {
+        true => assert(true)
+        false => assert(false)
+    }
+}
+
+fn test_match_with_block_statement() {
+    let x = 42
+
+    match x {
+        1 => println("x is 1")
+        2 => {
+            println("This is a branch with multiple statements.") 
+            println("x is 2, in case you are wondering")
+        }
+        42 => println("The answer to the universe and everything!")
+        else => println("Default case")
+    }
+}

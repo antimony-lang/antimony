@@ -1,0 +1,26 @@
+//
+// Main entry point for test program
+//
+
+import "logger"
+
+import "conditionals"
+import "functions"
+import "imports"
+import "numbers"
+import "structs"
+import "types"
+
+
+fn main() {
+    log_test_stage("Running tests")
+
+    conditionals_main()
+    functions_main()
+    imports_main() 
+    numbers_main()
+    // structs_main()
+    types_main()
+
+    log_test_stage("Done!")
+}
