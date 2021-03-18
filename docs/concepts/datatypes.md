@@ -83,6 +83,19 @@ Apple
 Pineapple
 ```
 
+Arrays have a fixed capacity. In most cases, the capacity of an array can be infered. In the example above, the compiler knows that three elements are in the array, so it can be inferred. If the capacity can't be inferred by the compiler, it is necessary to mark it explicitely. This is the case for uninitialized arrays:
+
+```
+let arr: int[3]
+arr[0] = 1
+arr[1] = 2
+arr[2] = 3
+
+for element in arr {
+    println(element)
+}
+```
+
 ## The Any type
 
 `any` can be used to specify that any type can be used in this place. This should be used with caution, as it might cause undefined behavior.
