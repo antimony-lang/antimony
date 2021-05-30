@@ -138,13 +138,15 @@
                         </a>
                         
                         
+                        
+
                     </div>
                 </div>
 
                 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -175,7 +177,7 @@ It is meant to &quot;just work&quot;, without adding unnecessary and bloated lan
 <blockquote>
 <p><strong>Note</strong>: I consider this documentation <em>usable</em>, but it may be incomplete in some places. If you feel like that a feature or behavior should be documented, feel free to contact the maintainers. You can search for the word <em>TODO</em>, if you want to help improving this documentation but don't know where to start. Any help is always welcome!</p>
 </blockquote>
-<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
 <blockquote>
 <p><strong>Note:</strong> An installation of the Rust programming language is needed to compile Antimony.</p>
 </blockquote>
@@ -191,7 +193,7 @@ It is meant to &quot;just work&quot;, without adding unnecessary and bloated lan
 <p>Antimony provides a <a href="https://hub.docker.com/r/antimony-lang/antimony">Docker image</a>. It currently only supports the x64 architecture. Please reach out if you need a ARM variant (needed for Raspberry Pi). If you don't want to wait, you can build the image yourself by running this command in the root of the project:</p>
 <pre><code>docker build . -t antimony
 </code></pre>
-<h1 id="the-command-line-interface"><a class="header" href="#the-command-line-interface">The command line interface</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="the-command-line-interface"><a class="header" href="#the-command-line-interface">The command line interface</a></h1>
 <p>Now that you have installed Antimony, it is time to write our first program. This is a program that will simply print a string to the screen.</p>
 <h1 id="creating-a-project-directory"><a class="header" href="#creating-a-project-directory">Creating a project directory</a></h1>
 <p>Let's begin by setting up our development workspace. Antimony really doesn't care where you store the code, so feel free to choose a different directory, than the one in this example.</p>
@@ -211,10 +213,10 @@ cd hello_world
 <pre><code>$ sb run main.sb
 </code></pre>
 <p>You should see the string <code>Hello World!</code> on the screen. Congrats! You have officially written a Antimony Program!</p>
-<h1 id="common-language-concepts"><a class="header" href="#common-language-concepts">Common language concepts</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="common-language-concepts"><a class="header" href="#common-language-concepts">Common language concepts</a></h1>
 <p>This chapter covers concepts that appear in almost every programming language and how they work in Antimony. Many programming languages have much in common at their core.</p>
 <p>Specifically, you’ll learn about variables, basic types, functions, comments, and control flow. These foundations will be in every Antimony program, and learning them early will give you a strong core to start from.</p>
-<h1 id="variables"><a class="header" href="#variables">Variables</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="variables"><a class="header" href="#variables">Variables</a></h1>
 <p>If you are familiar with some other programming language, the way Antimony handles variables won't surprise you.</p>
 <p>To declare a variable, the <code>let</code> keyword is used. The type of the variable is infered, but can be specified explicitly.</p>
 <blockquote>
@@ -231,7 +233,7 @@ fn main() {
 <pre><code>$ sb run variables.sb
 15
 </code></pre>
-<h1 id="datatypes"><a class="header" href="#datatypes">Datatypes</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="datatypes"><a class="header" href="#datatypes">Datatypes</a></h1>
 <p>Antimony comes with some generic data types.</p>
 <h2 id="the-boolean-type"><a class="header" href="#the-boolean-type">The Boolean type</a></h2>
 <p>As in most other programming languages, a Boolean type in Antimony has two possible values: <code>true</code> and <code>false</code>. Booleans are one byte in size. The Boolean type in Antimony is specified using <code>bool</code>. For example:</p>
@@ -326,7 +328,7 @@ Hello
 Two
 3
 </code></pre>
-<h1 id="functions"><a class="header" href="#functions">Functions</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="functions"><a class="header" href="#functions">Functions</a></h1>
 <p>Functions are pervasive in Antimony code. You’ve already seen one of the most important functions in the language: the <code>main</code> function, which is the entry point of many programs. You've also seen the <code>fn</code> keyword, which allows you to declare new functions.</p>
 <p>Antimony code uses snake_case as the conventional style for function and variable names. In snake case, all letters are lowercase and underscores separate words. Here’s a program that contains an example function definition:</p>
 <pre><code>fn main() {
@@ -372,7 +374,7 @@ fn add_one(x: int): int {
 <pre><code>$ sb run main.sb
 2
 </code></pre>
-<h1 id="comments"><a class="header" href="#comments">Comments</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="comments"><a class="header" href="#comments">Comments</a></h1>
 <p>All programmers strive to make their code easy to understand, but sometimes extra explanation is warranted. In these cases, programmers leave notes, or comments, in their source code that the compiler will ignore but people reading the source code may find useful.</p>
 <p>Here’s a simple comment:</p>
 <pre><code>// I'm a comment!
@@ -393,7 +395,7 @@ fn add_one(x: int): int {
     let lucky_number = 7
 }
 </code></pre>
-<h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
 <p>Deciding whether or not to run some code depending on if a condition is true and deciding to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Antimony code are <code>if</code> expressions and loops.</p>
 <h2 id="if-expressions"><a class="header" href="#if-expressions"><code>if</code> Expressions</a></h2>
 <p>An <code>if</code> expression allows you to branch your code depending on conditions. You provide a condition and then state, &quot;If this condition is met, run this block of code. If the condition is not met, do not run this block of code.&quot;</p>
@@ -524,7 +526,7 @@ the value is: 50
 </code></pre>
 <p>When we run this code, we’ll see the same output as in the previous example. More importantly, the code is faster and less prone to errors.</p>
 <p>For example, in the code in the previous example, if you changed the definition of the a array to have four elements but forgot to update the condition to <code>while index &lt; 4</code>, the program would crash. Using the <code>for</code> loop, you wouldn’t need to remember to change any other code if you changed the number of values in the array.</p>
-<h1 id="structured-data"><a class="header" href="#structured-data">Structured data</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="structured-data"><a class="header" href="#structured-data">Structured data</a></h1>
 <p>When working with data, you often find yourself needing to group information together. This is where a <code>struct</code> could come into play. A <em>struct</em>, or <em>structure</em>, is a custom data type that lets you name and package together multiple related values that make up a meaningful group. If you’re familiar with an object-oriented language, a struct is like an object’s data attributes.</p>
 <h2 id="defining-structs"><a class="header" href="#defining-structs">Defining structs</a></h2>
 <p>To define a struct, we enter the keyword <code>struct</code> and name the entire struct. A struct’s name should describe the significance of the pieces of data being grouped together. Then, inside curly brackets, we define the names and types of the pieces of data, which we call fields. The following example shows a struct that stores information about a user account.</p>
@@ -599,7 +601,7 @@ println(alice.full_name())
 Jon Doe
 </code></pre>
 <p>Methods behave just like functions. They can return a value and take parameters. The only difference is the <code>self</code> keyword, which allows you to execute it on a specific instance of a struct.</p>
-<h1 id="modules-and-imports"><a class="header" href="#modules-and-imports">Modules and Imports</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="modules-and-imports"><a class="header" href="#modules-and-imports">Modules and Imports</a></h1>
 <p>Projects naturally grow over time, and digging through 10.000 lines of code in a single file can be cumbersome. By grouping related functionality and separating code with distinct features, you’ll clarify where to find code that implements a particular feature and where to go to change how a feature works.</p>
 <p>The programs we've written so far have been in one file. As a project grows, you can organize code by splitting it into multiple modules with a clear name.</p>
 <p>In Antimony, every file is also a module. Let's take a look at a project structure and identify its modules.</p>
@@ -641,8 +643,8 @@ fn main() {
 <pre><code>$ sb run main.sb
 3
 </code></pre>
-<p>This chapter includes resources that might be helpful for developers hacking on the Antimony compiler.</p>
-<h1 id="specification"><a class="header" href="#specification">Specification</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><p>This chapter includes resources that might be helpful for developers hacking on the Antimony compiler.</p>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="specification"><a class="header" href="#specification">Specification</a></h1>
 <blockquote>
 <p><strong>Note</strong>: This specification is a work in progress.</p>
 </blockquote>
@@ -692,7 +694,7 @@ hex_digit     = &quot;0&quot; ... &quot;9&quot; | &quot;A&quot; ... &quot;F&quot
 <p>A comment cannot start inside a string literal, or inside a comment.</p>
 <h3 id="tokens"><a class="header" href="#tokens">Tokens</a></h3>
 <p>Tokens form the vocabulary of the Antimony programming language. There are four classes: <em>identifiers</em>, <em>keywords</em>, <em>operators and punctuation</em>, and <em>literals</em>. <em>White space</em>, formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns (U+000D), and newlines (U+000A), is ignored except as it separates tokens that would otherwise combine into a single token.</p>
-<h1 id="backends"><a class="header" href="#backends">Backends</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="backends"><a class="header" href="#backends">Backends</a></h1>
 <p>Antimony currently implements a JavaScript backend, but a C backend is in development. WASM, ARM and x86 are planned.</p>
 <p>Backend can be specified when running on building with <code>--target</code> (<code>-t</code>) option, default is <code>js</code>:</p>
 <pre><code class="language-sh">sb -t c build in.sb --out-file out
@@ -706,7 +708,7 @@ hex_digit     = &quot;0&quot; ... &quot;9&quot; | &quot;A&quot; ... &quot;F&quot
 <p>LLVM also requires to enable <code>llvm</code> feature when building:</p>
 <pre><code class="language-sh">cargo build --features llvm
 </code></pre>
-<h1 id="release-workflow"><a class="header" href="#release-workflow">Release Workflow</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="release-workflow"><a class="header" href="#release-workflow">Release Workflow</a></h1>
 <ol>
 <li>Update version in <code>Cargo.toml</code></li>
 <li>Add entry in <code>CHANGELOG.md</code></li>
