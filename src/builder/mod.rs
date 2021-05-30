@@ -141,6 +141,7 @@ impl Builder {
                 #[cfg(feature = "llvm")]
                 generator::llvm::LLVMGenerator::generate(condensed)
             }
+            Target::X86 => generator::x86::X86Generator::generate(condensed),
         };
 
         buffer.write_all(output.as_bytes()).expect("write failed");

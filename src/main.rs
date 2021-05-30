@@ -56,7 +56,7 @@ struct Opt {
     #[structopt(subcommand)]
     command: Command,
 
-    /// Target language. Options: c, js, llvm
+    /// Target language. Options: c, js, llvm, x86
     #[structopt(long, short, parse(try_from_str))]
     target: Option<Target>,
 }

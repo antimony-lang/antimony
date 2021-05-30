@@ -30,6 +30,7 @@ pub enum Target {
     C,
     JS,
     LLVM,
+    X86,
 }
 
 impl Target {
@@ -41,6 +42,7 @@ impl Target {
         match &*ext.to_string_lossy() {
             "c" => Some(Self::C),
             "js" => Some(Self::JS),
+            "s" => Some(Self::X86),
             _ => None,
         }
     }
@@ -56,7 +58,7 @@ impl FromStr for Target {
             "c" => Ok(Target::C),
             "js" => Ok(Target::JS),
             "llvm" => Ok(Target::LLVM),
-
+            "x86" => Ok(Target::X86),
             _ => Err(format!("no target {} found", s)),
         }
     }
