@@ -22,10 +22,12 @@ jobs:
       - run: |
           python build_docs.py
 
+      - name: Disable Jekyll
+        run: |
+          touch book/.nojekyll
+
       - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@master
-        env:
-          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: book
-          BUILD_SCRIPT: touch book/.nojekyll
+        uses: JamesIves/github-pages-deploy-action@4.13
+        with:
+          branch: gh-pages
+          folder: book
