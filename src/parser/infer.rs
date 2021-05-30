@@ -64,10 +64,7 @@ fn infer_array(elements: &[Expression], table: &SymbolTable) -> Option<Type> {
 
     // TODO: This approach only relies on the first element.
     // It will not catch that types are possibly inconsistent.
-    match types.first().and_then(|ty| ty.to_owned()) {
-        Some(ty) => Some(Type::Array(Box::new(ty), Some(types.len()))),
-        None => None,
-    }
+    types.first().and_then(|ty| ty.to_owned()).map(|ty| Type::Array(Box::new(ty), Some(types.len())))
 }
 
 fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
@@ -76,3 +73,4 @@ fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
         None => None,
     }
 }
+

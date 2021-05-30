@@ -29,7 +29,7 @@ pub mod x86;
 pub enum Target {
     C,
     JS,
-    LLVM,
+    Llvm,
     X86,
 }
 
@@ -57,7 +57,7 @@ impl FromStr for Target {
         match s.as_str() {
             "c" => Ok(Target::C),
             "js" => Ok(Target::JS),
-            "llvm" => Ok(Target::LLVM),
+            "llvm" => Ok(Target::Llvm),
             "x86" => Ok(Target::X86),
             _ => Err(format!("no target {} found", s)),
         }
