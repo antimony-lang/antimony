@@ -42,6 +42,6 @@ pub fn build_to_buffer(
     buf: &mut Box<impl Write>,
 ) -> Result<(), String> {
     let mut b = builder::Builder::new(in_file.to_path_buf());
-    b.build()?;
+    b.build(target)?;
     b.generate(target, buf)
 }
