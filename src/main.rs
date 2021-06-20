@@ -45,6 +45,7 @@ enum Command {
     #[structopt()]
     Build {
         in_file: PathBuf,
+        /// Write output to a file. Use '-' to print to stdout
         #[structopt(short, long)]
         out_file: PathBuf,
     },

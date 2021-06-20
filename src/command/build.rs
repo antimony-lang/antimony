@@ -16,6 +16,7 @@
 use crate::builder;
 use crate::generator::Target;
 use std::fs::File;
+use std::io::stdout;
 use std::io::Write;
 use std::path::Path;
 
@@ -23,10 +24,16 @@ pub fn build(target: &Target, in_file: &Path, out_file: &Path) -> Result<(), Str
     let mut buf = Box::new(Vec::new());
     build_to_buffer(target, in_file, &mut buf)?;
 
-    File::create(out_file)
-        .map_err(|e| format!("Could not create output file: {}", e))?
-        .write_all(&buf)
-        .map_err(|e| format!("Could not write to file: {}", e))
+    if out_file.to_str() == Some("-") {
+        stdout()
+            .write_all(&buf)
+            .map_err(|e| format!("Could not write to stdout: {}", e))
+    } else {
+        File::create(out_file)
+            .map_err(|e| format!("Could not create output file: {}", e))?
+            .write_all(&buf)
+            .map_err(|e| format!("Could not write to file: {}", e))
+    }
 }
 
 pub fn build_to_buffer(
