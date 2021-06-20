@@ -16,17 +16,21 @@
 use crate::lexer::Position;
 
 pub fn highlight_position_in_file(input: String, position: Position) -> String {
-    // TODO: Chain without collecting in between
-    input
-        .chars()
-        .skip(position.raw)
-        .take_while(|c| c != &'\n')
-        .collect::<String>()
-        .chars()
-        .rev()
-        .take_while(|c| c != &'\n')
-        .collect::<String>()
-        .chars()
-        .rev()
-        .collect::<String>()
+    let mut buf = String::new();
+
+    let line = input.lines().nth(position.line - 1).unwrap();
+    // TODO: do something better, code can be more than 9999 lines
+    buf.push_str(&format!("{:>4} | {}\n", position.line, line));
+    buf.push_str("     | ");
+
+    buf.push_str(
+        &line
+            .chars()
+            .take(position.offset - 1)
+            .map(|c| if c == '\t' { '\t' } else { ' ' })
+            .collect::<String>(),
+    );
+    buf.push('^');
+
+    buf
 }
