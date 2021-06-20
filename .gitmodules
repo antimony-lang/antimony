@@ -1,0 +1,3 @@
+[submodule "vendor/qbe"]
+	path = vendor/qbe
+	url = https://git.sr.ht/~sircmpwn/qbe
