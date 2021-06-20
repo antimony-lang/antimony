@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Common language concepts - The Antimony Programming Language</title>
+        <title>Debugging the compiler - The Antimony Programming Language</title>
                 
 
         <!-- Custom HTML head -->
@@ -82,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction/SUMMARY.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../introduction/installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="../introduction/hello-world.html"><strong aria-hidden="true">1.2.</strong> Hello World!</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts/SUMMARY.html" class="active"><strong aria-hidden="true">2.</strong> Common language concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/variables.html"><strong aria-hidden="true">2.1.</strong> Variables</a></li><li class="chapter-item expanded "><a href="../concepts/datatypes.html"><strong aria-hidden="true">2.2.</strong> Data Types</a></li><li class="chapter-item expanded "><a href="../concepts/functions.html"><strong aria-hidden="true">2.3.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../concepts/comments.html"><strong aria-hidden="true">2.4.</strong> Comments</a></li><li class="chapter-item expanded "><a href="../concepts/control-flow.html"><strong aria-hidden="true">2.5.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="../concepts/structured-data.html"><strong aria-hidden="true">2.6.</strong> Structured Data</a></li></ol></li><li class="chapter-item expanded "><a href="../modules/SUMMARY.html"><strong aria-hidden="true">3.</strong> Modules and Imports</a></li><li class="chapter-item expanded "><a href="../developers/SUMMARY.html"><strong aria-hidden="true">4.</strong> Developer Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../developers/specification.html"><strong aria-hidden="true">4.1.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../developers/backends.html"><strong aria-hidden="true">4.2.</strong> Compiler Backends</a></li><li class="chapter-item expanded "><a href="../developers/debugging.html"><strong aria-hidden="true">4.3.</strong> Debugging the compiler</a></li><li class="chapter-item expanded "><a href="../developers/releasing.html"><strong aria-hidden="true">4.4.</strong> Release Workflow</a></li></ol></li></ol>            </div>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction/SUMMARY.html"><strong aria-hidden="true">1.</strong> Introduction</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../introduction/installation.html"><strong aria-hidden="true">1.1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="../introduction/hello-world.html"><strong aria-hidden="true">1.2.</strong> Hello World!</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts/SUMMARY.html"><strong aria-hidden="true">2.</strong> Common language concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/variables.html"><strong aria-hidden="true">2.1.</strong> Variables</a></li><li class="chapter-item expanded "><a href="../concepts/datatypes.html"><strong aria-hidden="true">2.2.</strong> Data Types</a></li><li class="chapter-item expanded "><a href="../concepts/functions.html"><strong aria-hidden="true">2.3.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../concepts/comments.html"><strong aria-hidden="true">2.4.</strong> Comments</a></li><li class="chapter-item expanded "><a href="../concepts/control-flow.html"><strong aria-hidden="true">2.5.</strong> Control Flow</a></li><li class="chapter-item expanded "><a href="../concepts/structured-data.html"><strong aria-hidden="true">2.6.</strong> Structured Data</a></li></ol></li><li class="chapter-item expanded "><a href="../modules/SUMMARY.html"><strong aria-hidden="true">3.</strong> Modules and Imports</a></li><li class="chapter-item expanded "><a href="../developers/SUMMARY.html"><strong aria-hidden="true">4.</strong> Developer Resources</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../developers/specification.html"><strong aria-hidden="true">4.1.</strong> Specification</a></li><li class="chapter-item expanded "><a href="../developers/backends.html"><strong aria-hidden="true">4.2.</strong> Compiler Backends</a></li><li class="chapter-item expanded "><a href="../developers/debugging.html" class="active"><strong aria-hidden="true">4.3.</strong> Debugging the compiler</a></li><li class="chapter-item expanded "><a href="../developers/releasing.html"><strong aria-hidden="true">4.4.</strong> Release Workflow</a></li></ol></li></ol>            </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
@@ -143,19 +143,29 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="common-language-concepts"><a class="header" href="#common-language-concepts">Common language concepts</a></h1>
-<p>This chapter covers concepts that appear in almost every programming language and how they work in Antimony. Many programming languages have much in common at their core.</p>
-<p>Specifically, you’ll learn about variables, basic types, functions, comments, and control flow. These foundations will be in every Antimony program, and learning them early will give you a strong core to start from.</p>
+                        <h1 id="debugging"><a class="header" href="#debugging">Debugging</a></h1>
+<blockquote>
+<p><strong>NOTE</strong>: Currently, debugging is still nearly impossible in Antimony.</p>
+</blockquote>
+<p>This document will give you some hints on debugging the Antimony compiler.</p>
+<h2 id="viewing-the-generated-source-code"><a class="header" href="#viewing-the-generated-source-code">Viewing the generated source code</a></h2>
+<p>Programs can be compiled to stdout. Use the <code>-o -</code> flag in combination with the
+target backend:</p>
+<pre><code class="language-sh">cargo run -- -t js build -o - examples/fib.sb
+</code></pre>
+<p>Or, if Antimony is installed in your path:</p>
+<pre><code class="language-sh">sb -t js build -o - examples/fib.sb
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                                                    <a rel="prev" href="../introduction/hello-world.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                                    <a rel="prev" href="../developers/backends.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
-                                                    <a rel="next" href="../concepts/variables.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                                    <a rel="next" href="../developers/releasing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -165,11 +175,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                                    <a rel="prev" href="../introduction/hello-world.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                    <a rel="prev" href="../developers/backends.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
-                                    <a rel="next" href="../concepts/variables.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                    <a rel="next" href="../developers/releasing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                             </nav>
