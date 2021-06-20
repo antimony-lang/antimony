@@ -1,0 +1,67 @@
+/* START builtins */
+
+function _printf(msg) {
+  // Message is casted to string to prevent crash
+  process.stdout.write(msg.toString());
+}
+
+function _exit(code) {
+  process.exit(code);
+}
+
+/* END builtins */
+function main(){
+var num = 10;
+println(fib(num));
+}
+
+function fib(n){
+if (1 >= n){
+return n;
+};
+return fib(n - 1) + fib(n - 2);
+}
+
+function print(arg){
+_printf(arg);
+}
+
+function println(msg){
+print(msg + "\n");
+}
+
+function assert(condition){
+if (condition === false){
+println("Assertion failed");
+exit(1);
+};
+}
+
+function exit(code){
+_exit(code);
+}
+
+function len(arr){
+var c = 0;
+while (arr[c]) {
+c += 1;
+}
+;
+return c;
+}
+
+function rev(arr){
+var l = len(arr);
+var new_arr = [];
+var i = 0;
+var j = l;
+while (i < l) {
+new_arr[i] = arr[j];
+i = i - 1;
+j = j - 1;
+}
+;
+return new_arr;
+}
+
+main();

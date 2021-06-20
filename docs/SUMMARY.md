@@ -14,4 +14,5 @@
 - [Developer Resources](./developers/SUMMARY.md)
   - [Specification](./developers/specification.md)
   - [Compiler Backends](./developers/backends.md)
+  - [Debugging the compiler](./developers/debugging.md)
   - [Release Workflow](./developers/releasing.md)
