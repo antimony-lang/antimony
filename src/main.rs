@@ -18,6 +18,7 @@ extern crate structopt;
 
 use generator::Target;
 use std::path::PathBuf;
+use std::process;
 use structopt::StructOpt;
 
 mod ast;
@@ -61,7 +62,14 @@ struct Opt {
     target: Option<Target>,
 }
 
-fn main() -> Result<(), String> {
+fn main() {
+    if let Err(err) = run() {
+        eprintln!("Error: {}", err);
+        process::exit(1);
+    }
+}
+
+fn run() -> Result<(), String> {
     let opts = Opt::from_args();
 
     match opts.command {

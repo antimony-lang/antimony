@@ -1,5 +1,3 @@
-use crate::ast::*;
-use crate::lexer::Keyword;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -15,6 +13,8 @@ use crate::lexer::Keyword;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::ast::*;
+use crate::lexer::Keyword;
 use crate::lexer::Position;
 use crate::lexer::{Token, TokenKind};
 use crate::parser::infer::infer;
@@ -92,10 +92,7 @@ impl Parser {
     pub(super) fn peek_token(&mut self, token_kind: TokenKind) -> Result<Token, String> {
         match self.peek()? {
             token if token.kind == token_kind => Ok(token),
-            other => Err(format!(
-                "Token {:?} not found, found {:?}",
-                token_kind, other
-            )),
+            other => Err(self.make_error(token_kind, other)),
         }
     }
 
@@ -111,27 +108,34 @@ impl Parser {
         BinOp::try_from(self.next()?.kind)
     }
     pub(super) fn match_identifier(&mut self) -> Result<String, String> {
-        match self.next()?.kind {
-            TokenKind::Identifier(n) => Ok(n),
-            other => Err(format!("Expected Identifier, found {:?}", other)),
+        let token = self.next()?;
+        match &token.kind {
+            TokenKind::Identifier(n) => Ok(n.to_string()),
+            other => {
+                Err(self
+                    .make_error_msg(token.pos, format!("Expected Identifier, found {:?}", other)))
+            }
         }
     }
 
     pub(super) fn make_error(&mut self, token_kind: TokenKind, other: Token) -> String {
-        match &self.raw {
-            Some(raw_file) => format!(
-                "Token {:?} not found, found {:?}\n{:?}",
-                token_kind,
-                other,
-                highlight_position_in_file(raw_file.to_string(), other.to_owned().pos)
-            ),
-            None => format!("Token {:?} not found, found {:?}", token_kind, other),
-        }
+        self.make_error_msg(
+            other.pos,
+            format!("Token {:?} not found, found {:?}", token_kind, other),
+        )
     }
 
     pub(super) fn make_error_msg(&mut self, pos: Position, msg: String) -> String {
-        let pos_string = format!("{}:{}", pos.line, pos.offset);
-        format!("ERROR: {}\nAt {}", msg, pos_string)
+        match &self.raw {
+            Some(raw_file) => format!(
+                "{}:{}: {}\n{}",
+                pos.line,
+                pos.offset,
+                msg,
+                highlight_position_in_file(raw_file.to_string(), pos)
+            ),
+            None => format!("{}:{}: {}", pos.line, pos.offset, msg),
+        }
     }
 
     pub(super) fn prev(&mut self) -> Option<Token> {
