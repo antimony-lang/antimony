@@ -51,7 +51,7 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
             .spawn()?
             .wait()?
             .success();
-        assert_eq!(success, true, "{:?}", &in_file);
+        assert!(success, "{:?}", &in_file);
 
         let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
         if node_installed {
@@ -60,7 +60,7 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
                 .spawn()?
                 .wait()?
                 .success();
-            assert_eq!(execution, true, "{:?}", &in_file)
+            assert!(execution, "{:?}", &in_file)
         }
     }
     Ok(())
@@ -84,6 +84,6 @@ fn test_testcases() -> Result<(), Error> {
         .spawn()?
         .wait()?
         .success();
-    assert_eq!(success, true, "{:?}", &in_file);
+    assert!(success, "{:?}", &in_file);
     Ok(())
 }
