@@ -162,6 +162,7 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Function {
+            public: true,
             name,
             arguments,
             body,
