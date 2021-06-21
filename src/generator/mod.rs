@@ -21,6 +21,7 @@ pub mod c;
 pub mod js;
 #[cfg(feature = "llvm")]
 pub mod llvm;
+pub mod qbe;
 #[cfg(test)]
 mod tests;
 pub mod x86;
@@ -30,6 +31,7 @@ pub enum Target {
     C,
     JS,
     Llvm,
+    Qbe,
     X86,
 }
 
@@ -42,6 +44,7 @@ impl Target {
         match &*ext.to_string_lossy() {
             "c" => Some(Self::C),
             "js" => Some(Self::JS),
+            "ssa" => Some(Self::Qbe),
             "s" => Some(Self::X86),
             _ => None,
         }
@@ -58,6 +61,7 @@ impl FromStr for Target {
             "c" => Ok(Target::C),
             "js" => Ok(Target::JS),
             "llvm" => Ok(Target::Llvm),
+            "qbe" => Ok(Target::Qbe),
             "x86" => Ok(Target::X86),
             _ => Err(format!("no target {} found", s)),
         }

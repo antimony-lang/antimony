@@ -143,6 +143,7 @@ impl Builder {
                 #[cfg(feature = "llvm")]
                 generator::llvm::LLVMGenerator::generate(condensed)
             }
+            Target::Qbe => generator::qbe::QbeGenerator::generate(condensed),
             Target::X86 => generator::x86::X86Generator::generate(condensed),
         };
 
