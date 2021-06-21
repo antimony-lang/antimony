@@ -1,9 +1,3 @@
-use super::parser::Parser;
-use crate::ast::types::Type;
-use crate::ast::*;
-use crate::lexer::Keyword;
-use crate::lexer::{TokenKind, Value};
-use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -19,6 +13,12 @@ use std::collections::HashMap;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use super::parser::Parser;
+use crate::ast::types::Type;
+use crate::ast::*;
+use crate::lexer::Keyword;
+use crate::lexer::{TokenKind, Value};
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::convert::TryFrom;
 
@@ -32,6 +32,7 @@ impl Parser {
         while self.has_more() {
             let next = self.peek()?;
             match next.kind {
+                TokenKind::Keyword(Keyword::Pub) => functions.push(self.parse_function()?),
                 TokenKind::Keyword(Keyword::Function) => functions.push(self.parse_function()?),
                 TokenKind::Keyword(Keyword::Import) => {
                     imports.insert(self.parse_import()?);
@@ -64,6 +65,9 @@ impl Parser {
         while self.peek_token(TokenKind::CurlyBracesClose).is_err() {
             let next = self.peek()?;
             match next.kind {
+                TokenKind::Keyword(Keyword::Pub) => {
+                    methods.push(self.parse_function()?);
+                }
                 TokenKind::Keyword(Keyword::Function) => {
                     methods.push(self.parse_function()?);
                 }
@@ -142,6 +146,14 @@ impl Parser {
     /// If a function is parsed, the `fn` keyword is matched.
     /// If a method is parsed, `fn` will be omitted
     fn parse_function(&mut self) -> Result<Function, String> {
+        let public = match self.peek()? {
+            t if t.kind == TokenKind::Keyword(Keyword::Pub) => {
+                self.next()?;
+                true
+            }
+            _ => false,
+        };
+
         self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
 
@@ -162,7 +174,7 @@ impl Parser {
         let body = self.parse_block()?;
 
         Ok(Function {
-            public: true,
+            public,
             name,
             arguments,
             body,
