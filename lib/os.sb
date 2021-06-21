@@ -1,4 +1,4 @@
 // Exit the program immediately
-fn exit(code: int) {
+pub fn exit(code: int) {
     _exit(code)
 }
