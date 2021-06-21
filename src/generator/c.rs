@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-
-use crate::ast::types::Type;
-use crate::ast::*;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -17,8 +13,11 @@ use crate::ast::*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::ast::types::Type;
+use crate::ast::*;
 use crate::generator::Generator;
 use crate::util::Either;
+use std::collections::HashMap;
 
 pub struct CGenerator;
 
@@ -108,7 +107,14 @@ fn generate_function_signature(func: Function) -> String {
         .collect::<Vec<String>>()
         .join(", ");
     let t = generate_type(Either::Right(func.ret_type));
-    format!("{T} {N}({A})", T = t, N = func.name, A = arguments)
+
+    format!(
+        "{M}{T} {N}({A})",
+        M = if !func.public { "static " } else { "" },
+        T = t,
+        N = func.name,
+        A = arguments
+    )
 }
 
 fn generate_block(block: Vec<Statement>, _scope: Vec<Variable>) -> String {
