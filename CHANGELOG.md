@@ -13,6 +13,7 @@
 - Support for `_` character in integers (E.g. `1_000_000`)
 - Parser errors have been improved in consistency and readability
 - Compile to stdout by using the `-o -` flag
+- New `pub` keyword to control visibility of functions
 
 **Fixes**
 
