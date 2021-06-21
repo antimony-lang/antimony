@@ -125,6 +125,7 @@ break
 continue
 else
 false
+pub
 fn
 for
 if
@@ -137,5 +138,5 @@ return
 self
 struct
 true
-while 
+while
 ```
