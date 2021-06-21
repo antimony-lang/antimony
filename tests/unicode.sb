@@ -1,0 +1,21 @@
+fn unicode_main() {
+    log_test_stage("Testing unicode")
+    test_unicode_strings()
+    test_unicode_identifiers()
+}
+
+fn test_unicode_strings() {
+    println("Test unicode strings")
+    let alpha_omega = "αβ"
+
+    println(alpha_omega)
+}
+
+fn test_unicode_identifiers() {
+    println("Test unicode identifiers")
+    let αβ = "αβ"
+    let 世界 = "世界"
+
+    println(世界)
+}
+

@@ -17,6 +17,8 @@ pub(crate) mod cursor;
 
 use self::TokenKind::*;
 use cursor::Cursor;
+use lazy_static::lazy_static;
+use regex::Regex;
 
 #[cfg(test)]
 mod tests;
@@ -178,7 +180,6 @@ pub fn first_token(input: &str, pos: &mut Position) -> Token {
 }
 
 pub fn is_whitespace(c: char) -> bool {
-
     // https://doc.rust-lang.org/reference/whitespace.html
     matches!(
         c,
@@ -203,14 +204,24 @@ pub fn is_whitespace(c: char) -> bool {
     )
 }
 
-/// True if `c` is valid as a first character of an identifier.
+/// True if `c` is a valid first character of an identifier
+/// See [Antimony specification](https://antimony-lang.github.io/antimony/developers/specification.html#identifiers) for
+/// a formal definition of valid identifier name.
 pub fn is_id_start(c: char) -> bool {
-    ('a'..='z').contains(&c) || ('A'..='Z').contains(&c) || c == '_'
+    lazy_static! {
+        static ref ID_START: Regex = Regex::new(r"[\pL_]").unwrap();
+    }
+    ID_START.is_match(&c.to_string())
 }
 
-/// True if `c` is valid as a non-first character of an identifier.
+/// True if `c` is a valid continuation of an identifier
+/// See [Antimony specification](https://antimony-lang.github.io/antimony/developers/specification.html#identifiers) for
+/// a formal definition of valid identifier name.
 pub fn is_id_continue(c: char) -> bool {
-    ('a'..='z').contains(&c) || ('A'..='Z').contains(&c) || ('0'..='9').contains(&c) || c == '_'
+    lazy_static! {
+        static ref ID_CONTINUE: Regex = Regex::new(r"[\pL\p{Nd}_]").unwrap();
+    }
+    ID_CONTINUE.is_match(&c.to_string())
 }
 
 impl Cursor<'_> {
@@ -345,7 +356,7 @@ impl Cursor<'_> {
     {
         let mut eaten: usize = 0;
         while predicate(self.first()) && !self.is_eof() {
-            eaten += 1;
+            eaten += self.first().len_utf8();
             self.bump();
         }
 

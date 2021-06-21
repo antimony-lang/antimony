@@ -1,4 +1,4 @@
-fn functions_main() {
+fn structs_main() {
     log_test_stage("Testing structs")
     test_initialization()
     test_simple_field_access()
@@ -34,6 +34,7 @@ fn user_stub() {
 }
 
 fn test_initialization() {
+    println("test_initialization")
     let foo = new User {
         username: "Foo Bar"
         first_name: "Bar"
