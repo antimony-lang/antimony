@@ -297,6 +297,30 @@ fn test_functions() {
             }
         }
     );
+
+    let mut tokens = tokenize("pub fn fib() {}").into_iter();
+
+    assert!(matches!(
+        tokens.next().unwrap(),
+        Token {
+            kind: TokenKind::Keyword(Keyword::Pub),
+            ..
+        }
+    ));
+    assert!(matches!(
+        tokens.next().unwrap(),
+        Token {
+            kind: TokenKind::Whitespace,
+            ..
+        }
+    ));
+    assert!(matches!(
+        tokens.next().unwrap(),
+        Token {
+            kind: TokenKind::Keyword(Keyword::Function),
+            ..
+        }
+    ));
 }
 
 #[test]

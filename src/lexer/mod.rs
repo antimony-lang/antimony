@@ -143,6 +143,7 @@ pub enum Keyword {
     In,
     Break,
     Continue,
+    Pub,
     Function,
     Boolean,
     Struct,
@@ -382,6 +383,7 @@ impl Cursor<'_> {
         match original {
             c if c == "if" => Keyword::If,
             c if c == "else" => Keyword::Else,
+            c if c == "pub" => Keyword::Pub,
             c if c == "fn" => Keyword::Function,
             c if c == "true" || c == "false" => Keyword::Boolean,
             c if c == "let" => Keyword::Let,
