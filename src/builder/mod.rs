@@ -134,17 +134,17 @@ impl Builder {
         }
 
         let output = match target {
-            Target::JS => generator::js::JsGenerator::generate(condensed),
-            Target::C => generator::c::CGenerator::generate(condensed),
+            Target::JS => generator::js::JsGenerator::generate(condensed)?,
+            Target::C => generator::c::CGenerator::generate(condensed)?,
             Target::Llvm => {
                 #[cfg(not(feature = "llvm"))]
                 panic!("'llvm' feature should be enabled to use LLVM target");
 
                 #[cfg(feature = "llvm")]
-                generator::llvm::LLVMGenerator::generate(condensed)
+                generator::llvm::LLVMGenerator::generate(condensed)?
             }
-            Target::Qbe => generator::qbe::QbeGenerator::generate(condensed),
-            Target::X86 => generator::x86::X86Generator::generate(condensed),
+            Target::Qbe => generator::qbe::QbeGenerator::generate(condensed)?,
+            Target::X86 => generator::x86::X86Generator::generate(condensed)?,
         };
 
         buffer.write_all(output.as_bytes()).expect("write failed");

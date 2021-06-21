@@ -68,8 +68,10 @@ impl FromStr for Target {
     }
 }
 
+pub type GeneratorResult<T> = Result<T, String>;
+
 pub trait Generator {
-    fn generate(prog: Module) -> String;
+    fn generate(prog: Module) -> GeneratorResult<String>;
 }
 
 /// Returns C syntax representation of a raw string

@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 use crate::ast::*;
-use crate::generator::Generator;
+use crate::generator::{Generator, GeneratorResult};
 use std::collections::HashMap;
 use types::Type;
 
 pub struct JsGenerator;
 
 impl Generator for JsGenerator {
-    fn generate(prog: Module) -> String {
+    fn generate(prog: Module) -> GeneratorResult<String> {
         let mut code = String::new();
 
         let raw_builtins =
@@ -44,7 +44,7 @@ impl Generator for JsGenerator {
 
         code += "main();";
 
-        code
+        Ok(code)
     }
 }
 

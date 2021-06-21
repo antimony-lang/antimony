@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use super::Generator;
+use super::{Generator, GeneratorResult};
 use crate::ast::*;
 
 pub struct QbeGenerator;
 
 impl Generator for QbeGenerator {
-    fn generate(_prog: Module) -> String {
+    fn generate(_prog: Module) -> GeneratorResult<String> {
         todo!();
     }
 }
