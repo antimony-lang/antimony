@@ -193,6 +193,37 @@ hex_digit     = &quot;0&quot; ... &quot;9&quot; | &quot;A&quot; ... &quot;F&quot
 <p>A comment cannot start inside a string literal, or inside a comment.</p>
 <h3 id="tokens"><a class="header" href="#tokens">Tokens</a></h3>
 <p>Tokens form the vocabulary of the Antimony programming language. There are four classes: <em>identifiers</em>, <em>keywords</em>, <em>operators and punctuation</em>, and <em>literals</em>. <em>White space</em>, formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns (U+000D), and newlines (U+000A), is ignored except as it separates tokens that would otherwise combine into a single token.</p>
+<h3 id="identifiers"><a class="header" href="#identifiers">Identifiers</a></h3>
+<p>Identifiers name program entities such as variables and types. An identifier is
+a sequence of one or more letters and digits. The first character in an
+identifier must be a letter.</p>
+<pre><code>identifier = letter { letter | unicode_digit } .
+</code></pre>
+<pre><code>a
+_x9
+This_is_aValidIdentifier
+αβ
+</code></pre>
+<h3 id="keywords"><a class="header" href="#keywords">Keywords</a></h3>
+<p>The following keywords are reserved and may not be used as identifiers.</p>
+<pre><code>break
+continue
+else
+false
+fn
+for
+if
+import
+in
+let
+match
+new
+return
+self
+struct
+true
+while 
+</code></pre>
 
                     </main>
 
