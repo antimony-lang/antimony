@@ -149,7 +149,9 @@
 </blockquote>
 <h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
 <p>This is a reference manual for the Antimony programming language.</p>
-<p>Antimony is a general-purpose language designed with simplicity in mind. It is strongly typed and supports multiple compile-targets. Programs are constructed from modules, whose properties allow efficient management of dependencies.</p>
+<p>Antimony is a general-purpose language designed with simplicity in mind. It is
+strongly typed and supports multiple compile-targets. Programs are constructed
+from modules, whose properties allow efficient management of dependencies.</p>
 <h2 id="notation"><a class="header" href="#notation">Notation</a></h2>
 <p>The syntax is specified using altered Extended Backus-Naur Form (EBNF):</p>
 <pre><code>Production  = production_name &quot;=&quot; [ Expression ] &quot;.&quot; .
@@ -160,18 +162,32 @@ Group       = &quot;(&quot; Expression &quot;)&quot; .
 Option      = &quot;[&quot; Expression &quot;]&quot; .
 Repetition  = &quot;{&quot; Expression &quot;}&quot; .
 </code></pre>
-<p>Productions are expressions constructed from terms and the following operators, in increasing precedence:</p>
+<p>Productions are expressions constructed from terms and the following operators,
+in increasing precedence:</p>
 <pre><code>|   alternation
 ()  grouping
 []  option (0 or 1 times)
 {}  repetition (0 to n times)
 </code></pre>
-<p>Lower-case production names are used to identify lexical tokens. Non-terminals are in CamelCase. Lexical tokens are enclosed in double quotes <code>&quot;&quot;</code> or single quotes <code>''</code>.</p>
-<p>The form <code>a ... b</code> represents the set of characters from <code>a</code> through <code>b</code> as alternatives. The horizontal ellipsis <code>...</code> is also used elsewhere in the spec to informally denote various enumerations or code snippets that are not further specified. The character <code>…</code> (as opposed to the three characters <code>...</code>) is not a token of the Antimony language.</p>
+<p>Lower-case production names are used to identify lexical tokens. Non-terminals
+are in CamelCase. Lexical tokens are enclosed in double quotes <code>&quot;&quot;</code> or single
+quotes <code>''</code>.</p>
+<p>The form <code>a ... b</code> represents the set of characters from <code>a</code> through <code>b</code> as
+alternatives. The horizontal ellipsis <code>...</code> is also used elsewhere in the spec
+to informally denote various enumerations or code snippets that are not further
+specified. The character <code>…</code> (as opposed to the three characters <code>...</code>) is not a
+token of the Antimony language.</p>
 <h2 id="source-code-representation"><a class="header" href="#source-code-representation">Source Code Representation</a></h2>
-<p>Source code is Unicode text encoded in <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>. The text is not canonicalized, so a single accented code point is distinct from the same character constructed from combining an accent and a letter; those are treated as two code points. For simplicity, this document will use the unqualified term <em>character</em> to refer to a Unicode code point in the source text.</p>
-<p>Each code point is distinct; for instance, upper and lower case letters are different characters.</p>
-<p>Implementation restriction: For compatibility with other tools, a compiler may disallow the NUL character (U+0000) in the source text.</p>
+<p>Source code is Unicode text encoded in
+<a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>. The text is not canonicalized, so
+a single accented code point is distinct from the same character constructed
+from combining an accent and a letter; those are treated as two code points. For
+simplicity, this document will use the unqualified term <em>character</em> to refer to
+a Unicode code point in the source text.</p>
+<p>Each code point is distinct; for instance, upper and lower case letters are
+different characters.</p>
+<p>Implementation restriction: For compatibility with other tools, a compiler may
+disallow the NUL character (U+0000) in the source text.</p>
 <h3 id="characters"><a class="header" href="#characters">Characters</a></h3>
 <p>The following terms are used to denote specific Unicode character classes:</p>
 <pre><code>newline        = /* the Unicode code point U+000A */ .
@@ -189,10 +205,15 @@ hex_digit     = &quot;0&quot; ... &quot;9&quot; | &quot;A&quot; ... &quot;F&quot
 </code></pre>
 <h2 id="lexical-elements"><a class="header" href="#lexical-elements">Lexical elements</a></h2>
 <h3 id="comments"><a class="header" href="#comments">Comments</a></h3>
-<p>Comments serve as program documentation. A comment starts with the character sequence // and stop at the end of the line.</p>
+<p>Comments serve as program documentation. A comment starts with the character
+sequence // and stop at the end of the line.</p>
 <p>A comment cannot start inside a string literal, or inside a comment.</p>
 <h3 id="tokens"><a class="header" href="#tokens">Tokens</a></h3>
-<p>Tokens form the vocabulary of the Antimony programming language. There are four classes: <em>identifiers</em>, <em>keywords</em>, <em>operators and punctuation</em>, and <em>literals</em>. <em>White space</em>, formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns (U+000D), and newlines (U+000A), is ignored except as it separates tokens that would otherwise combine into a single token.</p>
+<p>Tokens form the vocabulary of the Antimony programming language. There are four
+classes: <em>identifiers</em>, <em>keywords</em>, <em>operators and punctuation</em>, and <em>literals</em>.
+<em>White space</em>, formed from spaces (U+0020), horizontal tabs (U+0009), carriage
+returns (U+000D), and newlines (U+000A), is ignored except as it separates
+tokens that would otherwise combine into a single token.</p>
 <h3 id="identifiers"><a class="header" href="#identifiers">Identifiers</a></h3>
 <p>Identifiers name program entities such as variables and types. An identifier is
 a sequence of one or more letters and digits. The first character in an
