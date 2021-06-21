@@ -5,7 +5,7 @@ Functions are pervasive in Antimony code. You’ve already seen one of the most 
 Antimony code uses snake_case as the conventional style for function and variable names. In snake case, all letters are lowercase and underscores separate words. Here’s a program that contains an example function definition:
 
 ```
-fn main() {
+pub fn main() {
     println("Hello, world!")
     another_function()
 }
@@ -17,6 +17,8 @@ fn another_function() {
 
 We can call any function we’ve defined by entering its name followed by a set of parentheses. Because `another_function` is defined in the program, it can be called from inside the main function. Note that we defined `another_function` after the `main` function in the source code; we could have defined it before as well. Antimony doesn’t care where you define your functions, only that they’re defined somewhere.
 
+`pub` keyword before a function marks it as public thus allowing the outside world to see it.
+
 ## Function parameters
 
 Functions can also be defined to have parameters, which are special variables that are part of a function’s signature. When a function has parameters, you can provide it with concrete values for those parameters. Technically, the concrete values are called arguments, but in casual conversation, people tend to use the words parameter and argument interchangeably for either the variables in a function’s definition or the concrete values passed in when you call a function.
@@ -24,7 +26,7 @@ Functions can also be defined to have parameters, which are special variables th
 The following rewritten version of `another_function` shows what parameters look like in Antimony:
 
 ```
-fn main() {
+pub fn main() {
     another_function(5)
 }
 
@@ -52,7 +54,7 @@ fn add_one(x: int): int {
 Now, if you call the function with `1` as its argument and read its value, you will see the computed result:
 
 ```
-fn main() {
+pub fn main() {
     let result = add_one(1)
     println(result)
 }

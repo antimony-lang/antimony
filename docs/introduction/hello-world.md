@@ -20,7 +20,7 @@ Next, make a new source file and call it `main.sb`. Antimony files should always
 Now open the main.sb file you just created and enter the following code:
 
 ```
-fn main() {
+pub fn main() {
     println("Hello, world!")
 }
 ```
