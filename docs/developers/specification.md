@@ -77,3 +77,44 @@ A comment cannot start inside a string literal, or inside a comment.
 ### Tokens
 
 Tokens form the vocabulary of the Antimony programming language. There are four classes: _identifiers_, _keywords_, _operators and punctuation_, and _literals_. _White space_, formed from spaces (U+0020), horizontal tabs (U+0009), carriage returns (U+000D), and newlines (U+000A), is ignored except as it separates tokens that would otherwise combine into a single token.
+
+### Identifiers
+
+Identifiers name program entities such as variables and types. An identifier is
+a sequence of one or more letters and digits. The first character in an
+identifier must be a letter.
+
+```
+identifier = letter { letter | unicode_digit } .
+```
+
+```
+a
+_x9
+This_is_aValidIdentifier
+αβ
+```
+
+### Keywords
+
+The following keywords are reserved and may not be used as identifiers.
+
+```
+break
+continue
+else
+false
+fn
+for
+if
+import
+in
+let
+match
+new
+return
+self
+struct
+true
+while 
+```
