@@ -128,6 +128,9 @@ impl QbeGenerator {
                 }
                 None => func.add_instr(QbeInstr::Ret(None)),
             },
+            Statement::If(cond, if_clause, else_clause) => {
+                self.generate_if(func, cond, if_clause, else_clause)?;
+            }
             _ => todo!("statement: {:?}", stmt),
         }
         Ok(())
@@ -208,6 +211,52 @@ impl QbeGenerator {
             }
             _ => todo!("expression: {:?}", expr),
         }
+    }
+
+    /// Generates an `if` statement
+    fn generate_if(
+        &mut self,
+        func: &mut QbeFunction,
+        cond: &Expression,
+        if_clause: &Statement,
+        else_clause: &Option<Box<Statement>>,
+    ) -> GeneratorResult<()> {
+        let (_, result) = self.generate_expression(func, cond)?;
+
+        self.tmp_counter += 1;
+        let if_label = format!("cond.{}.if", self.tmp_counter);
+        let else_label = format!("cond.{}.else", self.tmp_counter);
+        let end_label = format!("cond.{}.end", self.tmp_counter);
+
+        func.add_instr(QbeInstr::Jnz(
+            result,
+            if_label.clone(),
+            if else_clause.is_some() {
+                else_label.clone()
+            } else {
+                end_label.clone()
+            },
+        ));
+
+        func.add_block(if_label);
+        self.generate_statement(func, &if_clause)?;
+
+        if let Some(else_clause) = else_clause {
+            // Jump over to the end to prevent fallthrough into else
+            // clause, unless the last block already jumps
+            if !func.blocks.last().map_or(false, |b| b.jumps()) {
+                func.add_instr(QbeInstr::Jmp(end_label.clone()));
+            }
+
+            func.add_block(else_label);
+            self.generate_statement(func, &else_clause)?;
+        }
+
+        if !func.blocks.last().map_or(false, |b| b.jumps()) {
+            func.add_block(end_label);
+        }
+
+        Ok(())
     }
 
     /// Returns a new unique temporary
@@ -296,6 +345,10 @@ enum QbeInstr {
     Copy(Either<QbeTemporary, usize>),
     /// Return from a function, optionally with a value
     Ret(Option<QbeTemporary>),
+    /// Jumps to first label if a value is nonzero or to the second one otherwise
+    Jnz(QbeTemporary, String, String),
+    /// Unconditionally jumps to a label
+    Jmp(String),
 }
 
 impl fmt::Display for QbeInstr {
@@ -338,6 +391,10 @@ impl fmt::Display for QbeInstr {
                 Some(val) => write!(f, "ret {}", val),
                 None => write!(f, "ret"),
             },
+            Self::Jnz(val, if_nonzero, if_zero) => {
+                write!(f, "jnz {}, @{}, @{}", val, if_nonzero, if_zero)
+            }
+            Self::Jmp(label) => write!(f, "jmp @{}", label),
         }
     }
 }
@@ -443,6 +500,20 @@ impl QbeBlock {
     /// Adds a new instruction assigned to a temporary
     fn assign_instr(&mut self, temp: QbeTemporary, ty: QbeType, instr: QbeInstr) {
         self.instructions.push(QbeStatement::Assign(temp, ty, instr));
+    }
+
+    /// Returns true if the block's last instruction is a jump
+    fn jumps(&self) -> bool {
+        let last = self.instructions.last();
+
+        if let Some(QbeStatement::Volatile(instr)) = last {
+            matches!(
+                instr,
+                QbeInstr::Ret(_) | QbeInstr::Jmp(_) | QbeInstr::Jnz(..)
+            )
+        } else {
+            false
+        }
     }
 }
 
