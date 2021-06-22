@@ -186,6 +186,22 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
+            Expression::FunctionCall(name, args) => {
+                let mut new_args: Vec<(QbeType, QbeTemporary)> = Vec::new();
+                for arg in args.iter() {
+                    new_args.push(self.generate_expression(func, &arg)?);
+                }
+
+                let tmp = self.new_temporary();
+                func.assign_instr(
+                    tmp.clone(),
+                    // TODO: get that type properly
+                    QbeType::Word,
+                    QbeInstr::Call(name.clone(), new_args),
+                );
+
+                Ok((QbeType::Word, tmp))
+            }
             Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
             Expression::BinOp(lhs, op, rhs) => {
                 let (_, lhs) = self.generate_expression(func, &lhs)?;
@@ -405,6 +421,8 @@ enum QbeInstr {
     Jnz(QbeTemporary, String, String),
     /// Unconditionally jumps to a label
     Jmp(String),
+    /// Calls a function
+    Call(String, Vec<(QbeType, QbeTemporary)>),
 }
 
 impl fmt::Display for QbeInstr {
@@ -451,6 +469,17 @@ impl fmt::Display for QbeInstr {
                 write!(f, "jnz {}, @{}, @{}", val, if_nonzero, if_zero)
             }
             Self::Jmp(label) => write!(f, "jmp @{}", label),
+            Self::Call(name, args) => {
+                write!(
+                    f,
+                    "call ${}({})",
+                    name,
+                    args.iter()
+                        .map(|(ty, temp)| format!("{} {}", ty, temp))
+                        .collect::<Vec<String>>()
+                        .join(", "),
+                )
+            }
         }
     }
 }
