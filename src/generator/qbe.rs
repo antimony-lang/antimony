@@ -16,6 +16,7 @@
 use super::{Generator, GeneratorResult};
 use crate::ast::types::Type;
 use crate::ast::*;
+use crate::util::Either;
 use std::collections::HashMap;
 
 pub struct QbeGenerator {
@@ -114,6 +115,27 @@ impl QbeGenerator {
         Ok(())
     }
 
+    /// Generates an expression
+    fn generate_expression(
+        &mut self,
+        func: &mut QbeFunction,
+        expr: &Expression,
+    ) -> GeneratorResult<(QbeType, QbeTemporary)> {
+        match expr {
+            Expression::Int(literal) => {
+                let tmp = self.new_temporary();
+                func.assign_instr(
+                    tmp.clone(),
+                    QbeType::Word,
+                    QbeInstr::Copy(Either::Right(*literal)),
+                );
+
+                Ok((QbeType::Word, tmp))
+            }
+            _ => todo!("expression: {:?}", expr),
+        }
+    }
+
     /// Returns a new unique temporary
     fn new_temporary(&mut self) -> QbeTemporary {
         self.tmp_counter += 1;
@@ -163,6 +185,8 @@ use std::fmt;
 /// QBE instruction
 #[derive(Debug)]
 enum QbeInstr {
+    /// Copies either a temporary or a literal value
+    Copy(Either<QbeTemporary, usize>),
     /// Return from a function, optionally with a value
     Ret(Option<QbeTemporary>),
 }
@@ -170,6 +194,10 @@ enum QbeInstr {
 impl fmt::Display for QbeInstr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Copy(val) => match val {
+                Either::Left(temp) => write!(f, "copy {}", temp),
+                Either::Right(lit) => write!(f, "copy {}", *lit),
+            },
             Self::Ret(val) => match val {
                 Some(val) => write!(f, "ret {}", val),
                 None => write!(f, "ret"),
