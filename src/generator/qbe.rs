@@ -14,13 +14,147 @@
  * limitations under the License.
  */
 use super::{Generator, GeneratorResult};
+use crate::ast::types::Type;
 use crate::ast::*;
+use std::collections::HashMap;
 
-pub struct QbeGenerator;
+pub struct QbeGenerator {
+    /// Counter for unique temporary names
+    tmp_counter: u32,
+    /// Block-scoped variable -> temporary mappings
+    scopes: Vec<HashMap<String, QbeTemporary>>,
+}
 
 impl Generator for QbeGenerator {
-    fn generate(_prog: Module) -> GeneratorResult<String> {
-        todo!();
+    fn generate(prog: Module) -> GeneratorResult<String> {
+        let mut generator = QbeGenerator {
+            tmp_counter: 0,
+            scopes: Vec::new(),
+        };
+        let mut buf = String::new();
+
+        for func in &prog.func {
+            let func = generator.generate_function(func)?;
+            buf.push_str(&format!("{}\n", func));
+        }
+
+        Ok(buf)
+    }
+}
+
+impl QbeGenerator {
+    fn generate_function(&mut self, func: &Function) -> GeneratorResult<QbeFunction> {
+        // Function argument scope
+        self.scopes.push(HashMap::new());
+
+        let mut arguments: Vec<(QbeType, QbeTemporary)> = Vec::new();
+        for arg in &func.arguments {
+            let ty = self
+                .get_type(
+                    arg.ty
+                        .as_ref()
+                        .ok_or("Function arguments must have a type")?
+                        .to_owned(),
+                )?
+                .into_abi();
+            let tmp = self.new_var(&arg.name)?;
+
+            arguments.push((ty, tmp));
+        }
+
+        let return_ty = if let Some(ty) = &func.ret_type {
+            Some(self.get_type(ty.to_owned())?.into_abi())
+        } else {
+            None
+        };
+
+        let mut qfunc = QbeFunction {
+            exported: true,
+            name: func.name.clone(),
+            arguments,
+            return_ty,
+            blocks: Vec::new(),
+        };
+
+        qfunc.add_block("start".to_owned());
+
+        self.generate_statement(&mut qfunc, &func.body)?;
+
+        // Automatically add return in void functions
+        // TODO: validate the same in non-void ones
+        if func.ret_type.is_none() {
+            qfunc.add_instr(QbeInstr::Ret(None));
+        }
+
+        self.scopes.pop();
+
+        Ok(qfunc)
+    }
+
+    /// Generates a statement
+    fn generate_statement(
+        &mut self,
+        func: &mut QbeFunction,
+        stmt: &Statement,
+    ) -> GeneratorResult<()> {
+        match stmt {
+            Statement::Block(statements, _) => {
+                self.scopes.push(HashMap::new());
+                for stmt in statements.iter() {
+                    self.generate_statement(func, stmt)?;
+                }
+                self.scopes.pop();
+            }
+            Statement::Return(val) => match val {
+                Some(_) => todo!("expressions"),
+                None => func.add_instr(QbeInstr::Ret(None)),
+            },
+            _ => todo!("statement: {:?}", stmt),
+        }
+        Ok(())
+    }
+
+    /// Returns a new unique temporary
+    fn new_temporary(&mut self) -> QbeTemporary {
+        self.tmp_counter += 1;
+        QbeTemporary::new(format!("tmp.{}", self.tmp_counter))
+    }
+
+    /// Returns a new temporary bound to a variable
+    fn new_var(&mut self, name: &str) -> GeneratorResult<QbeTemporary> {
+        if self.get_var(name).is_ok() {
+            return Err(format!("Re-declaration of variable '{}'", name));
+        }
+
+        let tmp = self.new_temporary();
+
+        let scope = self
+            .scopes
+            .last_mut()
+            .expect("expected last scope to be present");
+        scope.insert(name.to_owned(), tmp.clone());
+
+        Ok(tmp)
+    }
+
+    /// Returns a temporary accociated to a variable
+    fn get_var(&self, name: &str) -> GeneratorResult<&QbeTemporary> {
+        self.scopes
+            .iter()
+            .rev()
+            .filter_map(|s| s.get(name))
+            .next()
+            .ok_or_else(|| format!("Undefined variable '{}'", name))
+    }
+
+    /// Returns a QBE type for the given AST type
+    fn get_type(&self, ty: Type) -> GeneratorResult<QbeType> {
+        match ty {
+            Type::Any => Err("'any' type is not supported".into()),
+            Type::Int => Ok(QbeType::Word),
+            Type::Bool => Ok(QbeType::Byte),
+            Type::Str | Type::Array(..) | Type::Struct(_) => todo!("aggregate types"),
+        }
     }
 }
 
