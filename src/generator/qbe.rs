@@ -151,6 +151,9 @@ impl QbeGenerator {
                     return Err("continue used outside of a loop".to_owned());
                 }
             }
+            Statement::Exp(expr) => {
+                self.generate_expression(func, expr)?;
+            }
             _ => todo!("statement: {:?}", stmt),
         }
         Ok(())
