@@ -136,6 +136,16 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
+            Expression::Bool(literal) => {
+                let tmp = self.new_temporary();
+                func.assign_instr(
+                    tmp.clone(),
+                    QbeType::Word,
+                    QbeInstr::Copy(Either::Right(if *literal { 1 } else { 0 })),
+                );
+
+                Ok((QbeType::Word, tmp))
+            }
             _ => todo!("expression: {:?}", expr),
         }
     }
