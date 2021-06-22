@@ -146,6 +146,51 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
+            Expression::BinOp(lhs, op, rhs) => {
+                let (_, lhs) = self.generate_expression(func, &lhs)?;
+                let (_, rhs) = self.generate_expression(func, &rhs)?;
+                let tmp = self.new_temporary();
+
+                // TODO: take the biggest
+                let ty = QbeType::Word;
+
+                func.assign_instr(
+                    tmp.clone(),
+                    ty.clone(),
+                    match op {
+                        BinOp::Addition => QbeInstr::Add(lhs, rhs),
+                        BinOp::Subtraction => QbeInstr::Sub(lhs, rhs),
+                        BinOp::Multiplication => QbeInstr::Mul(lhs, rhs),
+                        BinOp::Division => QbeInstr::Div(lhs, rhs),
+                        BinOp::Modulus => QbeInstr::Rem(lhs, rhs),
+
+                        BinOp::AddAssign => todo!(),
+                        BinOp::SubtractAssign => todo!(),
+                        BinOp::MultiplyAssign => todo!(),
+                        BinOp::DivideAssign => todo!(),
+
+                        BinOp::And => QbeInstr::And(lhs, rhs),
+                        BinOp::Or => QbeInstr::Or(lhs, rhs),
+
+                        // Others should be comparisons
+                        cmp => QbeInstr::Cmp(
+                            ty.clone(),
+                            match cmp {
+                                BinOp::LessThan => QbeCmp::Slt,
+                                BinOp::LessThanOrEqual => QbeCmp::Sle,
+                                BinOp::GreaterThan => QbeCmp::Sgt,
+                                BinOp::GreaterThanOrEqual => QbeCmp::Sge,
+                                BinOp::Equal => QbeCmp::Eq,
+                                BinOp::NotEqual => QbeCmp::Ne,
+                                _ => unreachable!(),
+                            },
+                            lhs,
+                            rhs,
+                        ),
+                    },
+                );
+                Ok((ty, tmp))
+            }
             _ => todo!("expression: {:?}", expr),
         }
     }
@@ -196,9 +241,42 @@ impl QbeGenerator {
 
 use std::fmt;
 
+/// QBE comparision
+#[derive(Debug)]
+enum QbeCmp {
+    /// Returns 1 if first value is less than second, respecting signedness
+    Slt,
+    /// Returns 1 if first value is less than or equal to second, respecting signedness
+    Sle,
+    /// Returns 1 if first value is greater than second, respecting signedness
+    Sgt,
+    /// Returns 1 if first value is greater than or equal to second, respecting signedness
+    Sge,
+    /// Returns 1 if values are equal
+    Eq,
+    /// Returns 1 if values are not equal
+    Ne,
+}
+
 /// QBE instruction
 #[derive(Debug)]
 enum QbeInstr {
+    /// Adds values of two temporaries together
+    Add(QbeTemporary, QbeTemporary),
+    /// Subtracts the second value from the first one
+    Sub(QbeTemporary, QbeTemporary),
+    /// Multiplies values of two temporaries
+    Mul(QbeTemporary, QbeTemporary),
+    /// Divides the first value by the second one
+    Div(QbeTemporary, QbeTemporary),
+    /// Returns a remainder from division
+    Rem(QbeTemporary, QbeTemporary),
+    /// Performs a comparion between values
+    Cmp(QbeType, QbeCmp, QbeTemporary, QbeTemporary),
+    /// Performs a bitwise AND on values
+    And(QbeTemporary, QbeTemporary),
+    /// Performs a bitwise OR on values
+    Or(QbeTemporary, QbeTemporary),
     /// Copies either a temporary or a literal value
     Copy(Either<QbeTemporary, usize>),
     /// Return from a function, optionally with a value
@@ -208,6 +286,35 @@ enum QbeInstr {
 impl fmt::Display for QbeInstr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Add(lhs, rhs) => write!(f, "add {}, {}", lhs, rhs),
+            Self::Sub(lhs, rhs) => write!(f, "sub {}, {}", lhs, rhs),
+            Self::Mul(lhs, rhs) => write!(f, "mul {}, {}", lhs, rhs),
+            Self::Div(lhs, rhs) => write!(f, "div {}, {}", lhs, rhs),
+            Self::Rem(lhs, rhs) => write!(f, "rem {}, {}", lhs, rhs),
+            Self::Cmp(ty, cmp, lhs, rhs) => {
+                assert!(
+                    !matches!(ty, QbeType::Aggregate(_)),
+                    "Cannot compare aggregate types"
+                );
+
+                write!(
+                    f,
+                    "c{}{} {}, {}",
+                    match cmp {
+                        QbeCmp::Slt => "slt",
+                        QbeCmp::Sle => "sle",
+                        QbeCmp::Sgt => "sgt",
+                        QbeCmp::Sge => "sge",
+                        QbeCmp::Eq => "eq",
+                        QbeCmp::Ne => "ne",
+                    },
+                    ty,
+                    lhs,
+                    rhs,
+                )
+            }
+            Self::And(lhs, rhs) => write!(f, "and {}, {}", lhs, rhs),
+            Self::Or(lhs, rhs) => write!(f, "or {}, {}", lhs, rhs),
             Self::Copy(val) => match val {
                 Either::Left(temp) => write!(f, "copy {}", temp),
                 Either::Right(lit) => write!(f, "copy {}", *lit),
