@@ -131,6 +131,9 @@ impl QbeGenerator {
             Statement::If(cond, if_clause, else_clause) => {
                 self.generate_if(func, cond, if_clause, else_clause)?;
             }
+            Statement::While(cond, body) => {
+                self.generate_while(func, cond, body)?;
+            }
             _ => todo!("statement: {:?}", stmt),
         }
         Ok(())
@@ -255,6 +258,35 @@ impl QbeGenerator {
         if !func.blocks.last().map_or(false, |b| b.jumps()) {
             func.add_block(end_label);
         }
+
+        Ok(())
+    }
+
+    /// Generates a `while` statement
+    fn generate_while(
+        &mut self,
+        func: &mut QbeFunction,
+        cond: &Expression,
+        body: &Statement,
+    ) -> GeneratorResult<()> {
+        self.tmp_counter += 1;
+        let cond_label = format!("loop.{}.cond", self.tmp_counter);
+        let body_label = format!("loop.{}.body", self.tmp_counter);
+        let end_label = format!("loop.{}.end", self.tmp_counter);
+
+        func.add_block(cond_label.clone());
+
+        let (_, result) = self.generate_expression(func, cond)?;
+        func.add_instr(QbeInstr::Jnz(result, body_label.clone(), end_label.clone()));
+
+        func.add_block(body_label);
+        self.generate_statement(func, body)?;
+
+        if !func.blocks.last().map_or(false, |b| b.jumps()) {
+            func.add_instr(QbeInstr::Jmp(cond_label));
+        }
+
+        func.add_block(end_label);
 
         Ok(())
     }
