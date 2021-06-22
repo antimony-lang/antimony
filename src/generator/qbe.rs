@@ -107,7 +107,11 @@ impl QbeGenerator {
                 self.scopes.pop();
             }
             Statement::Return(val) => match val {
-                Some(_) => todo!("expressions"),
+                Some(expr) => {
+                    let (_, result) = self.generate_expression(func, expr)?;
+                    // TODO: Cast to function return type
+                    func.add_instr(QbeInstr::Ret(Some(result)));
+                }
                 None => func.add_instr(QbeInstr::Ret(None)),
             },
             _ => todo!("statement: {:?}", stmt),
