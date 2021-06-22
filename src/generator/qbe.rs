@@ -24,6 +24,8 @@ pub struct QbeGenerator {
     tmp_counter: u32,
     /// Block-scoped variable -> temporary mappings
     scopes: Vec<HashMap<String, (QbeType, QbeTemporary)>>,
+    /// Label prefix of the current loop
+    loop_label: Option<String>,
 }
 
 impl Generator for QbeGenerator {
@@ -31,6 +33,7 @@ impl Generator for QbeGenerator {
         let mut generator = QbeGenerator {
             tmp_counter: 0,
             scopes: Vec::new(),
+            loop_label: None,
         };
         let mut buf = String::new();
 
@@ -133,6 +136,13 @@ impl QbeGenerator {
             }
             Statement::While(cond, body) => {
                 self.generate_while(func, cond, body)?;
+            }
+            Statement::Break => {
+                if let Some(label) = &self.loop_label {
+                    func.add_instr(QbeInstr::Jmp(format!("{}.end", label)));
+                } else {
+                    return Err("break used outside of a loop".to_owned());
+                }
             }
             _ => todo!("statement: {:?}", stmt),
         }
@@ -274,6 +284,8 @@ impl QbeGenerator {
         let body_label = format!("loop.{}.body", self.tmp_counter);
         let end_label = format!("loop.{}.end", self.tmp_counter);
 
+        self.loop_label = Some(format!("loop.{}", self.tmp_counter));
+
         func.add_block(cond_label.clone());
 
         let (_, result) = self.generate_expression(func, cond)?;
@@ -287,6 +299,8 @@ impl QbeGenerator {
         }
 
         func.add_block(end_label);
+
+        self.loop_label = None;
 
         Ok(())
     }
