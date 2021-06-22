@@ -23,7 +23,7 @@ pub struct QbeGenerator {
     /// Counter for unique temporary names
     tmp_counter: u32,
     /// Block-scoped variable -> temporary mappings
-    scopes: Vec<HashMap<String, QbeTemporary>>,
+    scopes: Vec<HashMap<String, (QbeType, QbeTemporary)>>,
 }
 
 impl Generator for QbeGenerator {
@@ -58,7 +58,7 @@ impl QbeGenerator {
                         .to_owned(),
                 )?
                 .into_abi();
-            let tmp = self.new_var(&arg.name)?;
+            let tmp = self.new_var(&ty, &arg.name)?;
 
             arguments.push((ty, tmp));
         }
@@ -202,7 +202,7 @@ impl QbeGenerator {
     }
 
     /// Returns a new temporary bound to a variable
-    fn new_var(&mut self, name: &str) -> GeneratorResult<QbeTemporary> {
+    fn new_var(&mut self, ty: &QbeType, name: &str) -> GeneratorResult<QbeTemporary> {
         if self.get_var(name).is_ok() {
             return Err(format!("Re-declaration of variable '{}'", name));
         }
@@ -213,13 +213,13 @@ impl QbeGenerator {
             .scopes
             .last_mut()
             .expect("expected last scope to be present");
-        scope.insert(name.to_owned(), tmp.clone());
+        scope.insert(name.to_owned(), (ty.to_owned(), tmp.to_owned()));
 
         Ok(tmp)
     }
 
     /// Returns a temporary accociated to a variable
-    fn get_var(&self, name: &str) -> GeneratorResult<&QbeTemporary> {
+    fn get_var(&self, name: &str) -> GeneratorResult<&(QbeType, QbeTemporary)> {
         self.scopes
             .iter()
             .rev()
