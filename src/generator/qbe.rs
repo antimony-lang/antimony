@@ -144,6 +144,13 @@ impl QbeGenerator {
                     return Err("break used outside of a loop".to_owned());
                 }
             }
+            Statement::Continue => {
+                if let Some(label) = &self.loop_label {
+                    func.add_instr(QbeInstr::Jmp(format!("{}.cond", label)));
+                } else {
+                    return Err("continue used outside of a loop".to_owned());
+                }
+            }
             _ => todo!("statement: {:?}", stmt),
         }
         Ok(())
