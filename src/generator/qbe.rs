@@ -146,6 +146,7 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
+            Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
             Expression::BinOp(lhs, op, rhs) => {
                 let (_, lhs) = self.generate_expression(func, &lhs)?;
                 let (_, rhs) = self.generate_expression(func, &rhs)?;
