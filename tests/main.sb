@@ -10,6 +10,7 @@ import "imports"
 import "numbers"
 import "structs"
 import "types"
+import "unicode"
 
 
 fn main() {
@@ -21,6 +22,7 @@ fn main() {
     numbers_main()
     structs_main()
     types_main()
+    unicode_main()
 
     log_test_stage("Done!")
 }
