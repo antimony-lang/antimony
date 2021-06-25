@@ -16,14 +16,13 @@
 use super::{Generator, GeneratorResult};
 use crate::ast::types::Type;
 use crate::ast::*;
-use crate::util::Either;
 use std::collections::HashMap;
 
 pub struct QbeGenerator {
     /// Counter for unique temporary names
     tmp_counter: u32,
     /// Block-scoped variable -> temporary mappings
-    scopes: Vec<HashMap<String, (QbeType, QbeTemporary)>>,
+    scopes: Vec<HashMap<String, (QbeType, QbeValue)>>,
     /// Label prefix of the current loop
     loop_label: Option<String>,
 }
@@ -51,7 +50,7 @@ impl QbeGenerator {
         // Function argument scope
         self.scopes.push(HashMap::new());
 
-        let mut arguments: Vec<(QbeType, QbeTemporary)> = Vec::new();
+        let mut arguments: Vec<(QbeType, QbeValue)> = Vec::new();
         for arg in &func.arguments {
             let ty = self
                 .get_type(
@@ -120,7 +119,7 @@ impl QbeGenerator {
 
                 if let Some(expr) = expr {
                     let (ty, result) = self.generate_expression(func, expr)?;
-                    func.assign_instr(tmp, ty, QbeInstr::Copy(Either::Left(result)));
+                    func.assign_instr(tmp, ty, QbeInstr::Copy(result));
                 }
             }
             Statement::Assign(lhs, rhs) => {
@@ -136,7 +135,7 @@ impl QbeGenerator {
                         func.assign_instr(
                             tmp.to_owned(),
                             vty.to_owned(),
-                            QbeInstr::Copy(Either::Left(rhs)),
+                            QbeInstr::Copy(rhs),
                         );
                     }
                     Expression::FieldAccess(..) | Expression::ArrayAccess(..) => todo!(),
@@ -184,14 +183,14 @@ impl QbeGenerator {
         &mut self,
         func: &mut QbeFunction,
         expr: &Expression,
-    ) -> GeneratorResult<(QbeType, QbeTemporary)> {
+    ) -> GeneratorResult<(QbeType, QbeValue)> {
         match expr {
             Expression::Int(literal) => {
                 let tmp = self.new_temporary();
                 func.assign_instr(
                     tmp.clone(),
                     QbeType::Word,
-                    QbeInstr::Copy(Either::Right(*literal)),
+                    QbeInstr::Copy(QbeValue::Const(*literal as u64)),
                 );
 
                 Ok((QbeType::Word, tmp))
@@ -201,13 +200,13 @@ impl QbeGenerator {
                 func.assign_instr(
                     tmp.clone(),
                     QbeType::Word,
-                    QbeInstr::Copy(Either::Right(if *literal { 1 } else { 0 })),
+                    QbeInstr::Copy(QbeValue::Const(if *literal { 1 } else { 0 })),
                 );
 
                 Ok((QbeType::Word, tmp))
             }
             Expression::FunctionCall(name, args) => {
-                let mut new_args: Vec<(QbeType, QbeTemporary)> = Vec::new();
+                let mut new_args: Vec<(QbeType, QbeValue)> = Vec::new();
                 for arg in args.iter() {
                     new_args.push(self.generate_expression(func, &arg)?);
                 }
@@ -352,13 +351,13 @@ impl QbeGenerator {
     }
 
     /// Returns a new unique temporary
-    fn new_temporary(&mut self) -> QbeTemporary {
+    fn new_temporary(&mut self) -> QbeValue {
         self.tmp_counter += 1;
-        QbeTemporary::new(format!("tmp.{}", self.tmp_counter))
+        QbeValue::Temporary(format!("tmp.{}", self.tmp_counter))
     }
 
     /// Returns a new temporary bound to a variable
-    fn new_var(&mut self, ty: &QbeType, name: &str) -> GeneratorResult<QbeTemporary> {
+    fn new_var(&mut self, ty: &QbeType, name: &str) -> GeneratorResult<QbeValue> {
         if self.get_var(name).is_ok() {
             return Err(format!("Re-declaration of variable '{}'", name));
         }
@@ -375,7 +374,7 @@ impl QbeGenerator {
     }
 
     /// Returns a temporary accociated to a variable
-    fn get_var(&self, name: &str) -> GeneratorResult<&(QbeType, QbeTemporary)> {
+    fn get_var(&self, name: &str) -> GeneratorResult<&(QbeType, QbeValue)> {
         self.scopes
             .iter()
             .rev()
@@ -418,31 +417,31 @@ enum QbeCmp {
 #[derive(Debug)]
 enum QbeInstr {
     /// Adds values of two temporaries together
-    Add(QbeTemporary, QbeTemporary),
+    Add(QbeValue, QbeValue),
     /// Subtracts the second value from the first one
-    Sub(QbeTemporary, QbeTemporary),
+    Sub(QbeValue, QbeValue),
     /// Multiplies values of two temporaries
-    Mul(QbeTemporary, QbeTemporary),
+    Mul(QbeValue, QbeValue),
     /// Divides the first value by the second one
-    Div(QbeTemporary, QbeTemporary),
+    Div(QbeValue, QbeValue),
     /// Returns a remainder from division
-    Rem(QbeTemporary, QbeTemporary),
+    Rem(QbeValue, QbeValue),
     /// Performs a comparion between values
-    Cmp(QbeType, QbeCmp, QbeTemporary, QbeTemporary),
+    Cmp(QbeType, QbeCmp, QbeValue, QbeValue),
     /// Performs a bitwise AND on values
-    And(QbeTemporary, QbeTemporary),
+    And(QbeValue, QbeValue),
     /// Performs a bitwise OR on values
-    Or(QbeTemporary, QbeTemporary),
+    Or(QbeValue, QbeValue),
     /// Copies either a temporary or a literal value
-    Copy(Either<QbeTemporary, usize>),
+    Copy(QbeValue),
     /// Return from a function, optionally with a value
-    Ret(Option<QbeTemporary>),
+    Ret(Option<QbeValue>),
     /// Jumps to first label if a value is nonzero or to the second one otherwise
-    Jnz(QbeTemporary, String, String),
+    Jnz(QbeValue, String, String),
     /// Unconditionally jumps to a label
     Jmp(String),
     /// Calls a function
-    Call(String, Vec<(QbeType, QbeTemporary)>),
+    Call(String, Vec<(QbeType, QbeValue)>),
 }
 
 impl fmt::Display for QbeInstr {
@@ -477,10 +476,7 @@ impl fmt::Display for QbeInstr {
             }
             Self::And(lhs, rhs) => write!(f, "and {}, {}", lhs, rhs),
             Self::Or(lhs, rhs) => write!(f, "or {}, {}", lhs, rhs),
-            Self::Copy(val) => match val {
-                Either::Left(temp) => write!(f, "copy {}", temp),
-                Either::Right(lit) => write!(f, "copy {}", *lit),
-            },
+            Self::Copy(val) => write!(f, "copy {}", val),
             Self::Ret(val) => match val {
                 Some(val) => write!(f, "ret {}", val),
                 None => write!(f, "ret"),
@@ -549,29 +545,32 @@ impl fmt::Display for QbeType {
     }
 }
 
-/// QBE temporary
+/// QBE value that is accepted by instructions
 #[derive(Debug, Clone)]
-struct QbeTemporary {
-    name: String,
+#[allow(dead_code)]
+enum QbeValue {
+    /// `%`-temporary
+    Temporary(String),
+    /// `$`-global
+    Global(String),
+    /// Constant
+    Const(u64),
 }
 
-impl QbeTemporary {
-    /// Returns a new temporary
-    pub fn new(name: String) -> Self {
-        Self { name }
-    }
-}
-
-impl fmt::Display for QbeTemporary {
+impl fmt::Display for QbeValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "%{}", self.name)
+        match self {
+            Self::Temporary(name) => write!(f, "%{}", name),
+            Self::Global(name) => write!(f, "${}", name),
+            Self::Const(value) => write!(f, "{}", value),
+        }
     }
 }
 
 /// An IR statement
 #[derive(Debug)]
 enum QbeStatement {
-    Assign(QbeTemporary, QbeType, QbeInstr),
+    Assign(QbeValue, QbeType, QbeInstr),
     Volatile(QbeInstr),
 }
 
@@ -579,6 +578,7 @@ impl fmt::Display for QbeStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Assign(temp, ty, instr) => {
+                assert!(matches!(temp, QbeValue::Temporary(_)));
                 write!(f, "{} ={} {}", temp, ty, instr)
             }
             Self::Volatile(instr) => write!(f, "{}", instr),
@@ -603,7 +603,7 @@ impl QbeBlock {
     }
 
     /// Adds a new instruction assigned to a temporary
-    fn assign_instr(&mut self, temp: QbeTemporary, ty: QbeType, instr: QbeInstr) {
+    fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
         self.instructions.push(QbeStatement::Assign(temp, ty, instr));
     }
 
@@ -648,7 +648,7 @@ struct QbeFunction {
     name: String,
 
     /// Function arguments
-    arguments: Vec<(QbeType, QbeTemporary)>,
+    arguments: Vec<(QbeType, QbeValue)>,
 
     /// Return type
     return_ty: Option<QbeType>,
@@ -675,7 +675,7 @@ impl QbeFunction {
     }
 
     /// Adds a new instruction assigned to a temporary
-    fn assign_instr(&mut self, temp: QbeTemporary, ty: QbeType, instr: QbeInstr) {
+    fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
         self.blocks
             .last_mut()
             .expect("Last block must be present")
@@ -718,9 +718,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn temporary() {
-        let tmp = QbeTemporary::new("temp42".into());
-        assert_eq!(format!("{}", tmp), "%temp42");
+    fn qbe_value() {
+        let val = QbeValue::Temporary("temp42".into());
+        assert_eq!(format!("{}", val), "%temp42");
+
+        let val = QbeValue::Global("main".into());
+        assert_eq!(format!("{}", val), "$main");
+
+        let val = QbeValue::Const(1337);
+        assert_eq!(format!("{}", val), "1337");
     }
 
     #[test]
