@@ -25,6 +25,8 @@ pub struct QbeGenerator {
     scopes: Vec<HashMap<String, (QbeType, QbeValue)>>,
     /// Label prefix of the current loop
     loop_label: Option<String>,
+    /// Data defintions collected during generation
+    datadefs: Vec<QbeDataDef>,
 }
 
 impl Generator for QbeGenerator {
@@ -33,12 +35,17 @@ impl Generator for QbeGenerator {
             tmp_counter: 0,
             scopes: Vec::new(),
             loop_label: None,
+            datadefs: Vec::new(),
         };
         let mut buf = String::new();
 
         for func in &prog.func {
             let func = generator.generate_function(func)?;
             buf.push_str(&format!("{}\n", func));
+        }
+
+        for def in &generator.datadefs {
+            buf.push_str(&format!("{}\n", def));
         }
 
         Ok(buf)
@@ -195,6 +202,7 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
+            Expression::Str(string) => self.generate_string(string),
             Expression::Bool(literal) => {
                 let tmp = self.new_temporary();
                 func.assign_instr(
@@ -350,6 +358,47 @@ impl QbeGenerator {
         Ok(())
     }
 
+    /// Generates a string
+    fn generate_string(&mut self, string: &str) -> GeneratorResult<(QbeType, QbeValue)> {
+        self.tmp_counter += 1;
+        let name = format!("string.{}", self.tmp_counter);
+
+        let mut items: Vec<(QbeType, QbeDataItem)> = Vec::new();
+        let mut buf = String::new();
+        for ch in string.chars() {
+            if ch.is_ascii() && !ch.is_ascii_control() && ch != '"' {
+                buf.push(ch)
+            } else {
+                if !buf.is_empty() {
+                    items.push((QbeType::Byte, QbeDataItem::Str(buf.clone())));
+                    buf.clear();
+                }
+
+                let mut buf = [0; 4];
+                let len = ch.encode_utf8(&mut buf).len();
+
+                for b in buf.iter().take(len) {
+                    items.push((QbeType::Byte, QbeDataItem::Const(*b as u64)));
+                }
+                continue;
+            }
+        }
+        if !buf.is_empty() {
+            items.push((QbeType::Byte, QbeDataItem::Str(buf)));
+        }
+        // NUL terminator
+        items.push((QbeType::Byte, QbeDataItem::Const(0)));
+
+        self.datadefs.push(QbeDataDef {
+            exported: false,
+            name: name.clone(),
+            align: None,
+            items,
+        });
+
+        Ok((QbeType::Long, QbeValue::Global(name)))
+    }
+
     /// Returns a new unique temporary
     fn new_temporary(&mut self) -> QbeValue {
         self.tmp_counter += 1;
@@ -389,7 +438,8 @@ impl QbeGenerator {
             Type::Any => Err("'any' type is not supported".into()),
             Type::Int => Ok(QbeType::Word),
             Type::Bool => Ok(QbeType::Byte),
-            Type::Str | Type::Array(..) | Type::Struct(_) => todo!("aggregate types"),
+            Type::Str => Ok(QbeType::Long),
+            Type::Array(..) | Type::Struct(_) => todo!("aggregate types"),
         }
     }
 }
@@ -563,6 +613,64 @@ impl fmt::Display for QbeValue {
             Self::Temporary(name) => write!(f, "%{}", name),
             Self::Global(name) => write!(f, "${}", name),
             Self::Const(value) => write!(f, "{}", value),
+        }
+    }
+}
+
+/// QBE data definition
+#[derive(Debug)]
+struct QbeDataDef {
+    exported: bool,
+    name: String,
+    align: Option<u64>,
+
+    items: Vec<(QbeType, QbeDataItem)>,
+}
+
+impl fmt::Display for QbeDataDef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.exported {
+            write!(f, "export ")?;
+        }
+
+        write!(f, "data ${} = ", self.name)?;
+
+        if let Some(align) = self.align {
+            write!(f, "align {} ", align)?;
+        }
+        write!(
+            f,
+            "{{ {} }}",
+            self.items
+                .iter()
+                .map(|(ty, item)| format!("{} {}", ty, item))
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
+    }
+}
+
+/// Data definition item
+#[derive(Debug)]
+#[allow(dead_code)]
+enum QbeDataItem {
+    /// Symbol and offset
+    Symbol(String, Option<u64>),
+    /// String
+    Str(String),
+    /// Constant
+    Const(u64),
+}
+
+impl fmt::Display for QbeDataItem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Symbol(name, offset) => match offset {
+                Some(off) => write!(f, "${} +{}", name, off),
+                None => write!(f, "${}", name),
+            },
+            Self::Str(string) => write!(f, "\"{}\"", string),
+            Self::Const(val) => write!(f, "{}", val),
         }
     }
 }
@@ -775,6 +883,25 @@ mod tests {
         assert_eq!(lines.next().unwrap(), "@start");
         assert_eq!(lines.next().unwrap(), "\tret");
         assert_eq!(lines.next().unwrap(), "}");
+    }
+
+    #[test]
+    fn datadef() {
+        let datadef = QbeDataDef {
+            exported: true,
+            name: "hello".into(),
+            align: None,
+            items: vec![
+                (QbeType::Byte, QbeDataItem::Str("Hello, World!".into())),
+                (QbeType::Byte, QbeDataItem::Const(0)),
+            ],
+        };
+
+        let formatted = format!("{}", datadef);
+        assert_eq!(
+            formatted,
+            "export data $hello = { b \"Hello, World!\", b 0 }"
+        );
     }
 
     #[test]
