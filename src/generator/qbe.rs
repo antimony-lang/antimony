@@ -130,24 +130,9 @@ impl QbeGenerator {
                 }
             }
             Statement::Assign(lhs, rhs) => {
-                let (ty, rhs) = self.generate_expression(func, rhs)?;
-
-                // XXX: meh
-                match &**lhs {
-                    Expression::Variable(name) => {
-                        let (vty, tmp) = self.get_var(&name)?;
-                        if ty != *vty {
-                            return Err(format!("Type mismatch: {:?} ('{}') and {:?} (expression)", &vty, name, &ty));
-                        }
-                        func.assign_instr(
-                            tmp.to_owned(),
-                            vty.to_owned(),
-                            QbeInstr::Copy(rhs),
-                        );
-                    }
-                    Expression::FieldAccess(..) | Expression::ArrayAccess(..) => todo!(),
-                    _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
-                }
+                let (_, rhs) = self.generate_expression(func, rhs)?;
+                // TODO: type check
+                self.generate_assignment(func, lhs, rhs)?;
             }
             Statement::Return(val) => match val {
                 Some(expr) => {
@@ -397,6 +382,30 @@ impl QbeGenerator {
         });
 
         Ok((QbeType::Long, QbeValue::Global(name)))
+    }
+
+    /// Generates an assignment to either a variable, field access or array
+    /// access
+    fn generate_assignment(
+        &self,
+        func: &mut QbeFunction,
+        lhs: &Expression,
+        rhs: QbeValue,
+    ) -> GeneratorResult<()> {
+        match lhs {
+            Expression::Variable(name) => {
+                let (vty, tmp) = self.get_var(name)?;
+                func.assign_instr(
+                    tmp.to_owned(),
+                    vty.to_owned(),
+                    QbeInstr::Copy(rhs),
+                );
+            }
+            Expression::FieldAccess(..) | Expression::ArrayAccess(..) => todo!(),
+            _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
+        }
+
+        Ok(())
     }
 
     /// Returns a new unique temporary
