@@ -218,3 +218,32 @@ _42         // an identifier, not an integer literal
 4__2        // invalid: only one _ at a time
 0_xBadFace  // invalid: _ must separate successive digits
 ```
+
+### Floating-point literals
+
+TO BE IMPLEMENTED
+
+### Rune literals
+
+TO BE IMPLEMENTED
+
+### String literals
+
+A string literal represents a string constant obtained from concatenating a
+sequence of characters. String literals are character sequences between double
+quotes, as in "bar". Within the quotes, any character may appear except newline
+and unescaped double quote.
+
+TODO: escapes
+TODO: byte values
+
+TODO: Currently, `"` and `'` are valid string characters. Remove `'` and only
+use them for runes.
+
+```
+string_lit = `"` unicode_value `"` .
+
+"abc"
+"Hello, world!"
+"日本語"
+```
