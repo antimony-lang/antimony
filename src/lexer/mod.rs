@@ -156,25 +156,25 @@ pub enum Keyword {
 }
 
 /// Creates an iterator that produces tokens from the input string.
-pub fn tokenize(mut input: &str) -> Vec<Token> {
+pub fn tokenize(mut input: &str) -> Result<Vec<Token>, String> {
     let mut pos = Position {
         raw: usize::MAX,
         line: 1,
         offset: 0,
     };
-    std::iter::from_fn(move || {
-        if input.is_empty() {
-            return None;
-        }
-        let token = first_token(input, &mut pos);
+
+    let mut tokens: Vec<Token> = Vec::new();
+    while !input.is_empty() {
+        let token = first_token(input, &mut pos)?;
         input = &input[token.len..];
-        Some(token)
-    })
-    .collect()
+        tokens.push(token);
+    }
+
+    Ok(tokens)
 }
 
 /// Parses the first token from the provided input string.
-pub fn first_token(input: &str, pos: &mut Position) -> Token {
+pub fn first_token(input: &str, pos: &mut Position) -> Result<Token, String> {
     debug_assert!(!input.is_empty());
     Cursor::new(input, pos).advance_token()
 }
@@ -226,7 +226,7 @@ pub fn is_id_continue(c: char) -> bool {
 
 impl Cursor<'_> {
     /// Parses a token from the input string.
-    fn advance_token(&mut self) -> Token {
+    fn advance_token(&mut self) -> Result<Token, String> {
         // Original chars used to identify the token later on
         let original_chars = self.chars();
         // FIXME: Identical value, since it will be used twice and is not clonable later
@@ -235,7 +235,7 @@ impl Cursor<'_> {
         let token_kind = match first_char {
             c if is_whitespace(c) => self.whitespace(),
             '0'..='9' => self.number(),
-            '"' | '\'' => self.string(first_char),
+            '"' | '\'' => self.string(first_char)?,
             '.' => Dot,
             '+' => match self.first() {
                 '=' => {
@@ -345,7 +345,8 @@ impl Cursor<'_> {
         // Cut the original tokens to the length of the token
         raw.truncate(len);
         let position = self.pos();
-        Token::new(token_kind, len, raw, position)
+
+        Ok(Token::new(token_kind, len, raw, position))
     }
 
     /// Eats symbols while predicate returns true or until the end of file is reached.
@@ -390,10 +391,10 @@ impl Cursor<'_> {
         TokenKind::Literal(Value::Int)
     }
 
-    fn string(&mut self, end: char) -> TokenKind {
-        self.eat_string(end);
+    fn string(&mut self, end: char) -> Result<TokenKind, String> {
+        self.eat_string(end)?;
 
-        TokenKind::Literal(Value::Str)
+        Ok(TokenKind::Literal(Value::Str))
     }
 
     fn identifier(&mut self, first_char: char) -> Keyword {
@@ -503,20 +504,23 @@ impl Cursor<'_> {
         has_digits
     }
 
-    fn eat_string(&mut self, end: char) {
+    fn eat_string(&mut self, end: char) -> Result<(), String> {
         loop {
             match self.first() {
                 ch if ch == end => break,
-                '\n' => panic!(
-                    "String does not end on same line. At {}:{}",
-                    self.pos().line,
-                    self.pos().offset
-                ),
+                '\n' => return Err(self.make_error_msg("String does not end on same line".into())),
                 _ => self.bump(),
             };
         }
 
         // Eat last quote
         self.bump();
+
+        Ok(())
+    }
+
+    fn make_error_msg(&self, msg: String) -> String {
+        let pos = self.pos();
+        format!("{}:{}: {}", pos.line, pos.offset, msg)
     }
 }

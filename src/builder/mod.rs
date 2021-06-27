@@ -61,7 +61,7 @@ impl Builder {
         self.build_module(self.in_file.clone(), &mut Vec::new())?;
 
         // Append standard library
-        self.build_stdlib();
+        self.build_stdlib()?;
 
         // Change back to the initial directory
         env::set_current_dir(initial_directory).expect("Could not set current directory");
@@ -87,7 +87,7 @@ impl Builder {
 
         file.read_to_string(&mut contents)
             .expect("Could not read file");
-        let tokens = lexer::tokenize(&contents);
+        let tokens = lexer::tokenize(&contents)?;
         let module = parser::parse(
             tokens,
             Some(contents),
@@ -148,7 +148,7 @@ impl Builder {
         buffer.flush().map_err(|_| "Could not flush file".into())
     }
 
-    fn build_stdlib(&mut self) {
+    fn build_stdlib(&mut self) -> Result<(), String> {
         let assets = Lib::iter();
 
         for file in assets {
@@ -156,10 +156,12 @@ impl Builder {
                 Lib::get(&file).expect("Standard library not found. This should not occur.");
             let stblib_str =
                 std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
-            let stdlib_tokens = lexer::tokenize(&stblib_str);
+            let stdlib_tokens = lexer::tokenize(&stblib_str)?;
             let module = parser::parse(stdlib_tokens, Some(stblib_str.into()), file.to_string())
                 .expect("Could not parse stdlib");
             self.modules.push(module);
         }
+
+        Ok(())
     }
 }
