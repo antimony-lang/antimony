@@ -146,7 +146,7 @@ fn test_string() {
         tokens.next().unwrap(),
         Token {
             len: 5,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("aaa".into())),
             raw: "'aaa'".to_owned(),
             pos: Position {
                 raw: 4,
@@ -160,7 +160,7 @@ fn test_string() {
         tokens.nth(1).unwrap(),
         Token {
             len: 5,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("bbb".into())),
             raw: "\"bbb\"".to_owned(),
             pos: Position {
                 raw: 10,
@@ -179,7 +179,7 @@ fn test_string_markers_within_string() {
         tokens.next().unwrap(),
         Token {
             len: 6,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("\"aaa".into())),
             raw: "'\"aaa'".to_owned(),
             pos: Position {
                 raw: 5,
@@ -193,7 +193,7 @@ fn test_string_markers_within_string() {
         tokens.nth(1).unwrap(),
         Token {
             len: 6,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("'bbb".into())),
             raw: "\"'bbb\"".to_owned(),
             pos: Position {
                 raw: 12,

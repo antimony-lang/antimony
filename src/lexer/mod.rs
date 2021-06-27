@@ -128,10 +128,10 @@ pub enum TokenKind {
     Unknown,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Value {
     Int,
-    Str,
+    Str(String),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -392,9 +392,7 @@ impl Cursor<'_> {
     }
 
     fn string(&mut self, end: char) -> Result<TokenKind, String> {
-        self.eat_string(end)?;
-
-        Ok(TokenKind::Literal(Value::Str))
+        Ok(TokenKind::Literal(Value::Str(self.eat_string(end)?)))
     }
 
     fn identifier(&mut self, first_char: char) -> Keyword {
@@ -504,19 +502,45 @@ impl Cursor<'_> {
         has_digits
     }
 
-    fn eat_string(&mut self, end: char) -> Result<(), String> {
+    fn eat_escape(&mut self) -> Result<char, String> {
+        let ch = self.first();
+        let ch = match ch {
+            'n' => '\n',       // Newline
+            'r' => '\r',       // Carriage Return
+            'b' => '\u{0008}', // Backspace
+            'f' => '\u{000C}', // Form feed
+            't' => '\t',       // Horizontal tab
+            '"' | '\\' => ch,
+            ch => {
+                return Err(self.make_error_msg(format!("Unknown escape sequence \\{}", ch)));
+            }
+        };
+        self.bump();
+
+        Ok(ch)
+    }
+
+    fn eat_string(&mut self, end: char) -> Result<String, String> {
+        let mut buf = String::new();
         loop {
             match self.first() {
-                ch if ch == end => break,
                 '\n' => return Err(self.make_error_msg("String does not end on same line".into())),
-                _ => self.bump(),
+                '\\' => {
+                    self.bump();
+                    buf.push(self.eat_escape()?)
+                }
+                ch if ch == end => break,
+                ch => {
+                    buf.push(ch);
+                    self.bump();
+                }
             };
         }
 
         // Eat last quote
         self.bump();
 
-        Ok(())
+        Ok(buf)
     }
 
     fn make_error_msg(&self, msg: String) -> String {
