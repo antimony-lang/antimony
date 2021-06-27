@@ -1,7 +1,3 @@
-use std::collections::HashMap;
-
-use crate::ast::types::Type;
-use crate::ast::*;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -17,6 +13,10 @@ use crate::ast::*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use std::collections::HashMap;
+
+use crate::ast::types::Type;
+use crate::ast::*;
 use crate::generator::Generator;
 use crate::util::Either;
 
@@ -146,7 +146,8 @@ fn generate_statement(statement: Statement) -> String {
 fn generate_expression(expr: Expression) -> String {
     match expr {
         Expression::Int(val) => val.to_string(),
-        Expression::Variable(val) | Expression::Str(val) => val,
+        Expression::Variable(val) => val,
+        Expression::Str(val) => super::string_syntax(val),
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
         Expression::Array(size, els) => generate_array(size, els),
@@ -176,8 +177,8 @@ fn generate_array(_size: usize, elements: Vec<Expression>) -> String {
     out_str += &elements
         .iter()
         .map(|el| match el {
-            Expression::Int(x) => x.to_string(),
-            Expression::Str(x) => x.to_string(),
+            Expression::Int(i) => i.to_string(),
+            Expression::Str(s) => super::string_syntax(s.to_owned()),
             _ => todo!("Not yet implemented"),
         })
         .collect::<Vec<String>>()
@@ -244,7 +245,8 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Bool(v) => v.to_string(),
             Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
-            Expression::Str(s) | Expression::Variable(s) => s,
+            Expression::Str(s) => super::string_syntax(s),
+            Expression::Variable(s) => s,
             Expression::Array(_, _) => todo!(),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
