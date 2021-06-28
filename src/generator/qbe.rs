@@ -544,7 +544,15 @@ impl QbeGenerator {
             Type::Int => Ok(QbeType::Word),
             Type::Bool => Ok(QbeType::Byte),
             Type::Str => Ok(QbeType::Long),
-            Type::Array(..) | Type::Struct(_) => todo!("aggregate types"),
+            Type::Struct(name) => {
+                let (ty, ..) = self
+                    .struct_map
+                    .get(&name)
+                    .ok_or_else(|| format!("Use of undeclared struct '{}'", name))?
+                    .to_owned();
+                Ok(ty)
+            }
+            Type::Array(..) => todo!("array types"),
         }
     }
 }
