@@ -137,7 +137,7 @@ return
 self
 struct
 true
-while 
+while
 ```
 
 ### Operators and Punctuation
@@ -234,16 +234,36 @@ sequence of characters. String literals are character sequences between double
 quotes, as in "bar". Within the quotes, any character may appear except newline
 and unescaped double quote.
 
-TODO: escapes
+If `\` character appears in the string, the character(s) following it *must* be
+interpreted specially:
+
+1. `\` and `"` are included unchanged (e.g. `"C:\\Users"` -> `C:\Users`)
+2. `n` emits the newline control chracter (U+000A)
+3. `r` emits the carriage return control chracter (U+000D)
+4. `b` emits the backspace control character (U+000C)
+5. `t` emits a horizontal tab (U+0009)
+6. `f` emits a form feed (U+000C)
+7. Unknown escape sequences *must* raise a compile error
+
 TODO: byte values
 
 TODO: Currently, `"` and `'` are valid string characters. Remove `'` and only
 use them for runes.
 
 ```
-string_lit = `"` unicode_value `"` .
+string_escape =
+    "\n" | # Newline (U+000A)
+    "\r" | # Carriage return (U+000D)
+    "\t" | # Horizontal tab (U+0009)
+    "\f" | # Form feed (U+000C)
+    "\b" | # Backspace (U+0008)
+    `\"` | "\\"
+any = /* Any Unicode code point except newline (U+000A) and double quote (U+0022) */ .
+string_lit = `"` { any | string_escape } `"` .
 
 "abc"
 "Hello, world!"
+"Hello\nworld"
+"C:\\Users" # Should emit C:\Users
 "日本語"
 ```
