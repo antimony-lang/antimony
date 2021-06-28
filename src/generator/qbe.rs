@@ -684,6 +684,35 @@ impl fmt::Display for QbeDataItem {
     }
 }
 
+/// QBE aggregate type definition
+#[derive(Debug)]
+struct QbeTypeDef {
+    name: String,
+    align: Option<u64>,
+    // TODO: Opaque types?
+    // TODO: Fills (e.g. { w 100 })
+    items: Vec<QbeType>,
+}
+
+impl fmt::Display for QbeTypeDef {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "type :{} = ", self.name)?;
+        if let Some(align) = self.align {
+            write!(f, "align {} ", align)?;
+        }
+
+        write!(
+            f,
+            "{{ {} }}",
+            self.items
+                .iter()
+                .map(|i| format!("{}", i))
+                .collect::<Vec<String>>()
+                .join(", "),
+        )
+    }
+}
+
 /// An IR statement
 #[derive(Debug)]
 enum QbeStatement {
@@ -911,6 +940,18 @@ mod tests {
             formatted,
             "export data $hello = { b \"Hello, World!\", b 0 }"
         );
+    }
+
+    #[test]
+    fn typedef() {
+        let typedef = QbeTypeDef {
+            name: "person".into(),
+            align: None,
+            items: vec![QbeType::Long, QbeType::Word, QbeType::Byte],
+        };
+
+        let formatted = format!("{}", typedef);
+        assert_eq!(formatted, "type :person = { l, w, b }");
     }
 
     #[test]
