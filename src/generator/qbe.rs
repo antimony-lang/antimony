@@ -704,6 +704,15 @@ impl QbeType {
         }
     }
 
+    /// Returns the closest base type
+    fn into_base(self) -> Self {
+        match self {
+            Self::Byte | Self::Halfword => Self::Word,
+            Self::Aggregate(_) => Self::Long,
+            other => other,
+        }
+    }
+
     /// Returns byte size for values of the type
     fn size(&self) -> u64 {
         match self {
@@ -880,7 +889,8 @@ impl QbeBlock {
 
     /// Adds a new instruction assigned to a temporary
     fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
-        self.instructions.push(QbeStatement::Assign(temp, ty, instr));
+        self.instructions
+            .push(QbeStatement::Assign(temp, ty.into_base(), instr));
     }
 
     /// Returns true if the block's last instruction is a jump
@@ -1097,5 +1107,20 @@ mod tests {
         // Extended types are transformed into closest base types
         assert_eq!(QbeType::Byte.into_abi(), QbeType::Word);
         assert_eq!(QbeType::Halfword.into_abi(), QbeType::Word);
+    }
+
+    #[test]
+    fn type_into_base() {
+        // Base types should stay unchanged
+        let unchanged = |ty: QbeType| assert_eq!(ty.clone().into_base(), ty);
+        unchanged(QbeType::Word);
+        unchanged(QbeType::Long);
+        unchanged(QbeType::Single);
+        unchanged(QbeType::Double);
+
+        // Extended and aggregate types are transformed into closest base types
+        assert_eq!(QbeType::Byte.into_base(), QbeType::Word);
+        assert_eq!(QbeType::Halfword.into_base(), QbeType::Word);
+        assert_eq!(QbeType::Aggregate("foo".into()).into_base(), QbeType::Long);
     }
 }
