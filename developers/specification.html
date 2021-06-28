@@ -279,6 +279,61 @@ while
 .
 :
 </code></pre>
+<h3 id="integer-literals"><a class="header" href="#integer-literals">Integer Literals</a></h3>
+<p>An integer literal is a sequence of digits representing an integer constant. An
+optional prefix sets a non-decimal base: <code>0b</code> or <code>0B</code> for binary, <code>0</code>, <code>0o</code>, or
+<code>0O</code> for octal, and <code>0x</code> or <code>0X</code> for hexadecimal. A single <code>0</code> is considered a
+decimal zero. In hexadecimal literals, letters <code>a</code> through <code>f</code> and <code>A</code> through
+<code>F</code> represent values <code>10</code> through <code>15</code>.</p>
+<p>For readability, an underscore character <code>_</code> may appear after a base prefix or
+between successive digits; such underscores do not change the literal's value.</p>
+<pre><code>int_lit        = decimal_lit | binary_lit | octal_lit | hex_lit .
+decimal_lit    = &quot;0&quot; | ( &quot;1&quot; … &quot;9&quot; ) [ [ &quot;_&quot; ] decimal_digits ] .
+binary_lit     = &quot;0&quot; ( &quot;b&quot; | &quot;B&quot; ) [ &quot;_&quot; ] binary_digits .
+octal_lit      = &quot;0&quot; [ &quot;o&quot; | &quot;O&quot; ] [ &quot;_&quot; ] octal_digits .
+hex_lit        = &quot;0&quot; ( &quot;x&quot; | &quot;X&quot; ) [ &quot;_&quot; ] hex_digits .
+
+decimal_digits = decimal_digit { [ &quot;_&quot; ] decimal_digit } .
+binary_digits  = binary_digit { [ &quot;_&quot; ] binary_digit } .
+octal_digits   = octal_digit { [ &quot;_&quot; ] octal_digit } .
+hex_digits     = hex_digit { [ &quot;_&quot; ] hex_digit } .
+
+42
+4_2
+0600
+0_600
+0o600
+0O600       // second character is capital letter 'O'
+0xBadFace
+0xBad_Face
+0x_67_7a_2f_cc_40_c6
+170141183460469231731687303715884105727
+170_141183_460469_231731_687303_715884_105727
+
+_42         // an identifier, not an integer literal
+42_         // invalid: _ must separate successive digits
+4__2        // invalid: only one _ at a time
+0_xBadFace  // invalid: _ must separate successive digits
+</code></pre>
+<h3 id="floating-point-literals"><a class="header" href="#floating-point-literals">Floating-point literals</a></h3>
+<p>TO BE IMPLEMENTED</p>
+<h3 id="rune-literals"><a class="header" href="#rune-literals">Rune literals</a></h3>
+<p>TO BE IMPLEMENTED</p>
+<h3 id="string-literals"><a class="header" href="#string-literals">String literals</a></h3>
+<p>A string literal represents a string constant obtained from concatenating a
+sequence of characters. String literals are character sequences between double
+quotes, as in &quot;bar&quot;. Within the quotes, any character may appear except newline
+and unescaped double quote.</p>
+<p>TODO: escapes
+TODO: byte values</p>
+<p>TODO: Currently, <code>&quot;</code> and <code>'</code> are valid string characters. Remove <code>'</code> and only
+use them for runes.</p>
+<pre><code>string_lit = `&quot;` unicode_value `&quot;` .
+
+&quot;abc&quot;
+&quot;Hello, world!&quot;
+&quot;日本語&quot;
+</code></pre>
 
                     </main>
 
