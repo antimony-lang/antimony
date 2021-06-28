@@ -23,21 +23,40 @@ pub struct QbeGenerator {
     tmp_counter: u32,
     /// Block-scoped variable -> temporary mappings
     scopes: Vec<HashMap<String, (QbeType, QbeValue)>>,
+    /// Structure -> (type, meta data, size) mappings
+    struct_map: HashMap<String, (QbeType, StructMeta, u64)>,
     /// Label prefix of the current loop
     loop_label: Option<String>,
     /// Data defintions collected during generation
     datadefs: Vec<QbeDataDef>,
 }
 
+/// Mapping of field -> (type, offset)
+type StructMeta = HashMap<String, (QbeType, u64)>;
+
 impl Generator for QbeGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
         let mut generator = QbeGenerator {
             tmp_counter: 0,
             scopes: Vec::new(),
+            struct_map: HashMap::new(),
             loop_label: None,
             datadefs: Vec::new(),
         };
         let mut buf = String::new();
+
+        for def in &prog.structs {
+            let structure = generator.generate_struct(def)?;
+
+            #[cfg(debug_assertions)]
+            {
+                // Just in case it incorrectly calculates offsets
+                let (_, meta, size) = generator.struct_map.get(&def.name).unwrap();
+                buf.push_str(&format!("# size: {}\n", size));
+                buf.push_str(&format!("# meta: {:?}\n", meta));
+            }
+            buf.push_str(&format!("{}\n", structure));
+        }
 
         for func in &prog.func {
             let func = generator.generate_function(func)?;
@@ -53,6 +72,39 @@ impl Generator for QbeGenerator {
 }
 
 impl QbeGenerator {
+    /// Returns an aggregate type for a structure (note: has side effects)
+    fn generate_struct(&mut self, def: &StructDef) -> GeneratorResult<QbeTypeDef> {
+        self.tmp_counter += 1;
+        let mut typedef = QbeTypeDef {
+            name: format!("struct.{}", self.tmp_counter),
+            align: None,
+            items: Vec::new(),
+        };
+        let mut meta: StructMeta = StructMeta::new();
+        let mut offset = 0_u64;
+
+        for field in &def.fields {
+            let ty = self.get_type(
+                field
+                    .ty
+                    .as_ref()
+                    .ok_or_else(|| "Structure field must have a type".to_owned())?
+                    .to_owned(),
+            )?;
+
+            meta.insert(field.name.clone(), (ty.clone(), offset));
+            typedef.items.push(ty.clone());
+
+            offset += ty.size();
+        }
+        self.struct_map.insert(
+            def.name.clone(),
+            (QbeType::Aggregate(typedef.name.clone()), meta, offset),
+        );
+
+        Ok(typedef)
+    }
+
     fn generate_function(&mut self, func: &Function) -> GeneratorResult<QbeFunction> {
         // Function argument scope
         self.scopes.push(HashMap::new());
@@ -584,6 +636,19 @@ impl QbeType {
         match self {
             Self::Byte | Self::Halfword => Self::Word,
             other => other,
+        }
+    }
+
+    /// Returns byte size for values of the type
+    fn size(&self) -> u64 {
+        match self {
+            Self::Word | Self::Single => 4,
+            Self::Long | Self::Double => 8,
+            Self::Byte => 1,
+            Self::Halfword => 2,
+
+            // Aggregate types are syntactic sugar for pointers ;)
+            Self::Aggregate(_) => 8,
         }
     }
 }
