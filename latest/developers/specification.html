@@ -243,7 +243,7 @@ return
 self
 struct
 true
-while 
+while
 </code></pre>
 <h3 id="operators-and-punctuation"><a class="header" href="#operators-and-punctuation">Operators and Punctuation</a></h3>
 <p>The following character sequences represent operators (including assignment operators) and punctuation:</p>
@@ -324,14 +324,34 @@ _42         // an identifier, not an integer literal
 sequence of characters. String literals are character sequences between double
 quotes, as in &quot;bar&quot;. Within the quotes, any character may appear except newline
 and unescaped double quote.</p>
-<p>TODO: escapes
-TODO: byte values</p>
+<p>If <code>\</code> character appears in the string, the character(s) following it <em>must</em> be
+interpreted specially:</p>
+<ol>
+<li><code>\</code> and <code>&quot;</code> are included unchanged (e.g. <code>&quot;C:\\Users&quot;</code> -&gt; <code>C:\Users</code>)</li>
+<li><code>n</code> emits the newline control chracter (U+000A)</li>
+<li><code>r</code> emits the carriage return control chracter (U+000D)</li>
+<li><code>b</code> emits the backspace control character (U+000C)</li>
+<li><code>t</code> emits a horizontal tab (U+0009)</li>
+<li><code>f</code> emits a form feed (U+000C)</li>
+<li>Unknown escape sequences <em>must</em> raise a compile error</li>
+</ol>
+<p>TODO: byte values</p>
 <p>TODO: Currently, <code>&quot;</code> and <code>'</code> are valid string characters. Remove <code>'</code> and only
 use them for runes.</p>
-<pre><code>string_lit = `&quot;` unicode_value `&quot;` .
+<pre><code>string_escape =
+    &quot;\n&quot; | # Newline (U+000A)
+    &quot;\r&quot; | # Carriage return (U+000D)
+    &quot;\t&quot; | # Horizontal tab (U+0009)
+    &quot;\f&quot; | # Form feed (U+000C)
+    &quot;\b&quot; | # Backspace (U+0008)
+    `\&quot;` | &quot;\\&quot;
+any = /* Any Unicode code point except newline (U+000A) and double quote (U+0022) */ .
+string_lit = `&quot;` { any | string_escape } `&quot;` .
 
 &quot;abc&quot;
 &quot;Hello, world!&quot;
+&quot;Hello\nworld&quot;
+&quot;C:\\Users&quot; # Should emit C:\Users
 &quot;日本語&quot;
 </code></pre>
 
