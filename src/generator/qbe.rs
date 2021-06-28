@@ -312,6 +312,9 @@ impl QbeGenerator {
                 );
                 Ok((ty, tmp))
             }
+            Expression::StructInitialization(name, fields) => {
+                self.generate_struct_init(func, name, fields)
+            }
             _ => todo!("expression: {:?}", expr),
         }
     }
@@ -460,6 +463,47 @@ impl QbeGenerator {
         Ok(())
     }
 
+    /// Generates struct initialization
+    fn generate_struct_init(
+        &mut self,
+        func: &mut QbeFunction,
+        name: &str,
+        fields: &HashMap<String, Box<Expression>>,
+    ) -> GeneratorResult<(QbeType, QbeValue)> {
+        let base = self.new_temporary();
+        let (ty, meta, size) = self
+            .struct_map
+            .get(name)
+            .ok_or_else(|| format!("Initialization of undeclared struct '{}'", name))?
+            .to_owned();
+
+        func.assign_instr(
+            base.clone(),
+            QbeType::Long,
+            // XXX: Always align to 8 bytes?
+            QbeInstr::Alloc8(size),
+        );
+
+        for (name, expr) in fields {
+            let (_, offset) = meta
+                .get(name)
+                .ok_or_else(|| format!("Unknown field '{}'", name))?;
+
+            let (ty, expr_tmp) = self.generate_expression(func, expr)?;
+
+            let field_tmp = self.new_temporary();
+            func.assign_instr(
+                field_tmp.clone(),
+                QbeType::Long,
+                QbeInstr::Add(base.clone(), QbeValue::Const(*offset)),
+            );
+
+            func.add_instr(QbeInstr::Store(ty, field_tmp, expr_tmp));
+        }
+
+        Ok((ty, base))
+    }
+
     /// Returns a new unique temporary
     fn new_temporary(&mut self) -> QbeValue {
         self.tmp_counter += 1;
@@ -553,6 +597,11 @@ enum QbeInstr {
     Jmp(String),
     /// Calls a function
     Call(String, Vec<(QbeType, QbeValue)>),
+    /// Allocates a 8-byte aligned area on the stack
+    Alloc8(u64),
+    /// Stores a value into memory pointed to by destination.
+    /// `(type, destination, value)`
+    Store(QbeType, QbeValue, QbeValue),
 }
 
 impl fmt::Display for QbeInstr {
@@ -606,6 +655,14 @@ impl fmt::Display for QbeInstr {
                         .collect::<Vec<String>>()
                         .join(", "),
                 )
+            }
+            Self::Alloc8(size) => write!(f, "alloc8 {}", size),
+            Self::Store(ty, dest, value) => {
+                if matches!(ty, QbeType::Aggregate(_)) {
+                    unimplemented!("Store to an aggregate type");
+                }
+
+                write!(f, "store{} {}, {}", ty, value, dest)
             }
         }
     }
