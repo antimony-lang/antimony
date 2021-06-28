@@ -67,3 +67,22 @@ impl FromStr for Target {
 pub trait Generator {
     fn generate(prog: Module) -> String;
 }
+
+/// Returns C syntax representation of a raw string
+pub fn string_syntax(raw: String) -> String {
+    format!(
+        "\"{}\"",
+        raw.chars()
+            .map(|c| match c {
+                '\n' => "\\n".to_string(),
+                '\r' => "\\r".to_string(),
+                '\t' => "\\t".to_string(),
+                '\u{000C}' => "\\f".to_string(),
+                '\u{0008}' => "\\b".to_string(),
+                '\\' => "\\\\".to_string(),
+                '"' => "\"".to_string(),
+                other => other.to_string(),
+            })
+            .collect::<String>(),
+    )
+}

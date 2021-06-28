@@ -129,7 +129,7 @@ impl TryFrom<Token> for Expression {
                 "false" => Ok(Expression::Bool(false)),
                 _ => Err("Boolean value could not be parsed".into()),
             },
-            TokenKind::Literal(Value::Str) => Ok(Expression::Str(token.raw)),
+            TokenKind::Literal(Value::Str(string)) => Ok(Expression::Str(string)),
             _ => Err("Value could not be parsed".into()),
         }
     }

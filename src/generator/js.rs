@@ -1,4 +1,3 @@
-use crate::ast::*;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -14,6 +13,7 @@ use crate::ast::*;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::ast::*;
 use crate::generator::Generator;
 use std::collections::HashMap;
 use types::Type;
@@ -148,7 +148,8 @@ fn generate_expression(expr: Expression) -> String {
     match expr {
         Expression::Int(val) => val.to_string(),
         Expression::Selff => "this".to_string(),
-        Expression::Variable(val) | Expression::Str(val) => val,
+        Expression::Str(val) => super::string_syntax(val),
+        Expression::Variable(val) => val,
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
         Expression::Array(_, els) => generate_array(els),
@@ -301,7 +302,8 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Selff => "this".to_string(),
             Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
-            Expression::Str(s) | Expression::Variable(s) => s,
+            Expression::Str(s) => super::string_syntax(s),
+            Expression::Variable(s) => s,
             Expression::Array(_, elements) => generate_array(elements),
             Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
             Expression::StructInitialization(name, fields) => {

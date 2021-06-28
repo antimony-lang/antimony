@@ -17,7 +17,7 @@ use crate::lexer::*;
 
 #[test]
 fn test_basic_tokenizing() {
-    let raw = tokenize("1 = 2");
+    let raw = tokenize("1 = 2").unwrap();
     let mut tokens = raw.into_iter();
 
     assert_eq!(
@@ -93,7 +93,7 @@ fn test_basic_tokenizing() {
 
 #[test]
 fn test_tokenizing_without_whitespace() {
-    let mut tokens = tokenize("1=2").into_iter();
+    let mut tokens = tokenize("1=2").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
@@ -140,13 +140,13 @@ fn test_tokenizing_without_whitespace() {
 
 #[test]
 fn test_string() {
-    let mut tokens = tokenize("'aaa' \"bbb\"").into_iter();
+    let mut tokens = tokenize("'aaa' \"bbb\"").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
         Token {
             len: 5,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("aaa".into())),
             raw: "'aaa'".to_owned(),
             pos: Position {
                 raw: 4,
@@ -160,7 +160,7 @@ fn test_string() {
         tokens.nth(1).unwrap(),
         Token {
             len: 5,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("bbb".into())),
             raw: "\"bbb\"".to_owned(),
             pos: Position {
                 raw: 10,
@@ -173,13 +173,13 @@ fn test_string() {
 
 #[test]
 fn test_string_markers_within_string() {
-    let mut tokens = tokenize("'\"aaa' \"'bbb\"").into_iter();
+    let mut tokens = tokenize("'\"aaa' \"'bbb\"").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
         Token {
             len: 6,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("\"aaa".into())),
             raw: "'\"aaa'".to_owned(),
             pos: Position {
                 raw: 5,
@@ -193,7 +193,7 @@ fn test_string_markers_within_string() {
         tokens.nth(1).unwrap(),
         Token {
             len: 6,
-            kind: TokenKind::Literal(Value::Str),
+            kind: TokenKind::Literal(Value::Str("'bbb".into())),
             raw: "\"'bbb\"".to_owned(),
             pos: Position {
                 raw: 12,
@@ -206,7 +206,7 @@ fn test_string_markers_within_string() {
 
 #[test]
 fn test_numbers() {
-    let mut tokens = tokenize("42").into_iter();
+    let mut tokens = tokenize("42").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
@@ -225,7 +225,7 @@ fn test_numbers() {
 
 #[test]
 fn test_binary_numbers() {
-    let mut tokens = tokenize("0b101010").into_iter();
+    let mut tokens = tokenize("0b101010").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
@@ -244,7 +244,7 @@ fn test_binary_numbers() {
 
 #[test]
 fn test_octal_numbers() {
-    let mut tokens = tokenize("0o52").into_iter();
+    let mut tokens = tokenize("0o52").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
@@ -263,7 +263,7 @@ fn test_octal_numbers() {
 
 #[test]
 fn test_hex_numbers() {
-    let mut tokens = tokenize("0x2A").into_iter();
+    let mut tokens = tokenize("0x2A").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
@@ -282,7 +282,7 @@ fn test_hex_numbers() {
 
 #[test]
 fn test_functions() {
-    let mut tokens = tokenize("fn fib() {}").into_iter();
+    let mut tokens = tokenize("fn fib() {}").unwrap().into_iter();
 
     assert_eq!(
         tokens.next().unwrap(),
@@ -306,6 +306,7 @@ fn test_comments() {
 fn fib() {}
         ",
     )
+    .unwrap()
     .into_iter()
     .filter(|t| {
         t.kind != TokenKind::Whitespace

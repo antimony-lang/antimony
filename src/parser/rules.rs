@@ -171,14 +171,17 @@ impl Parser {
 
     fn parse_import(&mut self) -> Result<String, String> {
         self.match_keyword(Keyword::Import)?;
-        let import_path_token = self.match_token(TokenKind::Literal(Value::Str))?;
+        let token = self.next()?;
+        let path = match token.kind {
+            TokenKind::Literal(Value::Str(path)) => path,
+            other => {
+                return Err(
+                    self.make_error_msg(token.pos, format!("Expected string, got {:?}", other))
+                )
+            }
+        };
 
-        // Remove leading and trailing string tokens
-        let mut chars = import_path_token.raw.chars();
-        chars.next();
-        chars.next_back();
-
-        Ok(chars.collect())
+        Ok(path)
     }
 
     fn parse_type(&mut self) -> Result<Type, String> {
@@ -355,7 +358,7 @@ impl Parser {
                 Expression::Int(val)
             }
             // "A string"
-            TokenKind::Literal(Value::Str) => Expression::Str(token.raw),
+            TokenKind::Literal(Value::Str(string)) => Expression::Str(string),
             // self
             TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
             TokenKind::Identifier(val) => {
