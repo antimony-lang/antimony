@@ -111,17 +111,15 @@ impl QbeGenerator {
 
         let mut arguments: Vec<(QbeType, QbeValue)> = Vec::new();
         for arg in &func.arguments {
-            let ty = self
-                .get_type(
-                    arg.ty
-                        .as_ref()
-                        .ok_or("Function arguments must have a type")?
-                        .to_owned(),
-                )?
-                .into_abi();
+            let ty = self.get_type(
+                arg.ty
+                    .as_ref()
+                    .ok_or("Function arguments must have a type")?
+                    .to_owned(),
+            )?;
             let tmp = self.new_var(&ty, &arg.name)?;
 
-            arguments.push((ty, tmp));
+            arguments.push((ty.into_abi(), tmp));
         }
 
         let return_ty = if let Some(ty) = &func.ret_type {
