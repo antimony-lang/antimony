@@ -441,7 +441,7 @@ impl QbeGenerator {
     /// Generates an assignment to either a variable, field access or array
     /// access
     fn generate_assignment(
-        &self,
+        &mut self,
         func: &mut QbeFunction,
         lhs: &Expression,
         rhs: QbeValue,
@@ -455,7 +455,19 @@ impl QbeGenerator {
                     QbeInstr::Copy(rhs),
                 );
             }
-            Expression::FieldAccess(..) | Expression::ArrayAccess(..) => todo!(),
+            Expression::FieldAccess(obj, field) => {
+                let (src, ty, offset) = self.resolve_field_access(obj, field)?;
+
+                let field_ptr = self.new_temporary();
+                func.assign_instr(
+                    field_ptr.clone(),
+                    QbeType::Long,
+                    QbeInstr::Add(src, QbeValue::Const(offset)),
+                );
+
+                func.add_instr(QbeInstr::Store(ty, field_ptr, rhs));
+            }
+            Expression::ArrayAccess(..) => todo!(),
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
         }
 
@@ -510,6 +522,31 @@ impl QbeGenerator {
         obj: &Expression,
         field: &Expression,
     ) -> GeneratorResult<(QbeType, QbeValue)> {
+        let (src, ty, offset) = self.resolve_field_access(obj, field)?;
+
+        let field_ptr = self.new_temporary();
+        func.assign_instr(
+            field_ptr.clone(),
+            QbeType::Long,
+            QbeInstr::Add(src, QbeValue::Const(offset)),
+        );
+
+        let tmp = self.new_temporary();
+        func.assign_instr(
+            tmp.clone(),
+            ty.clone(),
+            QbeInstr::Load(ty.clone(), field_ptr),
+        );
+
+        Ok((ty, tmp))
+    }
+
+    /// Retrieves `(source, offset)` from field access expression
+    fn resolve_field_access(
+        &mut self,
+        obj: &Expression,
+        field: &Expression,
+    ) -> GeneratorResult<(QbeValue, QbeType, u64)> {
         let (ty, src) = match obj {
             Expression::Variable(var) => self.get_var(var)?.to_owned(),
             Expression::FieldAccess(..) => todo!("nested field access"),
@@ -528,32 +565,28 @@ impl QbeGenerator {
             _ => unreachable!(),
         };
 
-        // XXX: this is so hacky and inefficient, I hate it
-        let mut meta: Option<StructMeta> = None;
-        for (_, (sty, smeta, _)) in self.struct_map.iter() {
-            if ty == *sty {
-                meta = Some(smeta.to_owned());
-                break;
-            }
-        }
+        // XXX: this is very hacky and inefficient
+        let (name, meta) = self
+            .struct_map
+            .iter()
+            .filter_map(
+                |(name, (sty, meta, _))| {
+                    if ty == *sty {
+                        Some((name, meta))
+                    } else {
+                        None
+                    }
+                },
+            )
+            .next()
+            .unwrap();
 
-        let (sty, offset) = meta
-            .unwrap()
+        let (ty, offset) = meta
             .get(field)
-            .ok_or_else(|| format!("No field '{}' on struct ???", field))?
+            .ok_or_else(|| format!("No field '{}' on struct {}", field, name))?
             .to_owned();
 
-        let field_ptr = self.new_temporary();
-        func.assign_instr(
-            field_ptr.clone(),
-            QbeType::Long,
-            QbeInstr::Add(src, QbeValue::Const(offset)),
-        );
-
-        let tmp = self.new_temporary();
-        func.assign_instr(tmp.clone(), sty.clone(), QbeInstr::Load(sty, field_ptr));
-
-        Ok((ty, tmp))
+        Ok((src, ty, offset))
     }
 
     /// Returns a new unique temporary
