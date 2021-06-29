@@ -315,6 +315,7 @@ impl QbeGenerator {
             Expression::StructInitialization(name, fields) => {
                 self.generate_struct_init(func, name, fields)
             }
+            Expression::FieldAccess(obj, field) => self.generate_field_access(func, obj, field),
             _ => todo!("expression: {:?}", expr),
         }
     }
@@ -504,6 +505,59 @@ impl QbeGenerator {
         Ok((ty, base))
     }
 
+    /// Retrieves the result of struct field access
+    fn generate_field_access(
+        &mut self,
+        func: &mut QbeFunction,
+        obj: &Expression,
+        field: &Expression,
+    ) -> GeneratorResult<(QbeType, QbeValue)> {
+        let (ty, src) = match obj {
+            Expression::Variable(var) => self.get_var(var)?.to_owned(),
+            Expression::FieldAccess(..) => todo!("nested field access"),
+            Expression::Selff => unimplemented!("methods"),
+            other => {
+                return Err(format!(
+                    "Invalid field access type: expected variable, field access or 'self', got {:?}",
+                    other,
+                ));
+            }
+        };
+        let field = match field {
+            Expression::Variable(v) => v,
+            Expression::FunctionCall(..) => unimplemented!("methods"),
+            // Parser should ensure this won't happen
+            _ => unreachable!(),
+        };
+
+        // XXX: this is so hacky and inefficient, I hate it
+        let mut meta: Option<StructMeta> = None;
+        for (_, (sty, smeta, _)) in self.struct_map.iter() {
+            if ty == *sty {
+                meta = Some(smeta.to_owned());
+                break;
+            }
+        }
+
+        let (sty, offset) = meta
+            .unwrap()
+            .get(field)
+            .ok_or_else(|| format!("No field '{}' on struct ???", field))?
+            .to_owned();
+
+        let field_ptr = self.new_temporary();
+        func.assign_instr(
+            field_ptr.clone(),
+            QbeType::Long,
+            QbeInstr::Add(src, QbeValue::Const(offset)),
+        );
+
+        let tmp = self.new_temporary();
+        func.assign_instr(tmp.clone(), sty.clone(), QbeInstr::Load(sty, field_ptr));
+
+        Ok((ty, tmp))
+    }
+
     /// Returns a new unique temporary
     fn new_temporary(&mut self) -> QbeValue {
         self.tmp_counter += 1;
@@ -610,6 +664,9 @@ enum QbeInstr {
     /// Stores a value into memory pointed to by destination.
     /// `(type, destination, value)`
     Store(QbeType, QbeValue, QbeValue),
+    /// Loads a value from memory pointed to by source
+    /// `(type, source)`
+    Load(QbeType, QbeValue),
 }
 
 impl fmt::Display for QbeInstr {
@@ -671,6 +728,13 @@ impl fmt::Display for QbeInstr {
                 }
 
                 write!(f, "store{} {}, {}", ty, value, dest)
+            }
+            Self::Load(ty, src) => {
+                if matches!(ty, QbeType::Aggregate(_)) {
+                    unimplemented!("Load aggregate type");
+                }
+
+                write!(f, "load{} {}", ty, src)
             }
         }
     }
