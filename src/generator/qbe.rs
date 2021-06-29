@@ -25,8 +25,8 @@ pub struct QbeGenerator {
     scopes: Vec<HashMap<String, (QbeType, QbeValue)>>,
     /// Structure -> (type, meta data, size) mappings
     struct_map: HashMap<String, (QbeType, StructMeta, u64)>,
-    /// Label prefix of the current loop
-    loop_label: Option<String>,
+    /// Label prefix of loop scopes
+    loop_labels: Vec<String>,
     /// Data defintions collected during generation
     datadefs: Vec<QbeDataDef>,
 }
@@ -40,7 +40,7 @@ impl Generator for QbeGenerator {
             tmp_counter: 0,
             scopes: Vec::new(),
             struct_map: HashMap::new(),
-            loop_label: None,
+            loop_labels: Vec::new(),
             datadefs: Vec::new(),
         };
         let mut buf = String::new();
@@ -199,14 +199,14 @@ impl QbeGenerator {
                 self.generate_while(func, cond, body)?;
             }
             Statement::Break => {
-                if let Some(label) = &self.loop_label {
+                if let Some(label) = &self.loop_labels.last() {
                     func.add_instr(QbeInstr::Jmp(format!("{}.end", label)));
                 } else {
                     return Err("break used outside of a loop".to_owned());
                 }
             }
             Statement::Continue => {
-                if let Some(label) = &self.loop_label {
+                if let Some(label) = &self.loop_labels.last() {
                     func.add_instr(QbeInstr::Jmp(format!("{}.cond", label)));
                 } else {
                     return Err("continue used outside of a loop".to_owned());
@@ -376,7 +376,7 @@ impl QbeGenerator {
         let body_label = format!("loop.{}.body", self.tmp_counter);
         let end_label = format!("loop.{}.end", self.tmp_counter);
 
-        self.loop_label = Some(format!("loop.{}", self.tmp_counter));
+        self.loop_labels.push(format!("loop.{}", self.tmp_counter));
 
         func.add_block(cond_label.clone());
 
@@ -392,7 +392,7 @@ impl QbeGenerator {
 
         func.add_block(end_label);
 
-        self.loop_label = None;
+        self.loop_labels.pop();
 
         Ok(())
     }
