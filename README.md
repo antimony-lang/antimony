@@ -1,4 +1,4 @@
-# The Antimony Programming language
+# The Antimony Programming Language
 
 [![](https://img.shields.io/crates/v/antimony-lang.svg)](https://crates.io/crates/antimony-lang)
 ![Continuous integration](https://github.com/antimony-lang/antimony/workflows/Continuous%20integration/badge.svg?branch=master)
