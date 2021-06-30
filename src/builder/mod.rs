@@ -45,7 +45,7 @@ impl Builder {
             .to_path_buf())
     }
 
-    pub fn build(&mut self) -> Result<(), String> {
+    pub fn build(&mut self, target: &Target) -> Result<(), String> {
         let in_file = self.in_file.clone();
         // Resolve path deltas between working directory and entrypoint
         let base_directory = self.get_base_path()?;
@@ -61,7 +61,9 @@ impl Builder {
         self.build_module(self.in_file.clone(), &mut Vec::new())?;
 
         // Append standard library
-        self.build_stdlib()?;
+        if matches!(target, Target::JS) {
+            self.build_stdlib()?;
+        }
 
         // Change back to the initial directory
         env::set_current_dir(initial_directory).expect("Could not set current directory");
@@ -132,16 +134,17 @@ impl Builder {
         }
 
         let output = match target {
-            Target::JS => generator::js::JsGenerator::generate(condensed),
-            Target::C => generator::c::CGenerator::generate(condensed),
+            Target::JS => generator::js::JsGenerator::generate(condensed)?,
+            Target::C => generator::c::CGenerator::generate(condensed)?,
             Target::Llvm => {
                 #[cfg(not(feature = "llvm"))]
                 panic!("'llvm' feature should be enabled to use LLVM target");
 
                 #[cfg(feature = "llvm")]
-                generator::llvm::LLVMGenerator::generate(condensed)
+                generator::llvm::LLVMGenerator::generate(condensed)?
             }
-            Target::X86 => generator::x86::X86Generator::generate(condensed),
+            Target::Qbe => generator::qbe::QbeGenerator::generate(condensed)?,
+            Target::X86 => generator::x86::X86Generator::generate(condensed)?,
         };
 
         buffer.write_all(output.as_bytes()).expect("write failed");

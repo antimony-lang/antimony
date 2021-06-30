@@ -14,6 +14,7 @@
 - Parser errors have been improved in consistency and readability
 - Compile to stdout by using the `-o -` flag
 - Proper support for utf-8
+- Initial support for QBE backend
 
 **Fixes**
 

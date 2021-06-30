@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::collections::HashMap;
-
 use crate::ast::types::Type;
 use crate::ast::*;
-use crate::generator::Generator;
+use crate::generator::{Generator, GeneratorResult};
 use crate::util::Either;
+use std::collections::HashMap;
 
 pub struct CGenerator;
 
 impl Generator for CGenerator {
-    fn generate(prog: Module) -> String {
+    fn generate(prog: Module) -> GeneratorResult<String> {
         let mut code = String::new();
 
         let raw_builtins =
@@ -43,7 +42,7 @@ impl Generator for CGenerator {
 
         code += &funcs;
 
-        code
+        Ok(code)
     }
 }
 

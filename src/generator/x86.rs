@@ -1,4 +1,3 @@
-use crate::ast::{Function, Module, Statement};
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -14,7 +13,8 @@ use crate::ast::{Function, Module, Statement};
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::generator::Generator;
+use crate::ast::{Function, Module, Statement};
+use crate::generator::{Generator, GeneratorResult};
 
 struct Assembly {
     asm: Vec<String>,
@@ -43,8 +43,8 @@ impl Assembly {
 pub struct X86Generator;
 
 impl Generator for X86Generator {
-    fn generate(prog: Module) -> String {
-        Self::new().gen_program(prog).build()
+    fn generate(prog: Module) -> GeneratorResult<String> {
+        Ok(Self::new().gen_program(prog).build())
     }
 }
 
