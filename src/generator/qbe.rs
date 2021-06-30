@@ -93,7 +93,7 @@ impl QbeGenerator {
             )?;
 
             meta.insert(field.name.clone(), (ty.clone(), offset));
-            typedef.items.push(ty.clone());
+            typedef.items.push((ty.clone(), 1));
 
             offset += ty.size();
         }
@@ -1016,8 +1016,7 @@ struct QbeTypeDef {
     name: String,
     align: Option<u64>,
     // TODO: Opaque types?
-    // TODO: Fills (e.g. { w 100 })
-    items: Vec<QbeType>,
+    items: Vec<(QbeType, usize)>,
 }
 
 impl fmt::Display for QbeTypeDef {
@@ -1032,7 +1031,11 @@ impl fmt::Display for QbeTypeDef {
             "{{ {} }}",
             self.items
                 .iter()
-                .map(|i| format!("{}", i))
+                .map(|(ty, count)| if *count > 1 {
+                    format!("{} {}", ty, count)
+                } else {
+                    format!("{}", ty)
+                })
                 .collect::<Vec<String>>()
                 .join(", "),
         )
@@ -1274,11 +1277,11 @@ mod tests {
         let typedef = QbeTypeDef {
             name: "person".into(),
             align: None,
-            items: vec![QbeType::Long, QbeType::Word, QbeType::Byte],
+            items: vec![(QbeType::Long, 1), (QbeType::Word, 2), (QbeType::Byte, 1)],
         };
 
         let formatted = format!("{}", typedef);
-        assert_eq!(formatted, "type :person = { l, w, b }");
+        assert_eq!(formatted, "type :person = { l, w 2, b }");
     }
 
     #[test]
