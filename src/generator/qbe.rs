@@ -655,7 +655,7 @@ impl QbeGenerator {
                     .to_owned();
                 Ok(ty)
             }
-            Type::Array(..) => todo!("array types"),
+            Type::Array(..) => Ok(QbeType::Long),
         }
     }
 }
