@@ -265,51 +265,7 @@ impl QbeGenerator {
                 Ok((QbeType::Word, tmp))
             }
             Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
-            Expression::BinOp(lhs, op, rhs) => {
-                let (_, lhs) = self.generate_expression(func, &lhs)?;
-                let (_, rhs) = self.generate_expression(func, &rhs)?;
-                let tmp = self.new_temporary();
-
-                // TODO: take the biggest
-                let ty = QbeType::Word;
-
-                func.assign_instr(
-                    tmp.clone(),
-                    ty.clone(),
-                    match op {
-                        BinOp::Addition => QbeInstr::Add(lhs, rhs),
-                        BinOp::Subtraction => QbeInstr::Sub(lhs, rhs),
-                        BinOp::Multiplication => QbeInstr::Mul(lhs, rhs),
-                        BinOp::Division => QbeInstr::Div(lhs, rhs),
-                        BinOp::Modulus => QbeInstr::Rem(lhs, rhs),
-
-                        BinOp::AddAssign => todo!(),
-                        BinOp::SubtractAssign => todo!(),
-                        BinOp::MultiplyAssign => todo!(),
-                        BinOp::DivideAssign => todo!(),
-
-                        BinOp::And => QbeInstr::And(lhs, rhs),
-                        BinOp::Or => QbeInstr::Or(lhs, rhs),
-
-                        // Others should be comparisons
-                        cmp => QbeInstr::Cmp(
-                            ty.clone(),
-                            match cmp {
-                                BinOp::LessThan => QbeCmp::Slt,
-                                BinOp::LessThanOrEqual => QbeCmp::Sle,
-                                BinOp::GreaterThan => QbeCmp::Sgt,
-                                BinOp::GreaterThanOrEqual => QbeCmp::Sge,
-                                BinOp::Equal => QbeCmp::Eq,
-                                BinOp::NotEqual => QbeCmp::Ne,
-                                _ => unreachable!(),
-                            },
-                            lhs,
-                            rhs,
-                        ),
-                    },
-                );
-                Ok((ty, tmp))
-            }
+            Expression::BinOp(lhs, op, rhs) => self.generate_binop(func, lhs, op, rhs),
             Expression::StructInitialization(name, fields) => {
                 self.generate_struct_init(func, name, fields)
             }
@@ -436,6 +392,68 @@ impl QbeGenerator {
         });
 
         Ok((QbeType::Long, QbeValue::Global(name)))
+    }
+
+    /// Returns the result of a binary operation (e.g. `+` or `*=`).
+    fn generate_binop(
+        &mut self,
+        func: &mut QbeFunction,
+        lhs: &Expression,
+        op: &BinOp,
+        rhs: &Expression,
+    ) -> GeneratorResult<(QbeType, QbeValue)> {
+        let (_, lhs_val) = self.generate_expression(func, lhs)?;
+        let (_, rhs_val) = self.generate_expression(func, rhs)?;
+        let tmp = self.new_temporary();
+
+        // TODO: take the biggest
+        let ty = QbeType::Word;
+
+        func.assign_instr(
+            tmp.clone(),
+            ty.clone(),
+            match op {
+                BinOp::Addition | BinOp::AddAssign => QbeInstr::Add(lhs_val, rhs_val),
+                BinOp::Subtraction | BinOp::SubtractAssign => QbeInstr::Sub(lhs_val, rhs_val),
+                BinOp::Multiplication | BinOp::MultiplyAssign => QbeInstr::Mul(lhs_val, rhs_val),
+                BinOp::Division | BinOp::DivideAssign => QbeInstr::Div(lhs_val, rhs_val),
+                BinOp::Modulus => QbeInstr::Rem(lhs_val, rhs_val),
+
+                BinOp::And => QbeInstr::And(lhs_val, rhs_val),
+                BinOp::Or => QbeInstr::Or(lhs_val, rhs_val),
+
+                // Others should be comparisons
+                cmp => QbeInstr::Cmp(
+                    ty.clone(),
+                    match cmp {
+                        BinOp::LessThan => QbeCmp::Slt,
+                        BinOp::LessThanOrEqual => QbeCmp::Sle,
+                        BinOp::GreaterThan => QbeCmp::Sgt,
+                        BinOp::GreaterThanOrEqual => QbeCmp::Sge,
+                        BinOp::Equal => QbeCmp::Eq,
+                        BinOp::NotEqual => QbeCmp::Ne,
+                        _ => unreachable!(),
+                    },
+                    lhs_val,
+                    rhs_val,
+                ),
+            },
+        );
+
+        // *Assign BinOps work just like normal ones except that here the
+        // result is assigned to the left hand side. This essentially makes
+        // `a += 1` the same as `a = a + 1`.
+        match op {
+            BinOp::AddAssign
+            | BinOp::SubtractAssign
+            | BinOp::MultiplyAssign
+            | BinOp::DivideAssign => {
+                self.generate_assignment(func, lhs, tmp.clone())?;
+            }
+            _ => {}
+        };
+
+        Ok((ty, tmp))
     }
 
     /// Generates an assignment to either a variable, field access or array
