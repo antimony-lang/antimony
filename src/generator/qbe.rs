@@ -29,6 +29,8 @@ pub struct QbeGenerator {
     loop_labels: Vec<String>,
     /// Data defintions collected during generation
     datadefs: Vec<QbeDataDef>,
+    /// Type defintions collected during generation
+    typedefs: Vec<QbeTypeDef>,
 }
 
 /// Mapping of field -> (type, offset)
@@ -42,6 +44,7 @@ impl Generator for QbeGenerator {
             struct_map: HashMap::new(),
             loop_labels: Vec::new(),
             datadefs: Vec::new(),
+            typedefs: Vec::new(),
         };
         let mut buf = String::new();
 
@@ -61,6 +64,10 @@ impl Generator for QbeGenerator {
         for func in &prog.func {
             let func = generator.generate_function(func)?;
             buf.push_str(&format!("{}\n", func));
+        }
+
+        for def in &generator.typedefs {
+            buf.push_str(&format!("{}\n", def));
         }
 
         for def in &generator.datadefs {
@@ -678,7 +685,21 @@ impl QbeGenerator {
             ));
         }
 
-        Ok((QbeType::Long, tmp))
+        self.tmp_counter += 1;
+        let name = format!("array.{}", self.tmp_counter);
+        let typedef = QbeTypeDef {
+            name: name.clone(),
+            align: None,
+            items: if let Some(ty) = first_type {
+                vec![(QbeType::Long, 1), (ty, len)]
+            } else {
+                // No elements
+                vec![(QbeType::Long, 1)]
+            },
+        };
+        self.typedefs.push(typedef);
+
+        Ok((QbeType::Aggregate(name), tmp))
     }
 
     /// Returns a new unique temporary
