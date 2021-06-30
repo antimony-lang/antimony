@@ -47,9 +47,9 @@ Documentation is hosted [here](https://antimony-lang.github.io/antimony).
 
 See the [installation](https://antimony-lang.github.io/antimony/latest/introduction/installation.html) instructions to get started.
 
-## Chat on matrix
+## Getting in touch
 
-[Get in touch](https://matrix.to/#/#antimony:matrix.slashdev.space?via=matrix.slashdev.space)!
+[Join our Matrix room](https://matrix.to/#/#antimony:matrix.slashdev.space?via=matrix.slashdev.space)!
 
 ## License
 
