@@ -248,6 +248,7 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
+            Expression::Array(len, items) => self.generate_array(func, *len, items),
             Expression::FunctionCall(name, args) => {
                 let mut new_args: Vec<(QbeType, QbeValue)> = Vec::new();
                 for arg in args.iter() {
@@ -605,6 +606,79 @@ impl QbeGenerator {
             .to_owned();
 
         Ok((src, ty, offset))
+    }
+
+    /// Generates an array literal
+    fn generate_array(
+        &mut self,
+        func: &mut QbeFunction,
+        len: usize,
+        items: &[Expression],
+    ) -> GeneratorResult<(QbeType, QbeValue)> {
+        let mut first_type: Option<QbeType> = None;
+        let mut results: Vec<QbeValue> = Vec::new();
+
+        for item in items.iter() {
+            let (ty, result) = self.generate_expression(func, item)?;
+            results.push(result);
+
+            if let Some(first_type) = first_type.clone() {
+                if ty != first_type {
+                    return Err(format!(
+                        "Inconsistent array types {:?} and {:?} (possibly more)",
+                        first_type, ty
+                    ));
+                }
+            } else {
+                first_type = Some(ty);
+            }
+        }
+
+        // Arrays have the following in-memory representation:
+        // {
+        //    length (long),
+        //    values...
+        // }
+        let tmp = self.new_temporary();
+        func.assign_instr(
+            tmp.clone(),
+            QbeType::Long,
+            QbeInstr::Alloc8(
+                QbeType::Long.size()
+                    + if let Some(ref ty) = first_type {
+                        ty.size() * (len as u64)
+                    } else {
+                        0
+                    },
+            ),
+        );
+        func.add_instr(QbeInstr::Store(
+            QbeType::Long,
+            tmp.clone(),
+            QbeValue::Const(len as u64),
+        ));
+
+        for (i, value) in results.iter().enumerate() {
+            let value_ptr = self.new_temporary();
+            func.assign_instr(
+                value_ptr.clone(),
+                QbeType::Long,
+                QbeInstr::Add(
+                    tmp.clone(),
+                    QbeValue::Const(
+                        QbeType::Long.size() + (i as u64) * first_type.as_ref().unwrap().size(),
+                    ),
+                ),
+            );
+
+            func.add_instr(QbeInstr::Store(
+                first_type.as_ref().unwrap().clone(),
+                value_ptr,
+                value.to_owned(),
+            ));
+        }
+
+        Ok((QbeType::Long, tmp))
     }
 
     /// Returns a new unique temporary
