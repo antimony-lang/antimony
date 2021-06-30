@@ -22,7 +22,7 @@ fn main() {
     println(fib(num))
 }
 
-fn fib(n: int) {
+fn fib(n: int): int {
     if n <= 1 {
         return n
     }
