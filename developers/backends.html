@@ -144,13 +144,14 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="backends"><a class="header" href="#backends">Backends</a></h1>
-<p>Antimony currently implements a JavaScript backend, but a C backend is in development. WASM, ARM and x86 are planned.</p>
+<p>Antimony currently implements a JavaScript backend, but C and QBE backends are in development. WASM, ARM and x86 are planned.</p>
 <p>Backend can be specified when running on building with <code>--target</code> (<code>-t</code>) option, default is <code>js</code>:</p>
 <pre><code class="language-sh">sb -t c build in.sb --out-file out
 </code></pre>
 <h2 id="available-backends"><a class="header" href="#available-backends">Available Backends</a></h2>
 <table><thead><tr><th align="left">Target Language</th><th align="left">Identifier</th><th align="left">Stability notice</th></tr></thead><tbody>
 <tr><td align="left">Node.js</td><td align="left"><code>js</code></td><td align="left">mostly stable</td></tr>
+<tr><td align="left"><a href="https://c9x.me/compile">QBE</a></td><td align="left"><code>qbe</code></td><td align="left">work in progess</td></tr>
 <tr><td align="left">LLVM</td><td align="left"><code>llvm</code></td><td align="left">unstable</td></tr>
 <tr><td align="left">C</td><td align="left"><code>c</code></td><td align="left">unstable</td></tr>
 </tbody></table>
