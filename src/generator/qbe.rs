@@ -331,9 +331,7 @@ impl QbeGenerator {
             self.generate_statement(func, &else_clause)?;
         }
 
-        if !func.blocks.last().map_or(false, |b| b.jumps()) {
-            func.add_block(end_label);
-        }
+        func.add_block(end_label);
 
         Ok(())
     }
