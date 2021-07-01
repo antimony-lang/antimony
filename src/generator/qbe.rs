@@ -147,10 +147,20 @@ impl QbeGenerator {
 
         self.generate_statement(&mut qfunc, &func.body)?;
 
-        // Automatically add return in void functions
-        // TODO: validate the same in non-void ones
-        if func.ret_type.is_none() {
-            qfunc.add_instr(QbeInstr::Ret(None));
+        let returns = qfunc.last_block().instructions.last().map_or(false, |i| {
+            matches!(i, QbeStatement::Volatile(QbeInstr::Ret(_)))
+        });
+        // Automatically add return in void functions unless it already returns,
+        // non-void functions raise an error
+        if !returns {
+            if func.ret_type.is_none() {
+                qfunc.add_instr(QbeInstr::Ret(None));
+            } else {
+                return Err(format!(
+                    "Function '{}' does not return in all code paths",
+                    &func.name
+                ));
+            }
         }
 
         self.scopes.pop();
@@ -1161,6 +1171,12 @@ impl QbeFunction {
             label,
             instructions: Vec::new(),
         });
+    }
+
+    fn last_block(&mut self) -> &QbeBlock {
+        self.blocks
+            .last()
+            .expect("Function must have at least one block")
     }
 
     /// Adds a new instruction to the last block
