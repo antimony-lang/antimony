@@ -767,7 +767,7 @@ use std::fmt;
 
 /// QBE comparision
 #[derive(Debug)]
-enum QbeCmp {
+pub(super) enum QbeCmp {
     /// Returns 1 if first value is less than second, respecting signedness
     Slt,
     /// Returns 1 if first value is less than or equal to second, respecting signedness
@@ -784,7 +784,7 @@ enum QbeCmp {
 
 /// QBE instruction
 #[derive(Debug)]
-enum QbeInstr {
+pub(super) enum QbeInstr {
     /// Adds values of two temporaries together
     Add(QbeValue, QbeValue),
     /// Subtracts the second value from the first one
@@ -895,7 +895,7 @@ impl fmt::Display for QbeInstr {
 /// QBE type
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[allow(dead_code)]
-enum QbeType {
+pub(super) enum QbeType {
     // Base types
     Word,
     Long,
@@ -913,7 +913,7 @@ enum QbeType {
 impl QbeType {
     /// Returns a C ABI type. Extended types are converted to closest base
     /// types
-    fn into_abi(self) -> Self {
+    pub(super) fn into_abi(self) -> Self {
         match self {
             Self::Byte | Self::Halfword => Self::Word,
             other => other,
@@ -921,7 +921,7 @@ impl QbeType {
     }
 
     /// Returns the closest base type
-    fn into_base(self) -> Self {
+    pub(super) fn into_base(self) -> Self {
         match self {
             Self::Byte | Self::Halfword => Self::Word,
             Self::Aggregate(_) => Self::Long,
@@ -930,7 +930,7 @@ impl QbeType {
     }
 
     /// Returns byte size for values of the type
-    fn size(&self) -> u64 {
+    pub(super) fn size(&self) -> u64 {
         match self {
             Self::Word | Self::Single => 4,
             Self::Long | Self::Double => 8,
@@ -962,7 +962,7 @@ impl fmt::Display for QbeType {
 /// QBE value that is accepted by instructions
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
-enum QbeValue {
+pub(super) enum QbeValue {
     /// `%`-temporary
     Temporary(String),
     /// `$`-global
@@ -983,12 +983,12 @@ impl fmt::Display for QbeValue {
 
 /// QBE data definition
 #[derive(Debug)]
-struct QbeDataDef {
-    exported: bool,
-    name: String,
-    align: Option<u64>,
+pub(super) struct QbeDataDef {
+    pub(super) exported: bool,
+    pub(super) name: String,
+    pub(super) align: Option<u64>,
 
-    items: Vec<(QbeType, QbeDataItem)>,
+    pub(super) items: Vec<(QbeType, QbeDataItem)>,
 }
 
 impl fmt::Display for QbeDataDef {
@@ -1017,7 +1017,7 @@ impl fmt::Display for QbeDataDef {
 /// Data definition item
 #[derive(Debug)]
 #[allow(dead_code)]
-enum QbeDataItem {
+pub(super) enum QbeDataItem {
     /// Symbol and offset
     Symbol(String, Option<u64>),
     /// String
@@ -1041,11 +1041,11 @@ impl fmt::Display for QbeDataItem {
 
 /// QBE aggregate type definition
 #[derive(Debug)]
-struct QbeTypeDef {
-    name: String,
-    align: Option<u64>,
+pub(super) struct QbeTypeDef {
+    pub(super) name: String,
+    pub(super) align: Option<u64>,
     // TODO: Opaque types?
-    items: Vec<(QbeType, usize)>,
+    pub(super) items: Vec<(QbeType, usize)>,
 }
 
 impl fmt::Display for QbeTypeDef {
@@ -1073,7 +1073,7 @@ impl fmt::Display for QbeTypeDef {
 
 /// An IR statement
 #[derive(Debug)]
-enum QbeStatement {
+pub(super) enum QbeStatement {
     Assign(QbeValue, QbeType, QbeInstr),
     Volatile(QbeInstr),
 }
@@ -1092,28 +1092,28 @@ impl fmt::Display for QbeStatement {
 
 /// Function block with a label
 #[derive(Debug)]
-struct QbeBlock {
+pub(super) struct QbeBlock {
     /// Label before the block
-    label: String,
+    pub(super) label: String,
 
     /// A list of instructions in the block
-    instructions: Vec<QbeStatement>,
+    pub(super) instructions: Vec<QbeStatement>,
 }
 
 impl QbeBlock {
     /// Adds a new instruction to the block
-    fn add_instr(&mut self, instr: QbeInstr) {
+    pub(super) fn add_instr(&mut self, instr: QbeInstr) {
         self.instructions.push(QbeStatement::Volatile(instr));
     }
 
     /// Adds a new instruction assigned to a temporary
-    fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
+    pub(super) fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
         self.instructions
             .push(QbeStatement::Assign(temp, ty.into_base(), instr));
     }
 
     /// Returns true if the block's last instruction is a jump
-    fn jumps(&self) -> bool {
+    pub(super) fn jumps(&self) -> bool {
         let last = self.instructions.last();
 
         if let Some(QbeStatement::Volatile(instr)) = last {
@@ -1145,40 +1145,40 @@ impl fmt::Display for QbeBlock {
 
 /// QBE function
 #[derive(Debug)]
-struct QbeFunction {
+pub(super) struct QbeFunction {
     /// Should the function be available to outside users
-    exported: bool,
+    pub(super) exported: bool,
 
     /// Function name
-    name: String,
+    pub(super) name: String,
 
     /// Function arguments
-    arguments: Vec<(QbeType, QbeValue)>,
+    pub(super) arguments: Vec<(QbeType, QbeValue)>,
 
     /// Return type
-    return_ty: Option<QbeType>,
+    pub(super) return_ty: Option<QbeType>,
 
     /// Labelled blocks
-    blocks: Vec<QbeBlock>,
+    pub(super) blocks: Vec<QbeBlock>,
 }
 
 impl QbeFunction {
     /// Adds a new empty block with a specified label
-    fn add_block(&mut self, label: String) {
+    pub(super) fn add_block(&mut self, label: String) {
         self.blocks.push(QbeBlock {
             label,
             instructions: Vec::new(),
         });
     }
 
-    fn last_block(&mut self) -> &QbeBlock {
+    pub(super) fn last_block(&mut self) -> &QbeBlock {
         self.blocks
             .last()
             .expect("Function must have at least one block")
     }
 
     /// Adds a new instruction to the last block
-    fn add_instr(&mut self, instr: QbeInstr) {
+    pub(super) fn add_instr(&mut self, instr: QbeInstr) {
         self.blocks
             .last_mut()
             .expect("Last block must be present")
@@ -1186,7 +1186,7 @@ impl QbeFunction {
     }
 
     /// Adds a new instruction assigned to a temporary
-    fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
+    pub(super) fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
         self.blocks
             .last_mut()
             .expect("Last block must be present")
@@ -1221,131 +1221,5 @@ impl fmt::Display for QbeFunction {
         }
 
         write!(f, "}}")
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn qbe_value() {
-        let val = QbeValue::Temporary("temp42".into());
-        assert_eq!(format!("{}", val), "%temp42");
-
-        let val = QbeValue::Global("main".into());
-        assert_eq!(format!("{}", val), "$main");
-
-        let val = QbeValue::Const(1337);
-        assert_eq!(format!("{}", val), "1337");
-    }
-
-    #[test]
-    fn block() {
-        let blk = QbeBlock {
-            label: "start".into(),
-            instructions: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
-        };
-
-        let formatted = format!("{}", blk);
-        let mut lines = formatted.lines();
-        assert_eq!(lines.next().unwrap(), "@start");
-        assert_eq!(lines.next().unwrap(), "\tret");
-
-        let blk = QbeBlock {
-            label: "start".into(),
-            instructions: vec![
-                QbeStatement::Volatile(QbeInstr::Ret(None)),
-                QbeStatement::Volatile(QbeInstr::Ret(None)),
-            ],
-        };
-
-        let formatted = format!("{}", blk);
-        let mut lines = formatted.lines();
-        assert_eq!(lines.next().unwrap(), "@start");
-        assert_eq!(lines.next().unwrap(), "\tret");
-        assert_eq!(lines.next().unwrap(), "\tret");
-    }
-
-    #[test]
-    fn function() {
-        let func = QbeFunction {
-            exported: true,
-            return_ty: None,
-            name: "main".into(),
-            arguments: Vec::new(),
-            blocks: vec![QbeBlock {
-                label: "start".into(),
-                instructions: vec![QbeStatement::Volatile(QbeInstr::Ret(None))],
-            }],
-        };
-
-        let formatted = format!("{}", func);
-        let mut lines = formatted.lines();
-        assert_eq!(lines.next().unwrap(), "export function $main() {");
-        assert_eq!(lines.next().unwrap(), "@start");
-        assert_eq!(lines.next().unwrap(), "\tret");
-        assert_eq!(lines.next().unwrap(), "}");
-    }
-
-    #[test]
-    fn datadef() {
-        let datadef = QbeDataDef {
-            exported: true,
-            name: "hello".into(),
-            align: None,
-            items: vec![
-                (QbeType::Byte, QbeDataItem::Str("Hello, World!".into())),
-                (QbeType::Byte, QbeDataItem::Const(0)),
-            ],
-        };
-
-        let formatted = format!("{}", datadef);
-        assert_eq!(
-            formatted,
-            "export data $hello = { b \"Hello, World!\", b 0 }"
-        );
-    }
-
-    #[test]
-    fn typedef() {
-        let typedef = QbeTypeDef {
-            name: "person".into(),
-            align: None,
-            items: vec![(QbeType::Long, 1), (QbeType::Word, 2), (QbeType::Byte, 1)],
-        };
-
-        let formatted = format!("{}", typedef);
-        assert_eq!(formatted, "type :person = { l, w 2, b }");
-    }
-
-    #[test]
-    fn type_into_abi() {
-        // Base types and aggregates should stay unchanged
-        let unchanged = |ty: QbeType| assert_eq!(ty.clone().into_abi(), ty);
-        unchanged(QbeType::Word);
-        unchanged(QbeType::Long);
-        unchanged(QbeType::Single);
-        unchanged(QbeType::Double);
-        unchanged(QbeType::Aggregate("foo".into()));
-
-        // Extended types are transformed into closest base types
-        assert_eq!(QbeType::Byte.into_abi(), QbeType::Word);
-        assert_eq!(QbeType::Halfword.into_abi(), QbeType::Word);
-    }
-
-    #[test]
-    fn type_into_base() {
-        // Base types should stay unchanged
-        let unchanged = |ty: QbeType| assert_eq!(ty.clone().into_base(), ty);
-        unchanged(QbeType::Word);
-        unchanged(QbeType::Long);
-        unchanged(QbeType::Single);
-        unchanged(QbeType::Double);
-
-        // Extended and aggregate types are transformed into closest base types
-        assert_eq!(QbeType::Byte.into_base(), QbeType::Word);
-        assert_eq!(QbeType::Halfword.into_base(), QbeType::Word);
-        assert_eq!(QbeType::Aggregate("foo".into()).into_base(), QbeType::Long);
     }
 }
