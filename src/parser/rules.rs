@@ -3,6 +3,7 @@ use crate::ast::types::Type;
 use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
+use indextree::NodeId;
 use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
@@ -23,38 +24,50 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 
 impl Parser {
+    pub fn append_node(&mut self, parent: &mut NodeId, child: ASTNode) {
+        let child_node = self.ast.new_node(Box::new(child));
+        parent.append(child_node, &mut self.ast)
+    }
+}
+
+impl Parser {
     pub fn parse_module(&mut self) -> Result<Module, String> {
-        let mut functions = Vec::new();
-        let mut structs = Vec::new();
-        let mut imports = HashSet::new();
-        let globals = Vec::new();
+        let mut module = Module {
+            func: Vec::new(),
+            structs: Vec::new(),
+            globals: Vec::new(),
+            path: self.path.clone(),
+            imports: HashSet::new(),
+        };
+        let mut module_node = self
+            .ast
+            .new_node(Box::new(ASTNode::ModuleNode(module.clone())));
 
         while self.has_more() {
             let next = self.peek()?;
             match next.kind {
-                TokenKind::Keyword(Keyword::Function) => functions.push(self.parse_function()?),
+                TokenKind::Keyword(Keyword::Function) => {
+                    let func = self.parse_function(&mut module_node)?;
+                    module.func.push(func);
+                }
                 TokenKind::Keyword(Keyword::Import) => {
-                    imports.insert(self.parse_import()?);
+                    module.imports.insert(self.parse_import()?);
                 }
-                TokenKind::Keyword(Keyword::Struct) => {
-                    structs.push(self.parse_struct_definition()?)
-                }
+                TokenKind::Keyword(Keyword::Struct) => module
+                    .structs
+                    .push(self.parse_struct_definition(&mut module_node)?),
                 _ => return Err(format!("Unexpected token: {}", next.raw)),
             }
         }
 
         // TODO: Populate imports
 
-        Ok(Module {
-            func: functions,
-            structs,
-            globals,
-            path: self.path.clone(),
-            imports,
-        })
+        dbg!(&self.ast.count());
+
+        Ok(module)
     }
 
-    fn parse_struct_definition(&mut self) -> Result<StructDef, String> {
+    fn parse_struct_definition(&mut self, mut mod_node: &mut NodeId) -> Result<StructDef, String> {
         self.match_keyword(Keyword::Struct)?;
         let name = self.match_identifier()?;
 
@@ -65,7 +78,7 @@ impl Parser {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::Keyword(Keyword::Function) => {
-                    methods.push(self.parse_function()?);
+                    methods.push(self.parse_function(&mut mod_node)?);
                 }
                 TokenKind::Identifier(_) => fields.push(self.parse_typed_variable()?),
                 _ => {
@@ -141,7 +154,7 @@ impl Parser {
     /// To reduce code duplication, this method can be either be used to parse a function or a method.
     /// If a function is parsed, the `fn` keyword is matched.
     /// If a method is parsed, `fn` will be omitted
-    fn parse_function(&mut self) -> Result<Function, String> {
+    fn parse_function(&mut self, mut mod_node: &mut NodeId) -> Result<Function, String> {
         self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
 
@@ -161,12 +174,16 @@ impl Parser {
 
         let body = self.parse_block()?;
 
-        Ok(Function {
+        let func = Function {
             name,
             arguments,
             body,
             ret_type: ty,
-        })
+        };
+
+        self.append_node(&mut mod_node, ASTNode::FunctionNode(func.clone()));
+
+        Ok(func)
     }
 
     fn parse_import(&mut self) -> Result<String, String> {

@@ -1,3 +1,4 @@
+extern crate indextree;
 extern crate lazy_static;
 extern crate regex;
 /**

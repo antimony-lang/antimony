@@ -19,12 +19,14 @@ use crate::lexer::Position;
 use crate::lexer::{Token, TokenKind};
 use crate::parser::infer::infer;
 use crate::util::string_util::highlight_position_in_file;
+use indextree::Arena;
 use std::convert::TryFrom;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
 pub struct Parser {
     pub path: String,
+    pub ast: Arena<Box<ASTNode>>,
     tokens: Peekable<IntoIter<Token>>,
     peeked: Vec<Token>,
     current: Option<Token>,
@@ -45,6 +47,7 @@ impl Parser {
             current: None,
             prev: None,
             raw,
+            ast: Arena::new(),
         }
     }
 
@@ -52,6 +55,8 @@ impl Parser {
         let mut program = self.parse_module()?;
         // infer types
         infer(&mut program);
+        self.ast
+            .new_node(Box::new(ASTNode::ModuleNode(program.clone())));
 
         Ok(program)
     }

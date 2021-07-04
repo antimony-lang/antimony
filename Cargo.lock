@@ -22,6 +22,7 @@ dependencies = [
 name = "antimony-lang"
 version = "0.6.0"
 dependencies = [
+ "indextree",
  "inkwell",
  "lazy_static",
  "regex",
@@ -96,6 +97,12 @@ checksum = "5aca5565f760fb5b220e499d72710ed156fdb74e631659e99377d9ebfbd13ae8"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "indextree"
+version = "4.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "990980c3d268c9b99df35e813eca2b8d1ee08606f6d2bb325edbd0b0c68f9ffe"
 
 [[package]]
 name = "inkwell"
