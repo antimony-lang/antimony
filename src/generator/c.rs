@@ -150,7 +150,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall(name, e) => generate_function_call(name, e),
         Expression::Array(size, els) => generate_array(size, els),
-        Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
+        Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
         Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
         Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
         Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
@@ -242,7 +242,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
         .map(|arg| match arg {
             Expression::Int(i) => i.to_string(),
             Expression::Bool(v) => v.to_string(),
-            Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
+            Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
             Expression::FunctionCall(n, a) => generate_function_call(n, a),
             Expression::Str(s) => super::string_syntax(s),
             Expression::Variable(s) => s,

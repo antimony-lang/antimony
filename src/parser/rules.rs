@@ -494,7 +494,10 @@ impl Parser {
         let expr = self.parse_expression()?;
         self.match_token(TokenKind::SquareBraceClose)?;
 
-        Ok(Expression::ArrayAccess(name, Box::new(expr)))
+        Ok(Expression::ArrayAccess {
+            name,
+            index: Box::new(expr),
+        })
     }
 
     fn parse_while_loop(&mut self) -> Result<Statement, String> {

@@ -501,7 +501,7 @@ impl QbeGenerator {
 
                 func.add_instr(QbeInstr::Store(ty, field_ptr, rhs));
             }
-            Expression::ArrayAccess(..) => todo!(),
+            Expression::ArrayAccess { name: _, index: _ } => todo!(),
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
         }
 

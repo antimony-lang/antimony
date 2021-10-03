@@ -104,8 +104,10 @@ pub enum Expression {
     Array(usize, Vec<Expression>),
     FunctionCall(String, Vec<Expression>),
     Variable(String),
-    /// (name, index)
-    ArrayAccess(String, Box<Expression>),
+    ArrayAccess {
+        name: String,
+        index: Box<Expression>,
+    },
     BinOp(Box<Expression>, BinOp, Box<Expression>),
     StructInitialization(String, HashMap<String, Box<Expression>>),
     FieldAccess(Box<Expression>, Box<Expression>),
