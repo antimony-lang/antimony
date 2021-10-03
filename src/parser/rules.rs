@@ -502,10 +502,13 @@ impl Parser {
 
     fn parse_while_loop(&mut self) -> Result<Statement, String> {
         self.match_keyword(Keyword::While)?;
-        let expr = self.parse_expression()?;
+        let condition = self.parse_expression()?;
         let body = self.parse_block()?;
 
-        Ok(Statement::While(expr, Box::new(body)))
+        Ok(Statement::While {
+            condition,
+            body: Box::new(body),
+        })
     }
 
     fn parse_break(&mut self) -> Result<Statement, String> {

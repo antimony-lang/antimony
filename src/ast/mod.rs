@@ -99,7 +99,10 @@ pub enum Statement {
         body: Box<Statement>,
         else_branch: Option<Box<Statement>>,
     },
-    While(Expression, Box<Statement>),
+    While {
+        condition: Expression,
+        body: Box<Statement>,
+    },
     For(Variable, Expression, Box<Statement>),
     Match(Expression, Vec<MatchArm>),
     Break,

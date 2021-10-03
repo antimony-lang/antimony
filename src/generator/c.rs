@@ -134,7 +134,7 @@ fn generate_statement(statement: Statement) -> String {
         } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
         Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
         Statement::Block { statements, scope } => generate_block(statements, scope),
-        Statement::While(expr, body) => generate_while_loop(expr, *body),
+        Statement::While { condition, body } => generate_while_loop(condition, *body),
         Statement::For(_ident, _expr, _body) => todo!(),
         Statement::Continue => todo!(),
         Statement::Break => todo!(),

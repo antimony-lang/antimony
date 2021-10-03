@@ -142,7 +142,7 @@ fn generate_statement(statement: Statement) -> String {
             statements: _,
             scope: _,
         } => generate_block(statement, None),
-        Statement::While(expr, body) => generate_while_loop(expr, *body),
+        Statement::While { condition, body } => generate_while_loop(condition, *body),
         Statement::For(ident, expr, body) => generate_for_loop(ident, expr, *body),
         Statement::Continue => generate_continue(),
         Statement::Break => generate_break(),

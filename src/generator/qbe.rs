@@ -220,8 +220,8 @@ impl QbeGenerator {
             } => {
                 self.generate_if(func, condition, body, else_branch)?;
             }
-            Statement::While(cond, body) => {
-                self.generate_while(func, cond, body)?;
+            Statement::While { condition, body } => {
+                self.generate_while(func, condition, body)?;
             }
             Statement::Break => {
                 if let Some(label) = &self.loop_labels.last() {
