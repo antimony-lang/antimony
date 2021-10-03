@@ -175,7 +175,10 @@ impl QbeGenerator {
         stmt: &Statement,
     ) -> GeneratorResult<()> {
         match stmt {
-            Statement::Block(statements, _) => {
+            Statement::Block {
+                statements,
+                scope: _,
+            } => {
                 self.scopes.push(HashMap::new());
                 for stmt in statements.iter() {
                     self.generate_statement(func, stmt)?;

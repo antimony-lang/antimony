@@ -81,7 +81,10 @@ impl AsRef<Variable> for Variable {
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Statement {
     /// (Statements, Scoped variables)
-    Block(Vec<Statement>, Vec<Variable>),
+    Block {
+        statements: Vec<Statement>,
+        scope: Vec<Variable>,
+    },
     Declare(Variable, Option<Expression>),
     Assign(Box<Expression>, Box<Expression>),
     Return(Option<Expression>),

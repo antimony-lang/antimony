@@ -92,7 +92,7 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
 fn generate_function(func: Function) -> String {
     let mut buf = String::new();
     buf += &format!("{} ", &generate_function_signature(func.clone()));
-    if let Statement::Block(statements, scope) = func.body {
+    if let Statement::Block { statements, scope } = func.body {
         buf += &generate_block(statements, scope);
     }
 
@@ -131,7 +131,7 @@ fn generate_statement(statement: Statement) -> String {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
         Statement::Assign(name, state) => generate_assign(*name, *state),
-        Statement::Block(statements, scope) => generate_block(statements, scope),
+        Statement::Block { statements, scope } => generate_block(statements, scope),
         Statement::While(expr, body) => generate_while_loop(expr, *body),
         Statement::For(_ident, _expr, _body) => todo!(),
         Statement::Continue => todo!(),
@@ -164,7 +164,7 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
     out_str += &generate_expression(expr);
     out_str += ") ";
 
-    if let Statement::Block(statements, scope) = body {
+    if let Statement::Block { statements, scope } = body {
         out_str += &generate_block(statements, scope);
     }
     out_str
@@ -199,7 +199,10 @@ fn generate_conditional(
     let expr_str = generate_expression(expr);
 
     let body = match if_state {
-        Statement::Block(blk, _) => blk,
+        Statement::Block {
+            statements,
+            scope: _,
+        } => statements,
         _ => panic!("Conditional body should be of type block"),
     };
 

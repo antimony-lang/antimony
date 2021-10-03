@@ -25,7 +25,11 @@ pub(super) fn infer(program: &mut Module) {
     let table = &program.get_symbol_table();
     // TODO: Fix aweful nesting
     for func in &mut program.func {
-        if let Statement::Block(statements, _) = &mut func.body {
+        if let Statement::Block {
+            statements,
+            scope: _,
+        } = &mut func.body
+        {
             for statement in statements {
                 if let Statement::Declare(var, expr) = statement {
                     if var.ty.is_none() {

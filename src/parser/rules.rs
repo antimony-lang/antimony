@@ -135,7 +135,7 @@ impl Parser {
 
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::Block(statements, scope))
+        Ok(Statement::Block { statements, scope })
     }
 
     /// To reduce code duplication, this method can be either be used to parse a function or a method.
