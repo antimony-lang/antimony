@@ -687,6 +687,9 @@ impl Parser {
 
         let expr = self.parse_expression()?;
 
-        Ok(Statement::Assign(Box::new(name), Box::new(expr)))
+        Ok(Statement::Assign {
+            lhs: Box::new(name),
+            rhs: Box::new(expr),
+        })
     }
 }

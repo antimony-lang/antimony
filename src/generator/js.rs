@@ -135,7 +135,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::If(expr, if_state, else_state) => {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))
         }
-        Statement::Assign(name, state) => generate_assign(*name, *state),
+        Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
         Statement::Block {
             statements: _,
             scope: _,

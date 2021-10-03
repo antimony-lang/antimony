@@ -89,7 +89,10 @@ pub enum Statement {
         variable: Variable,
         value: Option<Expression>,
     },
-    Assign(Box<Expression>, Box<Expression>),
+    Assign {
+        lhs: Box<Expression>,
+        rhs: Box<Expression>,
+    },
     Return(Option<Expression>),
     If(Expression, Box<Statement>, Option<Box<Statement>>),
     While(Expression, Box<Statement>),

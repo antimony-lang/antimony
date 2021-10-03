@@ -200,7 +200,7 @@ impl QbeGenerator {
                     func.assign_instr(tmp, ty, QbeInstr::Copy(result));
                 }
             }
-            Statement::Assign(lhs, rhs) => {
+            Statement::Assign { lhs, rhs } => {
                 let (_, rhs) = self.generate_expression(func, rhs)?;
                 // TODO: type check
                 self.generate_assignment(func, lhs, rhs)?;
