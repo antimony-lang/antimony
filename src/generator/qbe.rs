@@ -279,7 +279,7 @@ impl QbeGenerator {
             Expression::FunctionCall(name, args) => {
                 let mut new_args: Vec<(QbeType, QbeValue)> = Vec::new();
                 for arg in args.iter() {
-                    new_args.push(self.generate_expression(func, &arg)?);
+                    new_args.push(self.generate_expression(func, arg)?);
                 }
 
                 let tmp = self.new_temporary();
@@ -328,7 +328,7 @@ impl QbeGenerator {
         ));
 
         func.add_block(if_label);
-        self.generate_statement(func, &if_clause)?;
+        self.generate_statement(func, if_clause)?;
 
         if let Some(else_clause) = else_clause {
             // Jump over to the end to prevent fallthrough into else
@@ -338,7 +338,7 @@ impl QbeGenerator {
             }
 
             func.add_block(else_label);
-            self.generate_statement(func, &else_clause)?;
+            self.generate_statement(func, else_clause)?;
         }
 
         func.add_block(end_label);

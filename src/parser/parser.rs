@@ -33,6 +33,7 @@ pub struct Parser {
 }
 
 impl Parser {
+    #[allow(clippy::needless_collect)] // TODO
     pub fn new(tokens: Vec<Token>, raw: Option<String>, file_name: String) -> Parser {
         let tokens_without_whitespace: Vec<Token> = tokens
             .into_iter()

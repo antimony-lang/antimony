@@ -34,7 +34,7 @@ pub(super) fn infer(program: &mut Module) {
                 if let Statement::Declare { variable, value } = statement {
                     if variable.ty.is_none() {
                         if let Some(e) = value {
-                            variable.ty = infer_expression(&e, table);
+                            variable.ty = infer_expression(e, table);
                             #[cfg(debug_assertions)]
                             if variable.ty.is_none() {
                                 println!(
