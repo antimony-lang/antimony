@@ -273,7 +273,9 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
-            Expression::Array(len, items) => self.generate_array(func, *len, items),
+            Expression::Array { capacity, elements } => {
+                self.generate_array(func, *capacity, elements)
+            }
             Expression::FunctionCall(name, args) => {
                 let mut new_args: Vec<(QbeType, QbeValue)> = Vec::new();
                 for arg in args.iter() {
