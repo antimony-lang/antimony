@@ -127,9 +127,11 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Return(ret) => generate_return(ret),
         Statement::Declare { variable, value } => generate_declare(variable, value),
         Statement::Exp(val) => generate_expression(val) + ";\n",
-        Statement::If(expr, if_state, else_state) => {
-            generate_conditional(expr, *if_state, else_state.map(|x| *x))
-        }
+        Statement::If {
+            condition,
+            body,
+            else_branch,
+        } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
         Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
         Statement::Block { statements, scope } => generate_block(statements, scope),
         Statement::While(expr, body) => generate_while_loop(expr, *body),

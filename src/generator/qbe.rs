@@ -213,8 +213,12 @@ impl QbeGenerator {
                 }
                 None => func.add_instr(QbeInstr::Ret(None)),
             },
-            Statement::If(cond, if_clause, else_clause) => {
-                self.generate_if(func, cond, if_clause, else_clause)?;
+            Statement::If {
+                condition,
+                body,
+                else_branch,
+            } => {
+                self.generate_if(func, condition, body, else_branch)?;
             }
             Statement::While(cond, body) => {
                 self.generate_while(func, cond, body)?;

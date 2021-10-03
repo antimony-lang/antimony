@@ -94,7 +94,11 @@ pub enum Statement {
         rhs: Box<Expression>,
     },
     Return(Option<Expression>),
-    If(Expression, Box<Statement>, Option<Box<Statement>>),
+    If {
+        condition: Expression,
+        body: Box<Statement>,
+        else_branch: Option<Box<Statement>>,
+    },
     While(Expression, Box<Statement>),
     For(Variable, Expression, Box<Statement>),
     Match(Expression, Vec<MatchArm>),
