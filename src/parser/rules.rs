@@ -653,11 +653,11 @@ impl Parser {
 
         let op = self.match_operator()?;
 
-        Ok(Expression::BinOp(
-            Box::from(left),
+        Ok(Expression::BinOp {
+            lhs: Box::from(left),
             op,
-            Box::from(self.parse_expression()?),
-        ))
+            rhs: Box::from(self.parse_expression()?),
+        })
     }
 
     fn parse_declare(&mut self) -> Result<Statement, String> {
