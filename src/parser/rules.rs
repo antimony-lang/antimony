@@ -270,7 +270,7 @@ impl Parser {
     /// The name of the function needs to be passed here, because we have already passed it with our cursor.
     /// If no function name is provided, the next token will be fetched
     fn parse_function_call(&mut self, func_name: Option<String>) -> Result<Expression, String> {
-        let name = match func_name {
+        let fn_name = match func_name {
             Some(name) => name,
             None => self.next()?.raw,
         };
@@ -306,7 +306,7 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        let expr = Expression::FunctionCall(name, args);
+        let expr = Expression::FunctionCall { fn_name, args };
         match self.peek()?.kind {
             TokenKind::Dot => self.parse_field_access(expr),
             _ => Ok(expr),

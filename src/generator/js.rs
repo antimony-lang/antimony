@@ -159,7 +159,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Str(val) => super::string_syntax(val),
         Expression::Variable(val) => val,
         Expression::Bool(b) => b.to_string(),
-        Expression::FunctionCall(name, e) => generate_function_call(name, e),
+        Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
         Expression::Array {
             capacity: _,
             elements,
@@ -315,7 +315,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Bool(v) => v.to_string(),
             Expression::Selff => "this".to_string(),
             Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
-            Expression::FunctionCall(n, a) => generate_function_call(n, a),
+            Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
             Expression::Str(s) => super::string_syntax(s),
             Expression::Variable(s) => s,
             Expression::Array {

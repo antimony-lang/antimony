@@ -57,7 +57,7 @@ fn infer_expression(expr: &Expression, table: &SymbolTable) -> Option<Type> {
         Expression::Bool(_) => Some(Type::Bool),
         Expression::Str(_) => Some(Type::Str),
         Expression::StructInitialization(name, _) => Some(Type::Struct(name.to_string())),
-        Expression::FunctionCall(name, _) => infer_function_call(name, table),
+        Expression::FunctionCall { fn_name, args: _ } => infer_function_call(fn_name, table),
         Expression::Array {
             capacity: _,
             elements,

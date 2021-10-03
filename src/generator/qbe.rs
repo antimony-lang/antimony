@@ -276,7 +276,7 @@ impl QbeGenerator {
             Expression::Array { capacity, elements } => {
                 self.generate_array(func, *capacity, elements)
             }
-            Expression::FunctionCall(name, args) => {
+            Expression::FunctionCall { fn_name, args } => {
                 let mut new_args: Vec<(QbeType, QbeValue)> = Vec::new();
                 for arg in args.iter() {
                     new_args.push(self.generate_expression(func, arg)?);
@@ -287,7 +287,7 @@ impl QbeGenerator {
                     tmp.clone(),
                     // TODO: get that type properly
                     QbeType::Word,
-                    QbeInstr::Call(name.clone(), new_args),
+                    QbeInstr::Call(fn_name.clone(), new_args),
                 );
 
                 Ok((QbeType::Word, tmp))
@@ -604,7 +604,10 @@ impl QbeGenerator {
         };
         let field = match field {
             Expression::Variable(v) => v,
-            Expression::FunctionCall(..) => unimplemented!("methods"),
+            Expression::FunctionCall {
+                fn_name: _,
+                args: _,
+            } => unimplemented!("methods"),
             // Parser should ensure this won't happen
             _ => unreachable!(),
         };

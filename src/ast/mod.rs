@@ -128,7 +128,10 @@ pub enum Expression {
         capacity: usize,
         elements: Vec<Expression>,
     },
-    FunctionCall(String, Vec<Expression>),
+    FunctionCall {
+        fn_name: String,
+        args: Vec<Expression>,
+    },
     Variable(String),
     ArrayAccess {
         name: String,
