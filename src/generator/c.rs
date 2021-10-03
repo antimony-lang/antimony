@@ -125,7 +125,7 @@ fn generate_block(block: Vec<Statement>, _scope: Vec<Variable>) -> String {
 fn generate_statement(statement: Statement) -> String {
     let state = match statement {
         Statement::Return(ret) => generate_return(ret),
-        Statement::Declare(var, val) => generate_declare(var, val),
+        Statement::Declare { variable, value } => generate_declare(variable, value),
         Statement::Exp(val) => generate_expression(val) + ";\n",
         Statement::If(expr, if_state, else_state) => {
             generate_conditional(expr, *if_state, else_state.map(|x| *x))

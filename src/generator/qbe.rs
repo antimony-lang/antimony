@@ -185,16 +185,17 @@ impl QbeGenerator {
                 }
                 self.scopes.pop();
             }
-            Statement::Declare(var, expr) => {
+            Statement::Declare { variable, value } => {
                 let ty = self.get_type(
-                    var.ty
+                    variable
+                        .ty
                         .as_ref()
-                        .ok_or_else(|| format!("Missing type for variable '{}'", &var.name))?
+                        .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
                         .to_owned(),
                 )?;
-                let tmp = self.new_var(&ty, &var.name)?;
+                let tmp = self.new_var(&ty, &variable.name)?;
 
-                if let Some(expr) = expr {
+                if let Some(expr) = value {
                     let (ty, result) = self.generate_expression(func, expr)?;
                     func.assign_instr(tmp, ty, QbeInstr::Copy(result));
                 }

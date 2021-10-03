@@ -125,9 +125,9 @@ impl Parser {
 
             // If the current statement is a variable declaration,
             // let the scope know
-            if let Statement::Declare(var, _) = &statement {
+            if let Statement::Declare { variable, value: _ } = &statement {
                 // TODO: Not sure if we should clone here
-                scope.push(var.to_owned());
+                scope.push(variable.to_owned());
             }
 
             statements.push(statement);
@@ -665,9 +665,15 @@ impl Parser {
             TokenKind::Assign => {
                 self.match_token(TokenKind::Assign)?;
                 let expr = self.parse_expression()?;
-                Ok(Statement::Declare(Variable { name, ty }, Some(expr)))
+                Ok(Statement::Declare {
+                    variable: Variable { name, ty },
+                    value: Some(expr),
+                })
             }
-            _ => Ok(Statement::Declare(Variable { name, ty }, None)),
+            _ => Ok(Statement::Declare {
+                variable: Variable { name, ty },
+                value: None,
+            }),
         }
     }
 

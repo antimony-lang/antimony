@@ -31,13 +31,16 @@ pub(super) fn infer(program: &mut Module) {
         } = &mut func.body
         {
             for statement in statements {
-                if let Statement::Declare(var, expr) = statement {
-                    if var.ty.is_none() {
-                        if let Some(e) = expr {
-                            var.ty = infer_expression(&e, table);
+                if let Statement::Declare { variable, value } = statement {
+                    if variable.ty.is_none() {
+                        if let Some(e) = value {
+                            variable.ty = infer_expression(&e, table);
                             #[cfg(debug_assertions)]
-                            if var.ty.is_none() {
-                                println!("Type of {} could not be infered: {:?}", &var.name, e);
+                            if variable.ty.is_none() {
+                                println!(
+                                    "Type of {} could not be infered: {:?}",
+                                    &variable.name, e
+                                );
                             }
                         }
                     }

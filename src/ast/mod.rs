@@ -85,7 +85,10 @@ pub enum Statement {
         statements: Vec<Statement>,
         scope: Vec<Variable>,
     },
-    Declare(Variable, Option<Expression>),
+    Declare {
+        variable: Variable,
+        value: Option<Expression>,
+    },
     Assign(Box<Expression>, Box<Expression>),
     Return(Option<Expression>),
     If(Expression, Box<Statement>, Option<Box<Statement>>),
