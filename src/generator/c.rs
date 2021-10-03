@@ -135,7 +135,11 @@ fn generate_statement(statement: Statement) -> String {
         Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
         Statement::Block { statements, scope } => generate_block(statements, scope),
         Statement::While { condition, body } => generate_while_loop(condition, *body),
-        Statement::For(_ident, _expr, _body) => todo!(),
+        Statement::For {
+            ident: _,
+            expr: _,
+            body: _,
+        } => todo!(),
         Statement::Continue => todo!(),
         Statement::Break => todo!(),
         Statement::Match(_, _) => todo!(),

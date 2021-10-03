@@ -534,14 +534,14 @@ impl Parser {
 
         let body = self.parse_block()?;
 
-        Ok(Statement::For(
-            Variable {
+        Ok(Statement::For {
+            ident: Variable {
                 name: ident,
                 ty: ident_ty,
             },
             expr,
-            Box::new(body),
-        ))
+            body: Box::new(body),
+        })
     }
 
     fn parse_match_statement(&mut self) -> Result<Statement, String> {

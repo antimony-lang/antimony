@@ -103,7 +103,11 @@ pub enum Statement {
         condition: Expression,
         body: Box<Statement>,
     },
-    For(Variable, Expression, Box<Statement>),
+    For {
+        ident: Variable,
+        expr: Expression,
+        body: Box<Statement>,
+    },
     Match(Expression, Vec<MatchArm>),
     Break,
     Continue,
