@@ -142,7 +142,10 @@ fn generate_statement(statement: Statement) -> String {
         } => todo!(),
         Statement::Continue => todo!(),
         Statement::Break => todo!(),
-        Statement::Match(_, _) => todo!(),
+        Statement::Match {
+            subject: _,
+            arms: _,
+        } => todo!(),
     };
 
     format!("{}\n", state)

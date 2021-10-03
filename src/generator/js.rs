@@ -146,7 +146,7 @@ fn generate_statement(statement: Statement) -> String {
         Statement::For { ident, expr, body } => generate_for_loop(ident, expr, *body),
         Statement::Continue => generate_continue(),
         Statement::Break => generate_break(),
-        Statement::Match(subject, arms) => generate_match(subject, arms),
+        Statement::Match { subject, arms } => generate_match(subject, arms),
     };
 
     format!("{};\n", state)

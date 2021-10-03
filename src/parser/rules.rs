@@ -573,7 +573,7 @@ impl Parser {
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
-        Ok(Statement::Match(subject, arms))
+        Ok(Statement::Match { subject, arms })
     }
 
     fn parse_match_arm(&mut self) -> Result<MatchArm, String> {

@@ -108,7 +108,10 @@ pub enum Statement {
         expr: Expression,
         body: Box<Statement>,
     },
-    Match(Expression, Vec<MatchArm>),
+    Match {
+        subject: Expression,
+        arms: Vec<MatchArm>,
+    },
     Break,
     Continue,
     Exp(Expression),
