@@ -81,14 +81,37 @@ impl AsRef<Variable> for Variable {
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Statement {
     /// (Statements, Scoped variables)
-    Block(Vec<Statement>, Vec<Variable>),
-    Declare(Variable, Option<Expression>),
-    Assign(Box<Expression>, Box<Expression>),
+    Block {
+        statements: Vec<Statement>,
+        scope: Vec<Variable>,
+    },
+    Declare {
+        variable: Variable,
+        value: Option<Expression>,
+    },
+    Assign {
+        lhs: Box<Expression>,
+        rhs: Box<Expression>,
+    },
     Return(Option<Expression>),
-    If(Expression, Box<Statement>, Option<Box<Statement>>),
-    While(Expression, Box<Statement>),
-    For(Variable, Expression, Box<Statement>),
-    Match(Expression, Vec<MatchArm>),
+    If {
+        condition: Expression,
+        body: Box<Statement>,
+        else_branch: Option<Box<Statement>>,
+    },
+    While {
+        condition: Expression,
+        body: Box<Statement>,
+    },
+    For {
+        ident: Variable,
+        expr: Expression,
+        body: Box<Statement>,
+    },
+    Match {
+        subject: Expression,
+        arms: Vec<MatchArm>,
+    },
     Break,
     Continue,
     Exp(Expression),
@@ -101,14 +124,32 @@ pub enum Expression {
     Bool(bool),
     /// Represents "self" keyword
     Selff,
-    Array(usize, Vec<Expression>),
-    FunctionCall(String, Vec<Expression>),
+    Array {
+        capacity: usize,
+        elements: Vec<Expression>,
+    },
+    FunctionCall {
+        fn_name: String,
+        args: Vec<Expression>,
+    },
     Variable(String),
-    /// (name, index)
-    ArrayAccess(String, Box<Expression>),
-    BinOp(Box<Expression>, BinOp, Box<Expression>),
-    StructInitialization(String, HashMap<String, Box<Expression>>),
-    FieldAccess(Box<Expression>, Box<Expression>),
+    ArrayAccess {
+        name: String,
+        index: Box<Expression>,
+    },
+    BinOp {
+        lhs: Box<Expression>,
+        op: BinOp,
+        rhs: Box<Expression>,
+    },
+    StructInitialization {
+        name: String,
+        fields: HashMap<String, Box<Expression>>,
+    },
+    FieldAccess {
+        expr: Box<Expression>,
+        field: Box<Expression>,
+    },
 }
 
 impl TryFrom<Token> for Expression {

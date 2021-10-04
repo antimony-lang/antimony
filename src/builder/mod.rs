@@ -159,7 +159,7 @@ impl Builder {
                 Lib::get(&file).expect("Standard library not found. This should not occur.");
             let stblib_str =
                 std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
-            let stdlib_tokens = lexer::tokenize(&stblib_str)?;
+            let stdlib_tokens = lexer::tokenize(stblib_str)?;
             let module = parser::parse(stdlib_tokens, Some(stblib_str.into()), file.to_string())
                 .expect("Could not parse stdlib");
             self.modules.push(module);

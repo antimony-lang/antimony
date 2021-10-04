@@ -92,7 +92,7 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
 fn generate_function(func: Function) -> String {
     let mut buf = String::new();
     buf += &format!("{} ", &generate_function_signature(func.clone()));
-    if let Statement::Block(statements, scope) = func.body {
+    if let Statement::Block { statements, scope } = func.body {
         buf += &generate_block(statements, scope);
     }
 
@@ -125,18 +125,27 @@ fn generate_block(block: Vec<Statement>, _scope: Vec<Variable>) -> String {
 fn generate_statement(statement: Statement) -> String {
     let state = match statement {
         Statement::Return(ret) => generate_return(ret),
-        Statement::Declare(var, val) => generate_declare(var, val),
+        Statement::Declare { variable, value } => generate_declare(variable, value),
         Statement::Exp(val) => generate_expression(val) + ";\n",
-        Statement::If(expr, if_state, else_state) => {
-            generate_conditional(expr, *if_state, else_state.map(|x| *x))
-        }
-        Statement::Assign(name, state) => generate_assign(*name, *state),
-        Statement::Block(statements, scope) => generate_block(statements, scope),
-        Statement::While(expr, body) => generate_while_loop(expr, *body),
-        Statement::For(_ident, _expr, _body) => todo!(),
+        Statement::If {
+            condition,
+            body,
+            else_branch,
+        } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
+        Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
+        Statement::Block { statements, scope } => generate_block(statements, scope),
+        Statement::While { condition, body } => generate_while_loop(condition, *body),
+        Statement::For {
+            ident: _,
+            expr: _,
+            body: _,
+        } => todo!(),
         Statement::Continue => todo!(),
         Statement::Break => todo!(),
-        Statement::Match(_, _) => todo!(),
+        Statement::Match {
+            subject: _,
+            arms: _,
+        } => todo!(),
     };
 
     format!("{}\n", state)
@@ -148,12 +157,14 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Variable(val) => val,
         Expression::Str(val) => super::string_syntax(val),
         Expression::Bool(b) => b.to_string(),
-        Expression::FunctionCall(name, e) => generate_function_call(name, e),
-        Expression::Array(size, els) => generate_array(size, els),
-        Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
-        Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
-        Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
-        Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
+        Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
+        Expression::Array { capacity, elements } => generate_array(capacity, elements),
+        Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
+        Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
+        Expression::StructInitialization { name: _, fields } => {
+            generate_struct_initialization(fields)
+        }
+        Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
         Expression::Selff => todo!(),
     }
 }
@@ -164,7 +175,7 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
     out_str += &generate_expression(expr);
     out_str += ") ";
 
-    if let Statement::Block(statements, scope) = body {
+    if let Statement::Block { statements, scope } = body {
         out_str += &generate_block(statements, scope);
     }
     out_str
@@ -199,7 +210,10 @@ fn generate_conditional(
     let expr_str = generate_expression(expr);
 
     let body = match if_state {
-        Statement::Block(blk, _) => blk,
+        Statement::Block {
+            statements,
+            scope: _,
+        } => statements,
         _ => panic!("Conditional body should be of type block"),
     };
 
@@ -242,14 +256,19 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
         .map(|arg| match arg {
             Expression::Int(i) => i.to_string(),
             Expression::Bool(v) => v.to_string(),
-            Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
-            Expression::FunctionCall(n, a) => generate_function_call(n, a),
+            Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
+            Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
             Expression::Str(s) => super::string_syntax(s),
             Expression::Variable(s) => s,
-            Expression::Array(_, _) => todo!(),
-            Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
-            Expression::StructInitialization(_, fields) => generate_struct_initialization(fields),
-            Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
+            Expression::Array {
+                capacity: _,
+                elements: _,
+            } => todo!(),
+            Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
+            Expression::StructInitialization { name: _, fields } => {
+                generate_struct_initialization(fields)
+            }
+            Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
             Expression::Selff => todo!(),
         })
         .collect::<Vec<String>>()

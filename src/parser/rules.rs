@@ -125,9 +125,9 @@ impl Parser {
 
             // If the current statement is a variable declaration,
             // let the scope know
-            if let Statement::Declare(var, _) = &statement {
+            if let Statement::Declare { variable, value: _ } = &statement {
                 // TODO: Not sure if we should clone here
-                scope.push(var.to_owned());
+                scope.push(variable.to_owned());
             }
 
             statements.push(statement);
@@ -135,7 +135,7 @@ impl Parser {
 
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::Block(statements, scope))
+        Ok(Statement::Block { statements, scope })
     }
 
     /// To reduce code duplication, this method can be either be used to parse a function or a method.
@@ -270,7 +270,7 @@ impl Parser {
     /// The name of the function needs to be passed here, because we have already passed it with our cursor.
     /// If no function name is provided, the next token will be fetched
     fn parse_function_call(&mut self, func_name: Option<String>) -> Result<Expression, String> {
-        let name = match func_name {
+        let fn_name = match func_name {
             Some(name) => name,
             None => self.next()?.raw,
         };
@@ -306,7 +306,7 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        let expr = Expression::FunctionCall(name, args);
+        let expr = Expression::FunctionCall { fn_name, args };
         match self.peek()?.kind {
             TokenKind::Dot => self.parse_field_access(expr),
             _ => Ok(expr),
@@ -404,7 +404,10 @@ impl Parser {
             TokenKind::BraceOpen => self.parse_function_call(Some(id))?,
             _ => Expression::Variable(id),
         };
-        let expr = Expression::FieldAccess(Box::new(lhs), Box::new(field));
+        let expr = Expression::FieldAccess {
+            expr: Box::new(lhs),
+            field: Box::new(field),
+        };
         if self.peek_token(TokenKind::Dot).is_ok() {
             self.parse_field_access(expr)
         } else if BinOp::try_from(self.peek()?.kind).is_ok() {
@@ -421,7 +424,7 @@ impl Parser {
         let fields = self.parse_struct_fields()?;
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Expression::StructInitialization(name, fields))
+        Ok(Expression::StructInitialization { name, fields })
     }
 
     fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>, String> {
@@ -479,9 +482,9 @@ impl Parser {
         }
 
         self.match_token(TokenKind::SquareBraceClose)?;
-        let length = elements.len();
+        let capacity = elements.len();
 
-        Ok(Expression::Array(length, elements))
+        Ok(Expression::Array { capacity, elements })
     }
 
     fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {
@@ -494,15 +497,21 @@ impl Parser {
         let expr = self.parse_expression()?;
         self.match_token(TokenKind::SquareBraceClose)?;
 
-        Ok(Expression::ArrayAccess(name, Box::new(expr)))
+        Ok(Expression::ArrayAccess {
+            name,
+            index: Box::new(expr),
+        })
     }
 
     fn parse_while_loop(&mut self) -> Result<Statement, String> {
         self.match_keyword(Keyword::While)?;
-        let expr = self.parse_expression()?;
+        let condition = self.parse_expression()?;
         let body = self.parse_block()?;
 
-        Ok(Statement::While(expr, Box::new(body)))
+        Ok(Statement::While {
+            condition,
+            body: Box::new(body),
+        })
     }
 
     fn parse_break(&mut self) -> Result<Statement, String> {
@@ -528,14 +537,14 @@ impl Parser {
 
         let body = self.parse_block()?;
 
-        Ok(Statement::For(
-            Variable {
+        Ok(Statement::For {
+            ident: Variable {
                 name: ident,
                 ty: ident_ty,
             },
             expr,
-            Box::new(body),
-        ))
+            body: Box::new(body),
+        })
     }
 
     fn parse_match_statement(&mut self) -> Result<Statement, String> {
@@ -567,7 +576,7 @@ impl Parser {
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
-        Ok(Statement::Match(subject, arms))
+        Ok(Statement::Match { subject, arms })
     }
 
     fn parse_match_arm(&mut self) -> Result<MatchArm, String> {
@@ -601,22 +610,26 @@ impl Parser {
 
                 let peeked = self.peek()?;
 
-                let has_else = match &peeked.kind {
+                let else_branch = match &peeked.kind {
                     TokenKind::CurlyBracesOpen => Some(self.parse_block()?),
                     _ => None,
                 };
 
-                let else_branch = match has_else {
+                let else_branch = match else_branch {
                     Some(branch) => branch,
                     None => self.parse_conditional_statement()?,
                 };
-                Ok(Statement::If(
+                Ok(Statement::If {
                     condition,
-                    Box::new(body),
-                    Some(Box::new(else_branch)),
-                ))
+                    body: Box::new(body),
+                    else_branch: Some(Box::new(else_branch)),
+                })
             }
-            _ => Ok(Statement::If(condition, Box::new(body), None)),
+            _ => Ok(Statement::If {
+                condition,
+                body: Box::new(body),
+                else_branch: None,
+            }),
         }
     }
 
@@ -643,11 +656,11 @@ impl Parser {
 
         let op = self.match_operator()?;
 
-        Ok(Expression::BinOp(
-            Box::from(left),
+        Ok(Expression::BinOp {
+            lhs: Box::from(left),
             op,
-            Box::from(self.parse_expression()?),
-        ))
+            rhs: Box::from(self.parse_expression()?),
+        })
     }
 
     fn parse_declare(&mut self) -> Result<Statement, String> {
@@ -662,9 +675,15 @@ impl Parser {
             TokenKind::Assign => {
                 self.match_token(TokenKind::Assign)?;
                 let expr = self.parse_expression()?;
-                Ok(Statement::Declare(Variable { name, ty }, Some(expr)))
+                Ok(Statement::Declare {
+                    variable: Variable { name, ty },
+                    value: Some(expr),
+                })
             }
-            _ => Ok(Statement::Declare(Variable { name, ty }, None)),
+            _ => Ok(Statement::Declare {
+                variable: Variable { name, ty },
+                value: None,
+            }),
         }
     }
 
@@ -678,6 +697,9 @@ impl Parser {
 
         let expr = self.parse_expression()?;
 
-        Ok(Statement::Assign(Box::new(name), Box::new(expr)))
+        Ok(Statement::Assign {
+            lhs: Box::new(name),
+            rhs: Box::new(expr),
+        })
     }
 }

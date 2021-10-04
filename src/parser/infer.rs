@@ -25,15 +25,22 @@ pub(super) fn infer(program: &mut Module) {
     let table = &program.get_symbol_table();
     // TODO: Fix aweful nesting
     for func in &mut program.func {
-        if let Statement::Block(statements, _) = &mut func.body {
+        if let Statement::Block {
+            statements,
+            scope: _,
+        } = &mut func.body
+        {
             for statement in statements {
-                if let Statement::Declare(var, expr) = statement {
-                    if var.ty.is_none() {
-                        if let Some(e) = expr {
-                            var.ty = infer_expression(&e, table);
+                if let Statement::Declare { variable, value } = statement {
+                    if variable.ty.is_none() {
+                        if let Some(e) = value {
+                            variable.ty = infer_expression(e, table);
                             #[cfg(debug_assertions)]
-                            if var.ty.is_none() {
-                                println!("Type of {} could not be infered: {:?}", &var.name, e);
+                            if variable.ty.is_none() {
+                                println!(
+                                    "Type of {} could not be infered: {:?}",
+                                    &variable.name, e
+                                );
                             }
                         }
                     }
@@ -49,9 +56,14 @@ fn infer_expression(expr: &Expression, table: &SymbolTable) -> Option<Type> {
         Expression::Int(_) => Some(Type::Int),
         Expression::Bool(_) => Some(Type::Bool),
         Expression::Str(_) => Some(Type::Str),
-        Expression::StructInitialization(name, _) => Some(Type::Struct(name.to_string())),
-        Expression::FunctionCall(name, _) => infer_function_call(name, table),
-        Expression::Array(_, els) => infer_array(els, table),
+        Expression::StructInitialization { name, fields: _ } => {
+            Some(Type::Struct(name.to_string()))
+        }
+        Expression::FunctionCall { fn_name, args: _ } => infer_function_call(fn_name, table),
+        Expression::Array {
+            capacity: _,
+            elements,
+        } => infer_array(elements, table),
         _ => None,
     }
 }

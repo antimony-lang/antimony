@@ -81,7 +81,10 @@ impl X86Generator {
         let mut asm = Assembly::new();
 
         let has_return: bool = match &func.body {
-            Statement::Block(statements, _) => statements
+            Statement::Block {
+                statements,
+                scope: _,
+            } => statements
                 .iter()
                 .any(|s| matches!(*s, Statement::Return(_))),
             _ => panic!("Function body should be of type Block"),

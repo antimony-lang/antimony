@@ -175,28 +175,32 @@ impl QbeGenerator {
         stmt: &Statement,
     ) -> GeneratorResult<()> {
         match stmt {
-            Statement::Block(statements, _) => {
+            Statement::Block {
+                statements,
+                scope: _,
+            } => {
                 self.scopes.push(HashMap::new());
                 for stmt in statements.iter() {
                     self.generate_statement(func, stmt)?;
                 }
                 self.scopes.pop();
             }
-            Statement::Declare(var, expr) => {
+            Statement::Declare { variable, value } => {
                 let ty = self.get_type(
-                    var.ty
+                    variable
+                        .ty
                         .as_ref()
-                        .ok_or_else(|| format!("Missing type for variable '{}'", &var.name))?
+                        .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
                         .to_owned(),
                 )?;
-                let tmp = self.new_var(&ty, &var.name)?;
+                let tmp = self.new_var(&ty, &variable.name)?;
 
-                if let Some(expr) = expr {
+                if let Some(expr) = value {
                     let (ty, result) = self.generate_expression(func, expr)?;
                     func.assign_instr(tmp, ty, QbeInstr::Copy(result));
                 }
             }
-            Statement::Assign(lhs, rhs) => {
+            Statement::Assign { lhs, rhs } => {
                 let (_, rhs) = self.generate_expression(func, rhs)?;
                 // TODO: type check
                 self.generate_assignment(func, lhs, rhs)?;
@@ -209,11 +213,15 @@ impl QbeGenerator {
                 }
                 None => func.add_instr(QbeInstr::Ret(None)),
             },
-            Statement::If(cond, if_clause, else_clause) => {
-                self.generate_if(func, cond, if_clause, else_clause)?;
+            Statement::If {
+                condition,
+                body,
+                else_branch,
+            } => {
+                self.generate_if(func, condition, body, else_branch)?;
             }
-            Statement::While(cond, body) => {
-                self.generate_while(func, cond, body)?;
+            Statement::While { condition, body } => {
+                self.generate_while(func, condition, body)?;
             }
             Statement::Break => {
                 if let Some(label) = &self.loop_labels.last() {
@@ -265,11 +273,13 @@ impl QbeGenerator {
 
                 Ok((QbeType::Word, tmp))
             }
-            Expression::Array(len, items) => self.generate_array(func, *len, items),
-            Expression::FunctionCall(name, args) => {
+            Expression::Array { capacity, elements } => {
+                self.generate_array(func, *capacity, elements)
+            }
+            Expression::FunctionCall { fn_name, args } => {
                 let mut new_args: Vec<(QbeType, QbeValue)> = Vec::new();
                 for arg in args.iter() {
-                    new_args.push(self.generate_expression(func, &arg)?);
+                    new_args.push(self.generate_expression(func, arg)?);
                 }
 
                 let tmp = self.new_temporary();
@@ -277,17 +287,19 @@ impl QbeGenerator {
                     tmp.clone(),
                     // TODO: get that type properly
                     QbeType::Word,
-                    QbeInstr::Call(name.clone(), new_args),
+                    QbeInstr::Call(fn_name.clone(), new_args),
                 );
 
                 Ok((QbeType::Word, tmp))
             }
             Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
-            Expression::BinOp(lhs, op, rhs) => self.generate_binop(func, lhs, op, rhs),
-            Expression::StructInitialization(name, fields) => {
+            Expression::BinOp { lhs, op, rhs } => self.generate_binop(func, lhs, op, rhs),
+            Expression::StructInitialization { name, fields } => {
                 self.generate_struct_init(func, name, fields)
             }
-            Expression::FieldAccess(obj, field) => self.generate_field_access(func, obj, field),
+            Expression::FieldAccess { expr, field } => {
+                self.generate_field_access(func, expr, field)
+            }
             _ => todo!("expression: {:?}", expr),
         }
     }
@@ -318,7 +330,7 @@ impl QbeGenerator {
         ));
 
         func.add_block(if_label);
-        self.generate_statement(func, &if_clause)?;
+        self.generate_statement(func, if_clause)?;
 
         if let Some(else_clause) = else_clause {
             // Jump over to the end to prevent fallthrough into else
@@ -328,7 +340,7 @@ impl QbeGenerator {
             }
 
             func.add_block(else_label);
-            self.generate_statement(func, &else_clause)?;
+            self.generate_statement(func, else_clause)?;
         }
 
         func.add_block(end_label);
@@ -489,8 +501,8 @@ impl QbeGenerator {
                     QbeInstr::Copy(rhs),
                 );
             }
-            Expression::FieldAccess(obj, field) => {
-                let (src, ty, offset) = self.resolve_field_access(obj, field)?;
+            Expression::FieldAccess { expr, field } => {
+                let (src, ty, offset) = self.resolve_field_access(expr, field)?;
 
                 let field_ptr = self.new_temporary();
                 func.assign_instr(
@@ -501,7 +513,7 @@ impl QbeGenerator {
 
                 func.add_instr(QbeInstr::Store(ty, field_ptr, rhs));
             }
-            Expression::ArrayAccess(..) => todo!(),
+            Expression::ArrayAccess { name: _, index: _ } => todo!(),
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
         }
 
@@ -583,7 +595,7 @@ impl QbeGenerator {
     ) -> GeneratorResult<(QbeValue, QbeType, u64)> {
         let (ty, src) = match obj {
             Expression::Variable(var) => self.get_var(var)?.to_owned(),
-            Expression::FieldAccess(..) => todo!("nested field access"),
+            Expression::FieldAccess { .. } => todo!("nested field access"),
             Expression::Selff => unimplemented!("methods"),
             other => {
                 return Err(format!(
@@ -594,7 +606,10 @@ impl QbeGenerator {
         };
         let field = match field {
             Expression::Variable(v) => v,
-            Expression::FunctionCall(..) => unimplemented!("methods"),
+            Expression::FunctionCall {
+                fn_name: _,
+                args: _,
+            } => unimplemented!("methods"),
             // Parser should ensure this won't happen
             _ => unreachable!(),
         };

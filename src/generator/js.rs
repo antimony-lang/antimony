@@ -111,7 +111,10 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
 
     // TODO: Prepend statements
     let statements = match block {
-        Statement::Block(blk, _) => blk,
+        Statement::Block {
+            statements,
+            scope: _,
+        } => statements,
         _ => panic!("Block body should be of type Statement::Block"),
     };
 
@@ -127,18 +130,23 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
 fn generate_statement(statement: Statement) -> String {
     let state = match statement {
         Statement::Return(ret) => generate_return(ret),
-        Statement::Declare(ident, val) => generate_declare(ident, val),
+        Statement::Declare { variable, value } => generate_declare(variable, value),
         Statement::Exp(val) => generate_expression(val),
-        Statement::If(expr, if_state, else_state) => {
-            generate_conditional(expr, *if_state, else_state.map(|x| *x))
-        }
-        Statement::Assign(name, state) => generate_assign(*name, *state),
-        Statement::Block(_, _) => generate_block(statement, None),
-        Statement::While(expr, body) => generate_while_loop(expr, *body),
-        Statement::For(ident, expr, body) => generate_for_loop(ident, expr, *body),
+        Statement::If {
+            condition,
+            body,
+            else_branch,
+        } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
+        Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
+        Statement::Block {
+            statements: _,
+            scope: _,
+        } => generate_block(statement, None),
+        Statement::While { condition, body } => generate_while_loop(condition, *body),
+        Statement::For { ident, expr, body } => generate_for_loop(ident, expr, *body),
         Statement::Continue => generate_continue(),
         Statement::Break => generate_break(),
-        Statement::Match(subject, arms) => generate_match(subject, arms),
+        Statement::Match { subject, arms } => generate_match(subject, arms),
     };
 
     format!("{};\n", state)
@@ -151,14 +159,17 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Str(val) => super::string_syntax(val),
         Expression::Variable(val) => val,
         Expression::Bool(b) => b.to_string(),
-        Expression::FunctionCall(name, e) => generate_function_call(name, e),
-        Expression::Array(_, els) => generate_array(els),
-        Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
-        Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
-        Expression::StructInitialization(name, fields) => {
+        Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
+        Expression::Array {
+            capacity: _,
+            elements,
+        } => generate_array(elements),
+        Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
+        Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
+        Expression::StructInitialization { name, fields } => {
             generate_struct_initialization(name, fields)
         }
-        Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
+        Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
     }
 }
 
@@ -250,7 +261,10 @@ fn generate_conditional(
     let expr_str = generate_expression(expr);
 
     let body = match if_state {
-        Statement::Block(blk, _) => blk,
+        Statement::Block {
+            statements,
+            scope: _,
+        } => statements,
         _ => panic!("Conditional body should be of type block"),
     };
 
@@ -300,16 +314,19 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::Int(i) => i.to_string(),
             Expression::Bool(v) => v.to_string(),
             Expression::Selff => "this".to_string(),
-            Expression::ArrayAccess(name, expr) => generate_array_access(name, *expr),
-            Expression::FunctionCall(n, a) => generate_function_call(n, a),
+            Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
+            Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
             Expression::Str(s) => super::string_syntax(s),
             Expression::Variable(s) => s,
-            Expression::Array(_, elements) => generate_array(elements),
-            Expression::BinOp(left, op, right) => generate_bin_op(*left, op, *right),
-            Expression::StructInitialization(name, fields) => {
+            Expression::Array {
+                capacity: _,
+                elements,
+            } => generate_array(elements),
+            Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
+            Expression::StructInitialization { name, fields } => {
                 generate_struct_initialization(name, fields)
             }
-            Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
+            Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
         })
         .collect::<Vec<String>>()
         .join(",");
