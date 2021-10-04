@@ -142,7 +142,10 @@ pub enum Expression {
         op: BinOp,
         rhs: Box<Expression>,
     },
-    StructInitialization(String, HashMap<String, Box<Expression>>),
+    StructInitialization {
+        name: String,
+        fields: HashMap<String, Box<Expression>>,
+    },
     FieldAccess(Box<Expression>, Box<Expression>),
 }
 

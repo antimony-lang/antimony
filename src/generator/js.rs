@@ -166,7 +166,7 @@ fn generate_expression(expr: Expression) -> String {
         } => generate_array(elements),
         Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
         Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-        Expression::StructInitialization(name, fields) => {
+        Expression::StructInitialization { name, fields } => {
             generate_struct_initialization(name, fields)
         }
         Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
@@ -323,7 +323,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
                 elements,
             } => generate_array(elements),
             Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-            Expression::StructInitialization(name, fields) => {
+            Expression::StructInitialization { name, fields } => {
                 generate_struct_initialization(name, fields)
             }
             Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),

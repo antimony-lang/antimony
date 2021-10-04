@@ -421,7 +421,7 @@ impl Parser {
         let fields = self.parse_struct_fields()?;
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Expression::StructInitialization(name, fields))
+        Ok(Expression::StructInitialization { name, fields })
     }
 
     fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>, String> {

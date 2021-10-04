@@ -294,7 +294,7 @@ impl QbeGenerator {
             }
             Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
             Expression::BinOp { lhs, op, rhs } => self.generate_binop(func, lhs, op, rhs),
-            Expression::StructInitialization(name, fields) => {
+            Expression::StructInitialization { name, fields } => {
                 self.generate_struct_init(func, name, fields)
             }
             Expression::FieldAccess(obj, field) => self.generate_field_access(func, obj, field),
