@@ -297,7 +297,9 @@ impl QbeGenerator {
             Expression::StructInitialization { name, fields } => {
                 self.generate_struct_init(func, name, fields)
             }
-            Expression::FieldAccess(obj, field) => self.generate_field_access(func, obj, field),
+            Expression::FieldAccess { expr, field } => {
+                self.generate_field_access(func, expr, field)
+            }
             _ => todo!("expression: {:?}", expr),
         }
     }
@@ -499,8 +501,8 @@ impl QbeGenerator {
                     QbeInstr::Copy(rhs),
                 );
             }
-            Expression::FieldAccess(obj, field) => {
-                let (src, ty, offset) = self.resolve_field_access(obj, field)?;
+            Expression::FieldAccess { expr, field } => {
+                let (src, ty, offset) = self.resolve_field_access(expr, field)?;
 
                 let field_ptr = self.new_temporary();
                 func.assign_instr(
@@ -593,7 +595,7 @@ impl QbeGenerator {
     ) -> GeneratorResult<(QbeValue, QbeType, u64)> {
         let (ty, src) = match obj {
             Expression::Variable(var) => self.get_var(var)?.to_owned(),
-            Expression::FieldAccess(..) => todo!("nested field access"),
+            Expression::FieldAccess { .. } => todo!("nested field access"),
             Expression::Selff => unimplemented!("methods"),
             other => {
                 return Err(format!(

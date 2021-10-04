@@ -169,7 +169,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::StructInitialization { name, fields } => {
             generate_struct_initialization(name, fields)
         }
-        Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
+        Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
     }
 }
 
@@ -326,7 +326,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::StructInitialization { name, fields } => {
                 generate_struct_initialization(name, fields)
             }
-            Expression::FieldAccess(expr, field) => generate_field_access(*expr, *field),
+            Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
         })
         .collect::<Vec<String>>()
         .join(",");

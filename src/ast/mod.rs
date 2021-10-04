@@ -146,7 +146,10 @@ pub enum Expression {
         name: String,
         fields: HashMap<String, Box<Expression>>,
     },
-    FieldAccess(Box<Expression>, Box<Expression>),
+    FieldAccess {
+        expr: Box<Expression>,
+        field: Box<Expression>,
+    },
 }
 
 impl TryFrom<Token> for Expression {

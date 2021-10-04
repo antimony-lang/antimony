@@ -404,7 +404,10 @@ impl Parser {
             TokenKind::BraceOpen => self.parse_function_call(Some(id))?,
             _ => Expression::Variable(id),
         };
-        let expr = Expression::FieldAccess(Box::new(lhs), Box::new(field));
+        let expr = Expression::FieldAccess {
+            expr: Box::new(lhs),
+            field: Box::new(field),
+        };
         if self.peek_token(TokenKind::Dot).is_ok() {
             self.parse_field_access(expr)
         } else if BinOp::try_from(self.peek()?.kind).is_ok() {
