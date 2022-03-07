@@ -1,4 +1,5 @@
 extern crate lazy_static;
+extern crate qbe;
 extern crate regex;
 /**
  * Copyright 2020 Garrit Franke
