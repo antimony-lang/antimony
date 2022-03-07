@@ -22,19 +22,19 @@ pub struct QbeGenerator {
     /// Counter for unique temporary names
     tmp_counter: u32,
     /// Block-scoped variable -> temporary mappings
-    scopes: Vec<HashMap<String, (QbeType, QbeValue)>>,
+    scopes: Vec<HashMap<String, (qbe::Type, qbe::Value)>>,
     /// Structure -> (type, meta data, size) mappings
-    struct_map: HashMap<String, (QbeType, StructMeta, u64)>,
+    struct_map: HashMap<String, (qbe::Type, StructMeta, u64)>,
     /// Label prefix of loop scopes
     loop_labels: Vec<String>,
     /// Data defintions collected during generation
-    datadefs: Vec<QbeDataDef>,
+    datadefs: Vec<qbe::DataDef>,
     /// Type defintions collected during generation
-    typedefs: Vec<QbeTypeDef>,
+    typedefs: Vec<qbe::TypeDef>,
 }
 
 /// Mapping of field -> (type, offset)
-type StructMeta = HashMap<String, (QbeType, u64)>;
+type StructMeta = HashMap<String, (qbe::Type, u64)>;
 
 impl Generator for QbeGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
@@ -80,9 +80,9 @@ impl Generator for QbeGenerator {
 
 impl QbeGenerator {
     /// Returns an aggregate type for a structure (note: has side effects)
-    fn generate_struct(&mut self, def: &StructDef) -> GeneratorResult<QbeTypeDef> {
+    fn generate_struct(&mut self, def: &StructDef) -> GeneratorResult<qbe::TypeDef> {
         self.tmp_counter += 1;
-        let mut typedef = QbeTypeDef {
+        let mut typedef = qbe::TypeDef {
             name: format!("struct.{}", self.tmp_counter),
             align: None,
             items: Vec::new(),
@@ -106,17 +106,17 @@ impl QbeGenerator {
         }
         self.struct_map.insert(
             def.name.clone(),
-            (QbeType::Aggregate(typedef.name.clone()), meta, offset),
+            (qbe::Type::Aggregate(typedef.name.clone()), meta, offset),
         );
 
         Ok(typedef)
     }
 
-    fn generate_function(&mut self, func: &Function) -> GeneratorResult<QbeFunction> {
+    fn generate_function(&mut self, func: &Function) -> GeneratorResult<qbe::Function> {
         // Function argument scope
         self.scopes.push(HashMap::new());
 
-        let mut arguments: Vec<(QbeType, QbeValue)> = Vec::new();
+        let mut arguments: Vec<(qbe::Type, qbe::Value)> = Vec::new();
         for arg in &func.arguments {
             let ty = self.get_type(
                 arg.ty
@@ -135,8 +135,8 @@ impl QbeGenerator {
             None
         };
 
-        let mut qfunc = QbeFunction {
-            exported: true,
+        let mut qfunc = qbe::Function {
+            linkage: qbe::Linkage::public(),
             name: func.name.clone(),
             arguments,
             return_ty,
@@ -147,14 +147,14 @@ impl QbeGenerator {
 
         self.generate_statement(&mut qfunc, &func.body)?;
 
-        let returns = qfunc.last_block().instructions.last().map_or(false, |i| {
-            matches!(i, QbeStatement::Volatile(QbeInstr::Ret(_)))
+        let returns = qfunc.last_block().statements.last().map_or(false, |i| {
+            matches!(i, qbe::Statement::Volatile(qbe::Instr::Ret(_)))
         });
         // Automatically add return in void functions unless it already returns,
         // non-void functions raise an error
         if !returns {
             if func.ret_type.is_none() {
-                qfunc.add_instr(QbeInstr::Ret(None));
+                qfunc.add_instr(qbe::Instr::Ret(None));
             } else {
                 return Err(format!(
                     "Function '{}' does not return in all code paths",
@@ -171,7 +171,7 @@ impl QbeGenerator {
     /// Generates a statement
     fn generate_statement(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         stmt: &Statement,
     ) -> GeneratorResult<()> {
         match stmt {
@@ -197,7 +197,7 @@ impl QbeGenerator {
 
                 if let Some(expr) = value {
                     let (ty, result) = self.generate_expression(func, expr)?;
-                    func.assign_instr(tmp, ty, QbeInstr::Copy(result));
+                    func.assign_instr(tmp, ty, qbe::Instr::Copy(result));
                 }
             }
             Statement::Assign { lhs, rhs } => {
@@ -209,9 +209,9 @@ impl QbeGenerator {
                 Some(expr) => {
                     let (_, result) = self.generate_expression(func, expr)?;
                     // TODO: Cast to function return type
-                    func.add_instr(QbeInstr::Ret(Some(result)));
+                    func.add_instr(qbe::Instr::Ret(Some(result)));
                 }
-                None => func.add_instr(QbeInstr::Ret(None)),
+                None => func.add_instr(qbe::Instr::Ret(None)),
             },
             Statement::If {
                 condition,
@@ -225,14 +225,14 @@ impl QbeGenerator {
             }
             Statement::Break => {
                 if let Some(label) = &self.loop_labels.last() {
-                    func.add_instr(QbeInstr::Jmp(format!("{}.end", label)));
+                    func.add_instr(qbe::Instr::Jmp(format!("{}.end", label)));
                 } else {
                     return Err("break used outside of a loop".to_owned());
                 }
             }
             Statement::Continue => {
                 if let Some(label) = &self.loop_labels.last() {
-                    func.add_instr(QbeInstr::Jmp(format!("{}.cond", label)));
+                    func.add_instr(qbe::Instr::Jmp(format!("{}.cond", label)));
                 } else {
                     return Err("continue used outside of a loop".to_owned());
                 }
@@ -248,36 +248,36 @@ impl QbeGenerator {
     /// Generates an expression
     fn generate_expression(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         expr: &Expression,
-    ) -> GeneratorResult<(QbeType, QbeValue)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         match expr {
             Expression::Int(literal) => {
                 let tmp = self.new_temporary();
                 func.assign_instr(
                     tmp.clone(),
-                    QbeType::Word,
-                    QbeInstr::Copy(QbeValue::Const(*literal as u64)),
+                    qbe::Type::Word,
+                    qbe::Instr::Copy(qbe::Value::Const(*literal as u64)),
                 );
 
-                Ok((QbeType::Word, tmp))
+                Ok((qbe::Type::Word, tmp))
             }
             Expression::Str(string) => self.generate_string(string),
             Expression::Bool(literal) => {
                 let tmp = self.new_temporary();
                 func.assign_instr(
                     tmp.clone(),
-                    QbeType::Word,
-                    QbeInstr::Copy(QbeValue::Const(if *literal { 1 } else { 0 })),
+                    qbe::Type::Word,
+                    qbe::Instr::Copy(qbe::Value::Const(if *literal { 1 } else { 0 })),
                 );
 
-                Ok((QbeType::Word, tmp))
+                Ok((qbe::Type::Word, tmp))
             }
             Expression::Array { capacity, elements } => {
                 self.generate_array(func, *capacity, elements)
             }
             Expression::FunctionCall { fn_name, args } => {
-                let mut new_args: Vec<(QbeType, QbeValue)> = Vec::new();
+                let mut new_args: Vec<(qbe::Type, qbe::Value)> = Vec::new();
                 for arg in args.iter() {
                     new_args.push(self.generate_expression(func, arg)?);
                 }
@@ -286,11 +286,11 @@ impl QbeGenerator {
                 func.assign_instr(
                     tmp.clone(),
                     // TODO: get that type properly
-                    QbeType::Word,
-                    QbeInstr::Call(fn_name.clone(), new_args),
+                    qbe::Type::Word,
+                    qbe::Instr::Call(fn_name.clone(), new_args),
                 );
 
-                Ok((QbeType::Word, tmp))
+                Ok((qbe::Type::Word, tmp))
             }
             Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
             Expression::BinOp { lhs, op, rhs } => self.generate_binop(func, lhs, op, rhs),
@@ -307,7 +307,7 @@ impl QbeGenerator {
     /// Generates an `if` statement
     fn generate_if(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         cond: &Expression,
         if_clause: &Statement,
         else_clause: &Option<Box<Statement>>,
@@ -319,7 +319,7 @@ impl QbeGenerator {
         let else_label = format!("cond.{}.else", self.tmp_counter);
         let end_label = format!("cond.{}.end", self.tmp_counter);
 
-        func.add_instr(QbeInstr::Jnz(
+        func.add_instr(qbe::Instr::Jnz(
             result,
             if_label.clone(),
             if else_clause.is_some() {
@@ -336,7 +336,7 @@ impl QbeGenerator {
             // Jump over to the end to prevent fallthrough into else
             // clause, unless the last block already jumps
             if !func.blocks.last().map_or(false, |b| b.jumps()) {
-                func.add_instr(QbeInstr::Jmp(end_label.clone()));
+                func.add_instr(qbe::Instr::Jmp(end_label.clone()));
             }
 
             func.add_block(else_label);
@@ -351,7 +351,7 @@ impl QbeGenerator {
     /// Generates a `while` statement
     fn generate_while(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         cond: &Expression,
         body: &Statement,
     ) -> GeneratorResult<()> {
@@ -365,13 +365,17 @@ impl QbeGenerator {
         func.add_block(cond_label.clone());
 
         let (_, result) = self.generate_expression(func, cond)?;
-        func.add_instr(QbeInstr::Jnz(result, body_label.clone(), end_label.clone()));
+        func.add_instr(qbe::Instr::Jnz(
+            result,
+            body_label.clone(),
+            end_label.clone(),
+        ));
 
         func.add_block(body_label);
         self.generate_statement(func, body)?;
 
         if !func.blocks.last().map_or(false, |b| b.jumps()) {
-            func.add_instr(QbeInstr::Jmp(cond_label));
+            func.add_instr(qbe::Instr::Jmp(cond_label));
         }
 
         func.add_block(end_label);
@@ -382,18 +386,18 @@ impl QbeGenerator {
     }
 
     /// Generates a string
-    fn generate_string(&mut self, string: &str) -> GeneratorResult<(QbeType, QbeValue)> {
+    fn generate_string(&mut self, string: &str) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         self.tmp_counter += 1;
         let name = format!("string.{}", self.tmp_counter);
 
-        let mut items: Vec<(QbeType, QbeDataItem)> = Vec::new();
+        let mut items: Vec<(qbe::Type, qbe::DataItem)> = Vec::new();
         let mut buf = String::new();
         for ch in string.chars() {
             if ch.is_ascii() && !ch.is_ascii_control() && ch != '"' {
                 buf.push(ch)
             } else {
                 if !buf.is_empty() {
-                    items.push((QbeType::Byte, QbeDataItem::Str(buf.clone())));
+                    items.push((qbe::Type::Byte, qbe::DataItem::Str(buf.clone())));
                     buf.clear();
                 }
 
@@ -401,65 +405,65 @@ impl QbeGenerator {
                 let len = ch.encode_utf8(&mut buf).len();
 
                 for b in buf.iter().take(len) {
-                    items.push((QbeType::Byte, QbeDataItem::Const(*b as u64)));
+                    items.push((qbe::Type::Byte, qbe::DataItem::Const(*b as u64)));
                 }
                 continue;
             }
         }
         if !buf.is_empty() {
-            items.push((QbeType::Byte, QbeDataItem::Str(buf)));
+            items.push((qbe::Type::Byte, qbe::DataItem::Str(buf)));
         }
         // NUL terminator
-        items.push((QbeType::Byte, QbeDataItem::Const(0)));
+        items.push((qbe::Type::Byte, qbe::DataItem::Const(0)));
 
-        self.datadefs.push(QbeDataDef {
-            exported: false,
+        self.datadefs.push(qbe::DataDef {
+            linkage: qbe::Linkage::public(),
             name: name.clone(),
             align: None,
             items,
         });
 
-        Ok((QbeType::Long, QbeValue::Global(name)))
+        Ok((qbe::Type::Long, qbe::Value::Global(name)))
     }
 
     /// Returns the result of a binary operation (e.g. `+` or `*=`).
     fn generate_binop(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         lhs: &Expression,
         op: &BinOp,
         rhs: &Expression,
-    ) -> GeneratorResult<(QbeType, QbeValue)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         let (_, lhs_val) = self.generate_expression(func, lhs)?;
         let (_, rhs_val) = self.generate_expression(func, rhs)?;
         let tmp = self.new_temporary();
 
         // TODO: take the biggest
-        let ty = QbeType::Word;
+        let ty = qbe::Type::Word;
 
         func.assign_instr(
             tmp.clone(),
             ty.clone(),
             match op {
-                BinOp::Addition | BinOp::AddAssign => QbeInstr::Add(lhs_val, rhs_val),
-                BinOp::Subtraction | BinOp::SubtractAssign => QbeInstr::Sub(lhs_val, rhs_val),
-                BinOp::Multiplication | BinOp::MultiplyAssign => QbeInstr::Mul(lhs_val, rhs_val),
-                BinOp::Division | BinOp::DivideAssign => QbeInstr::Div(lhs_val, rhs_val),
-                BinOp::Modulus => QbeInstr::Rem(lhs_val, rhs_val),
+                BinOp::Addition | BinOp::AddAssign => qbe::Instr::Add(lhs_val, rhs_val),
+                BinOp::Subtraction | BinOp::SubtractAssign => qbe::Instr::Sub(lhs_val, rhs_val),
+                BinOp::Multiplication | BinOp::MultiplyAssign => qbe::Instr::Mul(lhs_val, rhs_val),
+                BinOp::Division | BinOp::DivideAssign => qbe::Instr::Div(lhs_val, rhs_val),
+                BinOp::Modulus => qbe::Instr::Rem(lhs_val, rhs_val),
 
-                BinOp::And => QbeInstr::And(lhs_val, rhs_val),
-                BinOp::Or => QbeInstr::Or(lhs_val, rhs_val),
+                BinOp::And => qbe::Instr::And(lhs_val, rhs_val),
+                BinOp::Or => qbe::Instr::Or(lhs_val, rhs_val),
 
                 // Others should be comparisons
-                cmp => QbeInstr::Cmp(
+                cmp => qbe::Instr::Cmp(
                     ty.clone(),
                     match cmp {
-                        BinOp::LessThan => QbeCmp::Slt,
-                        BinOp::LessThanOrEqual => QbeCmp::Sle,
-                        BinOp::GreaterThan => QbeCmp::Sgt,
-                        BinOp::GreaterThanOrEqual => QbeCmp::Sge,
-                        BinOp::Equal => QbeCmp::Eq,
-                        BinOp::NotEqual => QbeCmp::Ne,
+                        BinOp::LessThan => qbe::Cmp::Slt,
+                        BinOp::LessThanOrEqual => qbe::Cmp::Sle,
+                        BinOp::GreaterThan => qbe::Cmp::Sgt,
+                        BinOp::GreaterThanOrEqual => qbe::Cmp::Sge,
+                        BinOp::Equal => qbe::Cmp::Eq,
+                        BinOp::NotEqual => qbe::Cmp::Ne,
                         _ => unreachable!(),
                     },
                     lhs_val,
@@ -488,9 +492,9 @@ impl QbeGenerator {
     /// access
     fn generate_assignment(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         lhs: &Expression,
-        rhs: QbeValue,
+        rhs: qbe::Value,
     ) -> GeneratorResult<()> {
         match lhs {
             Expression::Variable(name) => {
@@ -498,7 +502,7 @@ impl QbeGenerator {
                 func.assign_instr(
                     tmp.to_owned(),
                     vty.to_owned(),
-                    QbeInstr::Copy(rhs),
+                    qbe::Instr::Copy(rhs),
                 );
             }
             Expression::FieldAccess { expr, field } => {
@@ -507,11 +511,11 @@ impl QbeGenerator {
                 let field_ptr = self.new_temporary();
                 func.assign_instr(
                     field_ptr.clone(),
-                    QbeType::Long,
-                    QbeInstr::Add(src, QbeValue::Const(offset)),
+                    qbe::Type::Long,
+                    qbe::Instr::Add(src, qbe::Value::Const(offset)),
                 );
 
-                func.add_instr(QbeInstr::Store(ty, field_ptr, rhs));
+                func.add_instr(qbe::Instr::Store(ty, field_ptr, rhs));
             }
             Expression::ArrayAccess { name: _, index: _ } => todo!(),
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
@@ -523,10 +527,10 @@ impl QbeGenerator {
     /// Generates struct initialization
     fn generate_struct_init(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         name: &str,
         fields: &HashMap<String, Box<Expression>>,
-    ) -> GeneratorResult<(QbeType, QbeValue)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         let base = self.new_temporary();
         let (ty, meta, size) = self
             .struct_map
@@ -536,9 +540,9 @@ impl QbeGenerator {
 
         func.assign_instr(
             base.clone(),
-            QbeType::Long,
+            qbe::Type::Long,
             // XXX: Always align to 8 bytes?
-            QbeInstr::Alloc8(size),
+            qbe::Instr::Alloc8(size),
         );
 
         for (name, expr) in fields {
@@ -551,11 +555,11 @@ impl QbeGenerator {
             let field_tmp = self.new_temporary();
             func.assign_instr(
                 field_tmp.clone(),
-                QbeType::Long,
-                QbeInstr::Add(base.clone(), QbeValue::Const(*offset)),
+                qbe::Type::Long,
+                qbe::Instr::Add(base.clone(), qbe::Value::Const(*offset)),
             );
 
-            func.add_instr(QbeInstr::Store(ty, field_tmp, expr_tmp));
+            func.add_instr(qbe::Instr::Store(ty, field_tmp, expr_tmp));
         }
 
         Ok((ty, base))
@@ -564,24 +568,24 @@ impl QbeGenerator {
     /// Retrieves the result of struct field access
     fn generate_field_access(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         obj: &Expression,
         field: &Expression,
-    ) -> GeneratorResult<(QbeType, QbeValue)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         let (src, ty, offset) = self.resolve_field_access(obj, field)?;
 
         let field_ptr = self.new_temporary();
         func.assign_instr(
             field_ptr.clone(),
-            QbeType::Long,
-            QbeInstr::Add(src, QbeValue::Const(offset)),
+            qbe::Type::Long,
+            qbe::Instr::Add(src, qbe::Value::Const(offset)),
         );
 
         let tmp = self.new_temporary();
         func.assign_instr(
             tmp.clone(),
             ty.clone(),
-            QbeInstr::Load(ty.clone(), field_ptr),
+            qbe::Instr::Load(ty.clone(), field_ptr),
         );
 
         Ok((ty, tmp))
@@ -592,7 +596,7 @@ impl QbeGenerator {
         &mut self,
         obj: &Expression,
         field: &Expression,
-    ) -> GeneratorResult<(QbeValue, QbeType, u64)> {
+    ) -> GeneratorResult<(qbe::Value, qbe::Type, u64)> {
         let (ty, src) = match obj {
             Expression::Variable(var) => self.get_var(var)?.to_owned(),
             Expression::FieldAccess { .. } => todo!("nested field access"),
@@ -641,12 +645,12 @@ impl QbeGenerator {
     /// Generates an array literal
     fn generate_array(
         &mut self,
-        func: &mut QbeFunction,
+        func: &mut qbe::Function,
         len: usize,
         items: &[Expression],
-    ) -> GeneratorResult<(QbeType, QbeValue)> {
-        let mut first_type: Option<QbeType> = None;
-        let mut results: Vec<QbeValue> = Vec::new();
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
+        let mut first_type: Option<qbe::Type> = None;
+        let mut results: Vec<qbe::Value> = Vec::new();
 
         for item in items.iter() {
             let (ty, result) = self.generate_expression(func, item)?;
@@ -672,9 +676,9 @@ impl QbeGenerator {
         let tmp = self.new_temporary();
         func.assign_instr(
             tmp.clone(),
-            QbeType::Long,
-            QbeInstr::Alloc8(
-                QbeType::Long.size()
+            qbe::Type::Long,
+            qbe::Instr::Alloc8(
+                qbe::Type::Long.size()
                     + if let Some(ref ty) = first_type {
                         ty.size() * (len as u64)
                     } else {
@@ -682,26 +686,26 @@ impl QbeGenerator {
                     },
             ),
         );
-        func.add_instr(QbeInstr::Store(
-            QbeType::Long,
+        func.add_instr(qbe::Instr::Store(
+            qbe::Type::Long,
             tmp.clone(),
-            QbeValue::Const(len as u64),
+            qbe::Value::Const(len as u64),
         ));
 
         for (i, value) in results.iter().enumerate() {
             let value_ptr = self.new_temporary();
             func.assign_instr(
                 value_ptr.clone(),
-                QbeType::Long,
-                QbeInstr::Add(
+                qbe::Type::Long,
+                qbe::Instr::Add(
                     tmp.clone(),
-                    QbeValue::Const(
-                        QbeType::Long.size() + (i as u64) * first_type.as_ref().unwrap().size(),
+                    qbe::Value::Const(
+                        qbe::Type::Long.size() + (i as u64) * first_type.as_ref().unwrap().size(),
                     ),
                 ),
             );
 
-            func.add_instr(QbeInstr::Store(
+            func.add_instr(qbe::Instr::Store(
                 first_type.as_ref().unwrap().clone(),
                 value_ptr,
                 value.to_owned(),
@@ -710,29 +714,29 @@ impl QbeGenerator {
 
         self.tmp_counter += 1;
         let name = format!("array.{}", self.tmp_counter);
-        let typedef = QbeTypeDef {
+        let typedef = qbe::TypeDef {
             name: name.clone(),
             align: None,
             items: if let Some(ty) = first_type {
-                vec![(QbeType::Long, 1), (ty, len)]
+                vec![(qbe::Type::Long, 1), (ty, len)]
             } else {
                 // No elements
-                vec![(QbeType::Long, 1)]
+                vec![(qbe::Type::Long, 1)]
             },
         };
         self.typedefs.push(typedef);
 
-        Ok((QbeType::Aggregate(name), tmp))
+        Ok((qbe::Type::Aggregate(name), tmp))
     }
 
     /// Returns a new unique temporary
-    fn new_temporary(&mut self) -> QbeValue {
+    fn new_temporary(&mut self) -> qbe::Value {
         self.tmp_counter += 1;
-        QbeValue::Temporary(format!("tmp.{}", self.tmp_counter))
+        qbe::Value::Temporary(format!("tmp.{}", self.tmp_counter))
     }
 
     /// Returns a new temporary bound to a variable
-    fn new_var(&mut self, ty: &QbeType, name: &str) -> GeneratorResult<QbeValue> {
+    fn new_var(&mut self, ty: &qbe::Type, name: &str) -> GeneratorResult<qbe::Value> {
         if self.get_var(name).is_ok() {
             return Err(format!("Re-declaration of variable '{}'", name));
         }
@@ -749,7 +753,7 @@ impl QbeGenerator {
     }
 
     /// Returns a temporary accociated to a variable
-    fn get_var(&self, name: &str) -> GeneratorResult<&(QbeType, QbeValue)> {
+    fn get_var(&self, name: &str) -> GeneratorResult<&(qbe::Type, qbe::Value)> {
         self.scopes
             .iter()
             .rev()
@@ -759,12 +763,12 @@ impl QbeGenerator {
     }
 
     /// Returns a QBE type for the given AST type
-    fn get_type(&self, ty: Type) -> GeneratorResult<QbeType> {
+    fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type> {
         match ty {
             Type::Any => Err("'any' type is not supported".into()),
-            Type::Int => Ok(QbeType::Word),
-            Type::Bool => Ok(QbeType::Byte),
-            Type::Str => Ok(QbeType::Long),
+            Type::Int => Ok(qbe::Type::Word),
+            Type::Bool => Ok(qbe::Type::Byte),
+            Type::Str => Ok(qbe::Type::Long),
             Type::Struct(name) => {
                 let (ty, ..) = self
                     .struct_map
@@ -773,468 +777,7 @@ impl QbeGenerator {
                     .to_owned();
                 Ok(ty)
             }
-            Type::Array(..) => Ok(QbeType::Long),
+            Type::Array(..) => Ok(qbe::Type::Long),
         }
-    }
-}
-
-use std::fmt;
-
-/// QBE comparision
-#[derive(Debug)]
-pub(super) enum QbeCmp {
-    /// Returns 1 if first value is less than second, respecting signedness
-    Slt,
-    /// Returns 1 if first value is less than or equal to second, respecting signedness
-    Sle,
-    /// Returns 1 if first value is greater than second, respecting signedness
-    Sgt,
-    /// Returns 1 if first value is greater than or equal to second, respecting signedness
-    Sge,
-    /// Returns 1 if values are equal
-    Eq,
-    /// Returns 1 if values are not equal
-    Ne,
-}
-
-/// QBE instruction
-#[derive(Debug)]
-pub(super) enum QbeInstr {
-    /// Adds values of two temporaries together
-    Add(QbeValue, QbeValue),
-    /// Subtracts the second value from the first one
-    Sub(QbeValue, QbeValue),
-    /// Multiplies values of two temporaries
-    Mul(QbeValue, QbeValue),
-    /// Divides the first value by the second one
-    Div(QbeValue, QbeValue),
-    /// Returns a remainder from division
-    Rem(QbeValue, QbeValue),
-    /// Performs a comparion between values
-    Cmp(QbeType, QbeCmp, QbeValue, QbeValue),
-    /// Performs a bitwise AND on values
-    And(QbeValue, QbeValue),
-    /// Performs a bitwise OR on values
-    Or(QbeValue, QbeValue),
-    /// Copies either a temporary or a literal value
-    Copy(QbeValue),
-    /// Return from a function, optionally with a value
-    Ret(Option<QbeValue>),
-    /// Jumps to first label if a value is nonzero or to the second one otherwise
-    Jnz(QbeValue, String, String),
-    /// Unconditionally jumps to a label
-    Jmp(String),
-    /// Calls a function
-    Call(String, Vec<(QbeType, QbeValue)>),
-    /// Allocates a 8-byte aligned area on the stack
-    Alloc8(u64),
-    /// Stores a value into memory pointed to by destination.
-    /// `(type, destination, value)`
-    Store(QbeType, QbeValue, QbeValue),
-    /// Loads a value from memory pointed to by source
-    /// `(type, source)`
-    Load(QbeType, QbeValue),
-}
-
-impl fmt::Display for QbeInstr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Add(lhs, rhs) => write!(f, "add {}, {}", lhs, rhs),
-            Self::Sub(lhs, rhs) => write!(f, "sub {}, {}", lhs, rhs),
-            Self::Mul(lhs, rhs) => write!(f, "mul {}, {}", lhs, rhs),
-            Self::Div(lhs, rhs) => write!(f, "div {}, {}", lhs, rhs),
-            Self::Rem(lhs, rhs) => write!(f, "rem {}, {}", lhs, rhs),
-            Self::Cmp(ty, cmp, lhs, rhs) => {
-                assert!(
-                    !matches!(ty, QbeType::Aggregate(_)),
-                    "Cannot compare aggregate types"
-                );
-
-                write!(
-                    f,
-                    "c{}{} {}, {}",
-                    match cmp {
-                        QbeCmp::Slt => "slt",
-                        QbeCmp::Sle => "sle",
-                        QbeCmp::Sgt => "sgt",
-                        QbeCmp::Sge => "sge",
-                        QbeCmp::Eq => "eq",
-                        QbeCmp::Ne => "ne",
-                    },
-                    ty,
-                    lhs,
-                    rhs,
-                )
-            }
-            Self::And(lhs, rhs) => write!(f, "and {}, {}", lhs, rhs),
-            Self::Or(lhs, rhs) => write!(f, "or {}, {}", lhs, rhs),
-            Self::Copy(val) => write!(f, "copy {}", val),
-            Self::Ret(val) => match val {
-                Some(val) => write!(f, "ret {}", val),
-                None => write!(f, "ret"),
-            },
-            Self::Jnz(val, if_nonzero, if_zero) => {
-                write!(f, "jnz {}, @{}, @{}", val, if_nonzero, if_zero)
-            }
-            Self::Jmp(label) => write!(f, "jmp @{}", label),
-            Self::Call(name, args) => {
-                write!(
-                    f,
-                    "call ${}({})",
-                    name,
-                    args.iter()
-                        .map(|(ty, temp)| format!("{} {}", ty, temp))
-                        .collect::<Vec<String>>()
-                        .join(", "),
-                )
-            }
-            Self::Alloc8(size) => write!(f, "alloc8 {}", size),
-            Self::Store(ty, dest, value) => {
-                if matches!(ty, QbeType::Aggregate(_)) {
-                    unimplemented!("Store to an aggregate type");
-                }
-
-                write!(f, "store{} {}, {}", ty, value, dest)
-            }
-            Self::Load(ty, src) => {
-                if matches!(ty, QbeType::Aggregate(_)) {
-                    unimplemented!("Load aggregate type");
-                }
-
-                write!(f, "load{} {}", ty, src)
-            }
-        }
-    }
-}
-
-/// QBE type
-#[derive(Debug, Eq, PartialEq, Clone)]
-#[allow(dead_code)]
-pub(super) enum QbeType {
-    // Base types
-    Word,
-    Long,
-    Single,
-    Double,
-
-    // Extended types
-    Byte,
-    Halfword,
-
-    /// Aggregate type with a specified name
-    Aggregate(String),
-}
-
-impl QbeType {
-    /// Returns a C ABI type. Extended types are converted to closest base
-    /// types
-    pub(super) fn into_abi(self) -> Self {
-        match self {
-            Self::Byte | Self::Halfword => Self::Word,
-            other => other,
-        }
-    }
-
-    /// Returns the closest base type
-    pub(super) fn into_base(self) -> Self {
-        match self {
-            Self::Byte | Self::Halfword => Self::Word,
-            Self::Aggregate(_) => Self::Long,
-            other => other,
-        }
-    }
-
-    /// Returns byte size for values of the type
-    pub(super) fn size(&self) -> u64 {
-        match self {
-            Self::Word | Self::Single => 4,
-            Self::Long | Self::Double => 8,
-            Self::Byte => 1,
-            Self::Halfword => 2,
-
-            // Aggregate types are syntactic sugar for pointers ;)
-            Self::Aggregate(_) => 8,
-        }
-    }
-}
-
-impl fmt::Display for QbeType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Word => write!(f, "w"),
-            Self::Long => write!(f, "l"),
-            Self::Single => write!(f, "s"),
-            Self::Double => write!(f, "d"),
-
-            Self::Byte => write!(f, "b"),
-            Self::Halfword => write!(f, "h"),
-
-            Self::Aggregate(name) => write!(f, ":{}", name),
-        }
-    }
-}
-
-/// QBE value that is accepted by instructions
-#[derive(Debug, Clone)]
-#[allow(dead_code)]
-pub(super) enum QbeValue {
-    /// `%`-temporary
-    Temporary(String),
-    /// `$`-global
-    Global(String),
-    /// Constant
-    Const(u64),
-}
-
-impl fmt::Display for QbeValue {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Temporary(name) => write!(f, "%{}", name),
-            Self::Global(name) => write!(f, "${}", name),
-            Self::Const(value) => write!(f, "{}", value),
-        }
-    }
-}
-
-/// QBE data definition
-#[derive(Debug)]
-pub(super) struct QbeDataDef {
-    pub(super) exported: bool,
-    pub(super) name: String,
-    pub(super) align: Option<u64>,
-
-    pub(super) items: Vec<(QbeType, QbeDataItem)>,
-}
-
-impl fmt::Display for QbeDataDef {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.exported {
-            write!(f, "export ")?;
-        }
-
-        write!(f, "data ${} = ", self.name)?;
-
-        if let Some(align) = self.align {
-            write!(f, "align {} ", align)?;
-        }
-        write!(
-            f,
-            "{{ {} }}",
-            self.items
-                .iter()
-                .map(|(ty, item)| format!("{} {}", ty, item))
-                .collect::<Vec<String>>()
-                .join(", ")
-        )
-    }
-}
-
-/// Data definition item
-#[derive(Debug)]
-#[allow(dead_code)]
-pub(super) enum QbeDataItem {
-    /// Symbol and offset
-    Symbol(String, Option<u64>),
-    /// String
-    Str(String),
-    /// Constant
-    Const(u64),
-}
-
-impl fmt::Display for QbeDataItem {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Symbol(name, offset) => match offset {
-                Some(off) => write!(f, "${} +{}", name, off),
-                None => write!(f, "${}", name),
-            },
-            Self::Str(string) => write!(f, "\"{}\"", string),
-            Self::Const(val) => write!(f, "{}", val),
-        }
-    }
-}
-
-/// QBE aggregate type definition
-#[derive(Debug)]
-pub(super) struct QbeTypeDef {
-    pub(super) name: String,
-    pub(super) align: Option<u64>,
-    // TODO: Opaque types?
-    pub(super) items: Vec<(QbeType, usize)>,
-}
-
-impl fmt::Display for QbeTypeDef {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "type :{} = ", self.name)?;
-        if let Some(align) = self.align {
-            write!(f, "align {} ", align)?;
-        }
-
-        write!(
-            f,
-            "{{ {} }}",
-            self.items
-                .iter()
-                .map(|(ty, count)| if *count > 1 {
-                    format!("{} {}", ty, count)
-                } else {
-                    format!("{}", ty)
-                })
-                .collect::<Vec<String>>()
-                .join(", "),
-        )
-    }
-}
-
-/// An IR statement
-#[derive(Debug)]
-pub(super) enum QbeStatement {
-    Assign(QbeValue, QbeType, QbeInstr),
-    Volatile(QbeInstr),
-}
-
-impl fmt::Display for QbeStatement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Assign(temp, ty, instr) => {
-                assert!(matches!(temp, QbeValue::Temporary(_)));
-                write!(f, "{} ={} {}", temp, ty, instr)
-            }
-            Self::Volatile(instr) => write!(f, "{}", instr),
-        }
-    }
-}
-
-/// Function block with a label
-#[derive(Debug)]
-pub(super) struct QbeBlock {
-    /// Label before the block
-    pub(super) label: String,
-
-    /// A list of instructions in the block
-    pub(super) instructions: Vec<QbeStatement>,
-}
-
-impl QbeBlock {
-    /// Adds a new instruction to the block
-    pub(super) fn add_instr(&mut self, instr: QbeInstr) {
-        self.instructions.push(QbeStatement::Volatile(instr));
-    }
-
-    /// Adds a new instruction assigned to a temporary
-    pub(super) fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
-        self.instructions
-            .push(QbeStatement::Assign(temp, ty.into_base(), instr));
-    }
-
-    /// Returns true if the block's last instruction is a jump
-    pub(super) fn jumps(&self) -> bool {
-        let last = self.instructions.last();
-
-        if let Some(QbeStatement::Volatile(instr)) = last {
-            matches!(
-                instr,
-                QbeInstr::Ret(_) | QbeInstr::Jmp(_) | QbeInstr::Jnz(..)
-            )
-        } else {
-            false
-        }
-    }
-}
-
-impl fmt::Display for QbeBlock {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "@{}", self.label)?;
-
-        write!(
-            f,
-            "{}",
-            self.instructions
-                .iter()
-                .map(|instr| format!("\t{}", instr))
-                .collect::<Vec<String>>()
-                .join("\n")
-        )
-    }
-}
-
-/// QBE function
-#[derive(Debug)]
-pub(super) struct QbeFunction {
-    /// Should the function be available to outside users
-    pub(super) exported: bool,
-
-    /// Function name
-    pub(super) name: String,
-
-    /// Function arguments
-    pub(super) arguments: Vec<(QbeType, QbeValue)>,
-
-    /// Return type
-    pub(super) return_ty: Option<QbeType>,
-
-    /// Labelled blocks
-    pub(super) blocks: Vec<QbeBlock>,
-}
-
-impl QbeFunction {
-    /// Adds a new empty block with a specified label
-    pub(super) fn add_block(&mut self, label: String) {
-        self.blocks.push(QbeBlock {
-            label,
-            instructions: Vec::new(),
-        });
-    }
-
-    pub(super) fn last_block(&mut self) -> &QbeBlock {
-        self.blocks
-            .last()
-            .expect("Function must have at least one block")
-    }
-
-    /// Adds a new instruction to the last block
-    pub(super) fn add_instr(&mut self, instr: QbeInstr) {
-        self.blocks
-            .last_mut()
-            .expect("Last block must be present")
-            .add_instr(instr);
-    }
-
-    /// Adds a new instruction assigned to a temporary
-    pub(super) fn assign_instr(&mut self, temp: QbeValue, ty: QbeType, instr: QbeInstr) {
-        self.blocks
-            .last_mut()
-            .expect("Last block must be present")
-            .assign_instr(temp, ty, instr);
-    }
-}
-
-impl fmt::Display for QbeFunction {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.exported {
-            write!(f, "export ")?;
-        }
-        write!(f, "function")?;
-        if let Some(ty) = &self.return_ty {
-            write!(f, " {}", ty)?;
-        }
-
-        writeln!(
-            f,
-            " ${name}({args}) {{",
-            name = self.name,
-            args = self
-                .arguments
-                .iter()
-                .map(|(ty, temp)| format!("{} {}", ty, temp))
-                .collect::<Vec<String>>()
-                .join(", "),
-        )?;
-
-        for blk in self.blocks.iter() {
-            writeln!(f, "{}", blk)?;
-        }
-
-        write!(f, "}}")
     }
 }
