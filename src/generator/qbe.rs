@@ -46,6 +46,8 @@ impl Generator for QbeGenerator {
             datadefs: Vec::new(),
             typedefs: Vec::new(),
         };
+
+        // TODO: use `qbe::Module` API instead of writing to the buffer directly
         let mut buf = String::new();
 
         for def in &prog.structs {
