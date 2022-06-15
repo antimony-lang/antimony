@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+xxx
+
+## v0.7.0 (2022-06-15)
+
 **Changes**
 
 - Arrays now have a fixed capacity
