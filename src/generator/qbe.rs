@@ -101,7 +101,7 @@ impl QbeGenerator {
             meta.insert(field.name.clone(), (ty.clone(), offset));
             typedef.items.push((ty.clone(), 1));
 
-            offset += self.type_size(&ty) as u64;
+            offset += self.type_size(&ty);
         }
         self.struct_map.insert(
             def.name.clone(),
@@ -617,9 +617,12 @@ impl QbeGenerator {
         obj: &Expression,
         field: &Expression,
     ) -> GeneratorResult<(qbe::Value, qbe::Type, u64)> {
-        let (ty, src) = match obj {
-            Expression::Variable(var) => self.get_var(var)?.to_owned(),
-            Expression::FieldAccess { .. } => todo!("nested field access"),
+        let (src, ty, off) = match obj {
+            Expression::Variable(var) => {
+                let (ty, src) = self.get_var(var)?.to_owned();
+                (src, ty, 0)
+            }
+            Expression::FieldAccess { expr, field } => self.resolve_field_access(expr, field)?,
             Expression::Selff => unimplemented!("methods"),
             other => {
                 return Err(format!(
@@ -659,7 +662,7 @@ impl QbeGenerator {
             .ok_or_else(|| format!("No field '{}' on struct {}", field, name))?
             .to_owned();
 
-        Ok((src, ty, offset))
+        Ok((src, ty, offset + off))
     }
 
     /// Generates an array literal
