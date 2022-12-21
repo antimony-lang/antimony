@@ -22,7 +22,7 @@ use std::process::Command;
 use std::process::Stdio;
 
 pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
-    let mut buf = Box::new(Vec::new());
+    let mut buf = Box::<Vec<u8>>::default();
     build::build_to_buffer(&target, &in_file, &mut buf)?;
 
     match target {

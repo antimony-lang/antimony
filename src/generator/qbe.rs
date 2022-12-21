@@ -270,7 +270,7 @@ impl QbeGenerator {
                 func.assign_instr(
                     tmp.clone(),
                     qbe::Type::Word,
-                    qbe::Instr::Copy(qbe::Value::Const(if *literal { 1 } else { 0 })),
+                    qbe::Instr::Copy(qbe::Value::Const(u64::from(*literal))),
                 );
 
                 Ok((qbe::Type::Word, tmp))

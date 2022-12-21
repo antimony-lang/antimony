@@ -21,7 +21,7 @@ use std::io::Write;
 use std::path::Path;
 
 pub fn build(target: &Target, in_file: &Path, out_file: &Path) -> Result<(), String> {
-    let mut buf = Box::new(Vec::new());
+    let mut buf = Box::<Vec<u8>>::default();
     build_to_buffer(target, in_file, &mut buf)?;
 
     if out_file.to_str() == Some("-") {
