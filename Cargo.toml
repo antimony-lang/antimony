@@ -21,6 +21,6 @@ llvm = ["inkwell"]
 structopt = "0.3.26"
 rust-embed = "5.7.0"
 inkwell = { version = "0.1.1", features = ["llvm10-0"], optional = true }
-qbe = "1.0.0"
+qbe = "2.1.0"
 regex = "1.7.3"
 lazy_static = "1.4.0"
