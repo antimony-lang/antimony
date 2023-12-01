@@ -72,6 +72,8 @@ pub enum TokenKind {
     Percent,
     /// ":"
     Colon,
+    /// "::"
+    DoubleColon,
     /// ";"
     SemiColon,
     /// "."
@@ -281,7 +283,13 @@ impl Cursor<'_> {
                 }
                 _ => Assign,
             },
-            ':' => Colon,
+            ':' => match self.first() {
+                ':' => {
+                    self.bump();
+                    DoubleColon
+                }
+                _ => Colon,
+            },
             ';' => SemiColon,
             ',' => Comma,
             '<' => match self.first() {

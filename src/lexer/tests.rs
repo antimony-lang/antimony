@@ -300,6 +300,57 @@ fn test_functions() {
 }
 
 #[test]
+fn test_namespaces() {
+    let mut tokens = tokenize("foo::bar").unwrap().into_iter().filter(|t| {
+        t.kind != TokenKind::Whitespace
+            && t.kind != TokenKind::Tab
+            && t.kind != TokenKind::CarriageReturn
+    });
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 3,
+            kind: TokenKind::Identifier("foo".to_string()),
+            raw: "foo".to_owned(),
+            pos: Position {
+                raw: 2,
+                line: 1,
+                offset: 2
+            }
+        }
+    );
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 2,
+            kind: TokenKind::DoubleColon,
+            raw: "::".to_owned(),
+            pos: Position {
+                raw: 4,
+                line: 1,
+                offset: 4
+            }
+        }
+    );
+
+    assert_eq!(
+        tokens.next().unwrap(),
+        Token {
+            len: 3,
+            kind: TokenKind::Identifier("bar".to_string()),
+            raw: "bar".to_owned(),
+            pos: Position {
+                raw: 7,
+                line: 1,
+                offset: 7
+            }
+        }
+    );
+}
+
+#[test]
 fn test_comments() {
     let mut tokens = tokenize(
         "// foo
