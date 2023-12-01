@@ -2,5 +2,5 @@ import "importable_module"
 
 fn imports_main() {
     log_test_stage("Testing imports")
-    external_function()
+    importable_module::external_function()
 }

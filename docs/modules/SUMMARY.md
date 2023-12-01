@@ -54,7 +54,7 @@ Let's say we have a module named `math.sb` in the same directory as out `main.sb
 import "math"
 
 fn main() {
-    println(add(1, 2))
+    println(math::add(1, 2))
 }
 ```
 

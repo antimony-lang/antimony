@@ -14,15 +14,15 @@ import "unicode"
 
 
 fn main() {
-    log_test_stage("Running tests")
+    logger::log_test_stage("Running tests")
 
-    conditionals_main()
-    functions_main()
-    imports_main() 
-    numbers_main()
-    structs_main()
-    types_main()
-    unicode_main()
+    conditionals::conditionals_main()
+    functions::functions_main()
+    imports::imports_main() 
+    numbers::numbers_main()
+    structs::structs_main()
+    types::types_main()
+    unicode::unicode_main()
 
-    log_test_stage("Done!")
+    logger::log_test_stage("Done!")
 }
