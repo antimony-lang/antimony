@@ -50,6 +50,11 @@ impl Generator for QbeGenerator {
         // TODO: use `qbe::Module` API instead of writing to the buffer directly
         let mut buf = String::new();
 
+        let raw_builtins =
+            crate::Builtins::get("builtin.ssa").expect("Could not locate builtin functions");
+        buf += std::str::from_utf8(raw_builtins.as_ref())
+            .expect("Unable to interpret builtin functions");
+
         for def in &prog.structs {
             let structure = generator.generate_struct(def)?;
 
