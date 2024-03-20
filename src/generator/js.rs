@@ -60,7 +60,19 @@ fn generate_function(func: Function) -> String {
 
     let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
 
-    raw += &generate_block(func.body, None);
+    let body = match &func.body {
+        super::Statement::Block { statements, scope } => {
+            let expr = &generate_block(func.body, None);
+            expr.to_string()
+        }
+        _ => {
+            let expr = &generate_statement(func.body);
+            let expr = expr.trim();
+            format!("{{ return {expr} // Single return }}")
+
+        }
+    }; 
+    raw.push_str(&body);
     raw += "\n";
     raw
 }
@@ -115,7 +127,7 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
             statements,
             scope: _,
         } => statements,
-        _ => panic!("Block body should be of type Statement::Block"),
+        _ => panic!("Block body should be of type Statement::Block found {:?}", block),
     };
 
     for statement in statements {

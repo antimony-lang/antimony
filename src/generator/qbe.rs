@@ -772,7 +772,7 @@ impl QbeGenerator {
     /// Returns a QBE type for the given AST type
     fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type> {
         match ty {
-            Type::Any => Err("'any' type is not supported".into()),
+            Type::Any => Ok(qbe::Type::Long),
             Type::Int => Ok(qbe::Type::Word),
             Type::Bool => Ok(qbe::Type::Byte),
             Type::Str => Ok(qbe::Type::Long),

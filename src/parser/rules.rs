@@ -159,7 +159,13 @@ impl Parser {
             _ => None,
         };
 
-        let body = self.parse_block()?;
+        let peeked_kind = self.peek()?.kind; 
+        let body = if peeked_kind == TokenKind::CurlyBracesOpen {
+            self.parse_block()?
+        } else {
+            self.next()?;
+            self.parse_statement()?
+        };
 
         Ok(Function {
             name,
