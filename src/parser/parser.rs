@@ -139,6 +139,16 @@ impl Parser {
         }
     }
 
+    pub(super) fn make_hint_msg(&mut self, msg: String) -> String {
+        match &self.raw {
+            Some(_) => format!(
+                "{}Hint: {}\n",
+                "\n".repeat(3),
+                msg,
+            ),
+            None => format!("{}",msg),
+        }
+    }
     pub(super) fn prev(&mut self) -> Option<Token> {
         self.prev.clone()
     }
