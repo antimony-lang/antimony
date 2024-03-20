@@ -61,6 +61,7 @@ fn generate_function(func: Function) -> String {
     let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
 
     let body = match &func.body {
+        #[allow(unused_variables)]
         super::Statement::Block { statements, scope } => {
             let expr = &generate_block(func.body, None);
             expr.to_string()
@@ -68,10 +69,11 @@ fn generate_function(func: Function) -> String {
         _ => {
             let expr = &generate_statement(func.body);
             let expr = expr.trim();
-            format!("{{ return {expr} // Single return }}")
+            format!("{{ return {expr} /* Single return */ }}")
 
         }
     }; 
+
     raw.push_str(&body);
     raw += "\n";
     raw

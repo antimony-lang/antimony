@@ -92,10 +92,23 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
 fn generate_function(func: Function) -> String {
     let mut buf = String::new();
     buf += &format!("{} ", &generate_function_signature(func.clone()));
-    if let Statement::Block { statements, scope } = func.body {
-        buf += &generate_block(statements, scope);
-    }
-
+    // if let Statement::Block { statements, scope } = func.body {
+        // buf += &generate_block(statements, scope);
+    // }
+    let body = match &func.body {
+        #[allow(unused_variables)]
+        super::Statement::Block { statements, scope } => {
+            let expr = &generate_block(statements.clone(), scope.clone());
+            expr.to_string()
+        }
+        _ => {
+            let expr = &generate_statement(func.body);
+            let expr = expr.trim();
+            format!("{{ return {expr} /* Single return */ }}")
+        }
+    }; 
+    buf += &body;
+    buf += "\n";
     buf
 }
 
