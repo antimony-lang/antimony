@@ -53,9 +53,7 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
         }
         Target::Qbe => {
             let dir_path = "./"; // TODO: Use this for changind build directory
-            let filename = in_file.file_name().unwrap().to_str().unwrap(); 
-            let filename_splits: Vec<_> = filename.split(".").collect();
-            let filename = filename_splits.first().unwrap(); 
+            let filename = in_file.file_stem().unwrap().to_str().unwrap(); 
             let ssa_path = format!("{dir_path}{}.ssa", filename); 
             let asm_path = format!("{dir_path}{}.s", filename); 
             let exe_path = format!("{dir_path}{}.exe", filename);
