@@ -140,13 +140,14 @@ impl Parser {
     }
 
     pub(super) fn make_hint_msg(&mut self, msg: String) -> String {
+        let new_lines = "\n".repeat(3);
+
         match &self.raw {
             Some(_) => format!(
-                "{}Hint: {}\n",
-                "\n".repeat(3),
+                "{new_lines}Hint: {}\n",
                 msg,
             ),
-            None => format!("{}",msg),
+            None => format!("{new_lines}Hint: {}\n",msg),
         }
     }
     pub(super) fn prev(&mut self) -> Option<Token> {
