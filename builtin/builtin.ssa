@@ -1,5 +1,0 @@
-export function $println(l %str) {
-@start
-        %vd.1 =w call $puts(l %str)
-        ret
-}
