@@ -15,10 +15,8 @@
  */
 use crate::command::build;
 use crate::generator::Target;
-use std::fs::File;
 use std::io::Read;
 use std::io::Write;
-use std::os::unix::fs::FileExt;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
