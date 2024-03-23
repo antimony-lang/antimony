@@ -141,6 +141,35 @@ fn test_parse_variable_reassignment() {
 }
 
 #[test]
+fn test_parse_short_reassignment() {
+    let raw = "
+    fn main() {
+        x += 1
+        x -= 1
+        x *= 2
+        x /= 2
+        x.y += 1
+        x[0] += 1
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_disallow_short_reassignment_in_expressions() {
+    let raw = "
+    fn main() {
+        return (x += 1) + 2
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_err())
+}
+
+#[test]
 fn test_parse_variable_declaration_added() {
     let raw = "
     fn main() {

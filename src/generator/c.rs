@@ -142,7 +142,7 @@ fn generate_statement(statement: Statement) -> String {
             body,
             else_branch,
         } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
-        Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
+        Statement::Assign { lhs, op, rhs } => generate_assign(*lhs, op, *rhs),
         Statement::Block { statements, scope } => generate_block(statements, scope),
         Statement::While { condition, body } => generate_while_loop(condition, *body),
         Statement::For {
@@ -167,14 +167,14 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Variable(val) => val,
         Expression::Str(val) => super::string_syntax(val),
         Expression::Bool(b) => b.to_string(),
-        Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
+        Expression::FunctionCall { expr, args } => generate_function_call(*expr, args),
         Expression::Array(elements) => generate_array(elements),
-        Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
+        Expression::ArrayAccess { expr, index } => generate_array_access(*expr, *index),
         Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
         Expression::StructInitialization { name: _, fields } => {
             generate_struct_initialization(fields)
         }
-        Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
+        Expression::FieldAccess { expr, field } => generate_field_access(*expr, field),
         Expression::Selff => todo!(),
     }
 }
@@ -208,8 +208,12 @@ fn generate_array(elements: Vec<Expression>) -> String {
     out_str
 }
 
-fn generate_array_access(name: String, expr: Expression) -> String {
-    format!("{n}[{e}]", n = name, e = generate_expression(expr))
+fn generate_array_access(expr: Expression, index: Expression) -> String {
+    format!(
+        "{}[{}]",
+        generate_expression(expr),
+        generate_expression(index)
+    )
 }
 
 fn generate_conditional(
@@ -260,27 +264,17 @@ fn generate_declare(var: Variable, val: Option<Expression>) -> String {
     }
 }
 
-fn generate_function_call(func: String, args: Vec<Expression>) -> String {
+fn generate_function_call(func: Expression, args: Vec<Expression>) -> String {
     let formatted_args = args
         .into_iter()
-        .map(|arg| match arg {
-            Expression::Int(i) => i.to_string(),
-            Expression::Bool(v) => v.to_string(),
-            Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
-            Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
-            Expression::Str(s) => super::string_syntax(s),
-            Expression::Variable(s) => s,
-            Expression::Array(_) => todo!(),
-            Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-            Expression::StructInitialization { name: _, fields } => {
-                generate_struct_initialization(fields)
-            }
-            Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
-            Expression::Selff => todo!(),
-        })
+        .map(generate_expression)
         .collect::<Vec<String>>()
         .join(",");
-    format!("{N}({A})", N = func, A = formatted_args)
+    format!(
+        "{N}({A})",
+        N = generate_expression(func),
+        A = formatted_args
+    )
 }
 
 fn generate_return(ret: Option<Expression>) -> String {
@@ -300,10 +294,6 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::GreaterThanOrEqual => ">=",
         BinOp::LessThan => "<",
         BinOp::LessThanOrEqual => "<=",
-        BinOp::AddAssign => "+=",
-        BinOp::SubtractAssign => "-=",
-        BinOp::MultiplyAssign => "*=",
-        BinOp::DivideAssign => "/=",
         BinOp::Modulus => "%",
         BinOp::Multiplication => "*",
         BinOp::NotEqual => "!=",
@@ -330,18 +320,22 @@ fn generate_struct_initialization(fields: HashMap<String, Box<Expression>>) -> S
     buf
 }
 
-fn generate_field_access(expr: Expression, field: Expression) -> String {
-    format!(
-        "{}.{}",
-        generate_expression(expr),
-        generate_expression(field)
-    )
+fn generate_field_access(expr: Expression, field: String) -> String {
+    format!("{}.{}", generate_expression(expr), field)
 }
 
-fn generate_assign(name: Expression, expr: Expression) -> String {
+fn generate_assign(name: Expression, op: AssignOp, expr: Expression) -> String {
+    let op_str = match op {
+        AssignOp::Set => "=",
+        AssignOp::Add => "+=",
+        AssignOp::Subtract => "-=",
+        AssignOp::Multiply => "*=",
+        AssignOp::Divide => "/=",
+    };
     format!(
-        "{} = {};",
+        "{} {} {};",
         generate_expression(name),
+        op_str,
         generate_expression(expr)
     )
 }

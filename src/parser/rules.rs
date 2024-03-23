@@ -209,72 +209,36 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.peek()?;
-        match &token.kind {
-            TokenKind::CurlyBracesOpen => self.parse_block(),
-            TokenKind::BraceOpen | TokenKind::Keyword(Keyword::Selff) => {
-                Ok(Statement::Exp(self.parse_expression()?))
-            }
-            TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
-            TokenKind::Keyword(Keyword::Return) => self.parse_return(),
-            TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
-            TokenKind::Keyword(Keyword::While) => self.parse_while_loop(),
-            TokenKind::Keyword(Keyword::Break) => self.parse_break(),
-            TokenKind::Keyword(Keyword::Continue) => self.parse_continue(),
-            TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
-            TokenKind::Keyword(Keyword::Match) => self.parse_match_statement(),
-            TokenKind::Identifier(_) => {
-                let ident = self.match_identifier()?;
-                let expr = if self.peek_token(TokenKind::Dot).is_ok() {
-                    self.parse_field_access(Expression::Variable(ident.clone()))?
-                } else {
-                    Expression::Variable(ident.clone())
-                };
-
-                // TODO: Use match statement
-                if self.peek_token(TokenKind::BraceOpen).is_ok() {
-                    let state = self.parse_function_call(Some(ident))?;
-                    Ok(Statement::Exp(state))
-                } else if self.peek_token(TokenKind::Assign).is_ok() {
-                    let state = self.parse_assignent(Some(expr))?;
-                    Ok(state)
-                } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
-                    let expr = self.parse_array_access(Some(ident))?;
-
-                    let next = self.peek()?;
-                    match next.kind {
-                        TokenKind::Assign => self.parse_assignent(Some(expr)),
-                        _ => Ok(Statement::Exp(expr)),
-                    }
-                } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-                    // Parse Binary operation
-                    let expr = Expression::Variable(ident);
-                    let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
-                    Ok(state)
-                } else if self.peek_token(TokenKind::Dot).is_ok() {
-                    Ok(Statement::Exp(
-                        self.parse_field_access(Expression::Variable(ident))?,
-                    ))
-                } else {
-                    Ok(Statement::Exp(expr))
-                }
-            }
-            TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
+        let expr = match &token.kind {
+            TokenKind::CurlyBracesOpen => return self.parse_block(),
+            TokenKind::Keyword(Keyword::Let) => return self.parse_declare(),
+            TokenKind::Keyword(Keyword::Return) => return self.parse_return(),
+            TokenKind::Keyword(Keyword::If) => return self.parse_conditional_statement(),
+            TokenKind::Keyword(Keyword::While) => return self.parse_while_loop(),
+            TokenKind::Keyword(Keyword::Break) => return self.parse_break(),
+            TokenKind::Keyword(Keyword::Continue) => return self.parse_continue(),
+            TokenKind::Keyword(Keyword::For) => return self.parse_for_loop(),
+            TokenKind::Keyword(Keyword::Match) => return self.parse_match_statement(),
+            TokenKind::BraceOpen
+            | TokenKind::Keyword(Keyword::Selff)
+            | TokenKind::Identifier(_)
+            | TokenKind::Literal(_) => self.parse_expression()?,
             TokenKind::Keyword(Keyword::Struct) => {
-                Err("Struct definitions inside functions are not allowed".to_string())
+                return Err("Struct definitions inside functions are not allowed".to_string())
             }
-            _ => Err(self.make_error_msg(token.pos, "Failed to parse statement".to_string())),
+            _ => {
+                return Err(self.make_error_msg(token.pos, "Failed to parse statement".to_string()))
+            }
+        };
+        let suffix = self.peek()?;
+        if AssignOp::try_from(suffix.kind).is_ok() {
+            Ok(self.parse_assignment(expr)?)
+        } else {
+            Ok(Statement::Exp(expr))
         }
     }
 
-    /// Parses a function call from tokens.
-    /// The name of the function needs to be passed here, because we have already passed it with our cursor.
-    /// If no function name is provided, the next token will be fetched
-    fn parse_function_call(&mut self, func_name: Option<String>) -> Result<Expression, String> {
-        let fn_name = match func_name {
-            Some(name) => name,
-            None => self.next()?.raw,
-        };
-
+    fn parse_function_call(&mut self, expr: Expression) -> Result<Expression, String> {
         self.match_token(TokenKind::BraceOpen)?;
 
         let mut args = Vec::new();
@@ -306,11 +270,10 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        let expr = Expression::FunctionCall { fn_name, args };
-        match self.peek()?.kind {
-            TokenKind::Dot => self.parse_field_access(expr),
-            _ => Ok(expr),
-        }
+        Ok(Expression::FunctionCall {
+            expr: Box::new(expr),
+            args,
+        })
     }
 
     fn parse_return(&mut self) -> Result<Statement, String> {
@@ -328,7 +291,8 @@ impl Parser {
     fn parse_expression(&mut self) -> Result<Expression, String> {
         let token = self.next()?;
 
-        let expr = match token.kind {
+        // TODO: don't mut
+        let mut expr = match token.kind {
             // (1 + 2)
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
@@ -364,17 +328,8 @@ impl Parser {
             TokenKind::Literal(Value::Str(string)) => Expression::Str(string),
             // self
             TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
-            TokenKind::Identifier(val) => {
-                let next = self.peek()?;
-                match &next.kind {
-                    // foo()
-                    TokenKind::BraceOpen => self.parse_function_call(Some(val))?,
-                    // arr[0]
-                    TokenKind::SquareBraceOpen => self.parse_array_access(Some(val))?,
-                    // some_var
-                    _ => Expression::Variable(val),
-                }
-            }
+            // name
+            TokenKind::Identifier(val) => Expression::Variable(val),
             // [1, 2, 3]
             TokenKind::SquareBraceOpen => self.parse_array()?,
             // new Foo {}
@@ -383,41 +338,35 @@ impl Parser {
         };
 
         // Check if the parsed expression continues
-        if self.peek_token(TokenKind::Dot).is_ok() {
-            // foo.bar
-            self.parse_field_access(expr)
-        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-            // 1 + 2
-            self.parse_bin_op(Some(expr))
-        } else {
-            // Nope, the expression was fully parsed
-            Ok(expr)
+        loop {
+            if self.peek_token(TokenKind::Dot).is_ok() {
+                // foo.bar
+                expr = self.parse_field_access(expr)?;
+            } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
+                // foo[0]
+                expr = self.parse_array_access(expr)?;
+            } else if self.peek_token(TokenKind::BraceOpen).is_ok() {
+                // foo(a, b)
+                expr = self.parse_function_call(expr)?;
+            } else if BinOp::try_from(self.peek()?.kind).is_ok() {
+                // a + b
+                expr = self.parse_bin_op(expr)?;
+            } else {
+                // The expression was fully parsed
+                return Ok(expr);
+            }
         }
     }
 
     fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
         self.match_token(TokenKind::Dot)?;
 
-        // Only possible options are identifier or function call,
-        // So it's safe to assume that the next token should be an identifier
-        let id = self.match_identifier()?;
-        let next = self.peek()?;
-
-        let field = match next.kind {
-            TokenKind::BraceOpen => self.parse_function_call(Some(id))?,
-            _ => Expression::Variable(id),
-        };
+        let field = self.match_identifier()?;
         let expr = Expression::FieldAccess {
             expr: Box::new(lhs),
-            field: Box::new(field),
+            field,
         };
-        if self.peek_token(TokenKind::Dot).is_ok() {
-            self.parse_field_access(expr)
-        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-            self.parse_bin_op(Some(expr))
-        } else {
-            Ok(expr)
-        }
+        Ok(expr)
     }
 
     /// TODO: Cleanup
@@ -489,19 +438,14 @@ impl Parser {
         Ok(Expression::Array(elements))
     }
 
-    fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {
-        let name = match arr_name {
-            Some(name) => name,
-            None => self.next()?.raw,
-        };
-
+    fn parse_array_access(&mut self, expr: Expression) -> Result<Expression, String> {
         self.match_token(TokenKind::SquareBraceOpen)?;
-        let expr = self.parse_expression()?;
+        let index = self.parse_expression()?;
         self.match_token(TokenKind::SquareBraceClose)?;
 
         Ok(Expression::ArrayAccess {
-            name,
-            index: Box::new(expr),
+            expr: Box::new(expr),
+            index: Box::new(index),
         })
     }
 
@@ -641,25 +585,11 @@ impl Parser {
     /// foo(1) * 2
     /// ```
     /// In this case, the function call has already been evaluated, and needs to be passed to this function.
-    fn parse_bin_op(&mut self, lhs: Option<Expression>) -> Result<Expression, String> {
-        let left = match lhs {
-            Some(lhs) => lhs,
-            None => {
-                let prev = self.prev().ok_or("Expected token")?;
-                match &prev.kind {
-                    TokenKind::Identifier(_) | TokenKind::Literal(_) | TokenKind::Keyword(_) => {
-                        Ok(Expression::try_from(prev)?)
-                    }
-                    _ => Err(self
-                        .make_error_msg(prev.pos, "Failed to parse binary operation".to_string())),
-                }?
-            }
-        };
-
+    fn parse_bin_op(&mut self, lhs: Expression) -> Result<Expression, String> {
         let op = self.match_operator()?;
 
         Ok(Expression::BinOp {
-            lhs: Box::from(left),
+            lhs: Box::from(lhs),
             op,
             rhs: Box::from(self.parse_expression()?),
         })
@@ -697,18 +627,14 @@ impl Parser {
         }
     }
 
-    fn parse_assignent(&mut self, name: Option<Expression>) -> Result<Statement, String> {
-        let name = match name {
-            Some(name) => name,
-            None => Expression::Variable(self.match_identifier()?),
-        };
-
-        self.match_token(TokenKind::Assign)?;
+    fn parse_assignment(&mut self, lhs: Expression) -> Result<Statement, String> {
+        let op = AssignOp::try_from(self.next()?.kind).unwrap();
 
         let expr = self.parse_expression()?;
 
         Ok(Statement::Assign {
-            lhs: Box::new(name),
+            lhs: Box::new(lhs),
+            op,
             rhs: Box::new(expr),
         })
     }

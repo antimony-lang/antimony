@@ -16,6 +16,7 @@
 use super::{Generator, GeneratorResult};
 use crate::ast::types::Type;
 use crate::ast::*;
+use crate::util::Either;
 use std::collections::HashMap;
 
 pub struct QbeGenerator {
@@ -188,10 +189,8 @@ impl QbeGenerator {
                     func.assign_instr(tmp, ty, qbe::Instr::Copy(result));
                 }
             }
-            Statement::Assign { lhs, rhs } => {
-                let (_, rhs) = self.generate_expression(func, rhs)?;
-                // TODO: type check
-                self.generate_assignment(func, lhs, rhs)?;
+            Statement::Assign { lhs, op, rhs } => {
+                self.generate_assignment(func, lhs, *op, Either::Right(rhs))?;
             }
             Statement::Return(val) => match val {
                 Some(expr) => {
@@ -262,18 +261,23 @@ impl QbeGenerator {
                 Ok((qbe::Type::Word, tmp))
             }
             Expression::Array(elements) => self.generate_array(func, elements),
-            Expression::FunctionCall { fn_name, args } => {
+            Expression::FunctionCall { expr, args } => {
                 let mut new_args: Vec<(qbe::Type, qbe::Value)> = Vec::new();
                 for arg in args.iter() {
                     new_args.push(self.generate_expression(func, arg)?);
                 }
+
+                let fn_name = match expr.as_ref() {
+                    Expression::Variable(name) => name.to_owned(),
+                    _ => todo!("methods"),
+                };
 
                 let tmp = self.new_temporary();
                 func.assign_instr(
                     tmp.clone(),
                     // TODO: get that type properly
                     qbe::Type::Word,
-                    qbe::Instr::Call(fn_name.clone(), new_args),
+                    qbe::Instr::Call(fn_name, new_args),
                 );
 
                 Ok((qbe::Type::Word, tmp))
@@ -431,10 +435,10 @@ impl QbeGenerator {
             tmp.clone(),
             ty.clone(),
             match op {
-                BinOp::Addition | BinOp::AddAssign => qbe::Instr::Add(lhs_val, rhs_val),
-                BinOp::Subtraction | BinOp::SubtractAssign => qbe::Instr::Sub(lhs_val, rhs_val),
-                BinOp::Multiplication | BinOp::MultiplyAssign => qbe::Instr::Mul(lhs_val, rhs_val),
-                BinOp::Division | BinOp::DivideAssign => qbe::Instr::Div(lhs_val, rhs_val),
+                BinOp::Addition => qbe::Instr::Add(lhs_val, rhs_val),
+                BinOp::Subtraction => qbe::Instr::Sub(lhs_val, rhs_val),
+                BinOp::Multiplication => qbe::Instr::Mul(lhs_val, rhs_val),
+                BinOp::Division => qbe::Instr::Div(lhs_val, rhs_val),
                 BinOp::Modulus => qbe::Instr::Rem(lhs_val, rhs_val),
 
                 BinOp::And => qbe::Instr::And(lhs_val, rhs_val),
@@ -458,19 +462,6 @@ impl QbeGenerator {
             },
         );
 
-        // *Assign BinOps work just like normal ones except that here the
-        // result is assigned to the left hand side. This essentially makes
-        // `a += 1` the same as `a = a + 1`.
-        match op {
-            BinOp::AddAssign
-            | BinOp::SubtractAssign
-            | BinOp::MultiplyAssign
-            | BinOp::DivideAssign => {
-                self.generate_assignment(func, lhs, tmp.clone())?;
-            }
-            _ => {}
-        };
-
         Ok((ty, tmp))
     }
 
@@ -480,8 +471,30 @@ impl QbeGenerator {
         &mut self,
         func: &mut qbe::Function,
         lhs: &Expression,
-        rhs: qbe::Value,
+        op: AssignOp,
+        rhs: Either<qbe::Value, &Expression>,
     ) -> GeneratorResult<()> {
+        if op != AssignOp::Set {
+            let binop = match op {
+                AssignOp::Add => BinOp::Addition,
+                AssignOp::Subtract => BinOp::Subtraction,
+                AssignOp::Multiply => BinOp::Multiplication,
+                AssignOp::Divide => BinOp::Division,
+                _ => unreachable!(),
+            };
+            let rhs = match rhs {
+                Either::Left(_) => unreachable!(),
+                Either::Right(expr) => expr,
+            };
+            // Desugar 'a += b' to 'a = a + b'
+            let (_, new_value) = self.generate_binop(func, lhs, &binop, rhs)?;
+            return self.generate_assignment(func, lhs, AssignOp::Set, Either::Left(new_value));
+        }
+
+        let rhs = match rhs {
+            Either::Left(qval) => qval,
+            Either::Right(expr) => self.generate_expression(func, expr)?.1,
+        };
         match lhs {
             Expression::Variable(name) => {
                 let (vty, tmp) = self.get_var(name)?;
@@ -503,7 +516,7 @@ impl QbeGenerator {
 
                 func.add_instr(qbe::Instr::Store(ty, field_ptr, rhs));
             }
-            Expression::ArrayAccess { name: _, index: _ } => todo!(),
+            Expression::ArrayAccess { .. } => todo!(),
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
         }
 
@@ -556,7 +569,7 @@ impl QbeGenerator {
         &mut self,
         func: &mut qbe::Function,
         obj: &Expression,
-        field: &Expression,
+        field: &str,
     ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         let (src, ty, offset) = self.resolve_field_access(obj, field)?;
 
@@ -581,7 +594,7 @@ impl QbeGenerator {
     fn resolve_field_access(
         &mut self,
         obj: &Expression,
-        field: &Expression,
+        field: &str,
     ) -> GeneratorResult<(qbe::Value, qbe::Type, u64)> {
         let (ty, src) = match obj {
             Expression::Variable(var) => self.get_var(var)?.to_owned(),
@@ -593,15 +606,6 @@ impl QbeGenerator {
                     other,
                 ));
             }
-        };
-        let field = match field {
-            Expression::Variable(v) => v,
-            Expression::FunctionCall {
-                fn_name: _,
-                args: _,
-            } => unimplemented!("methods"),
-            // Parser should ensure this won't happen
-            _ => unreachable!(),
         };
 
         // XXX: this is very hacky and inefficient

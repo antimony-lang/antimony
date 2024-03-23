@@ -99,6 +99,7 @@ pub enum Statement {
     },
     Assign {
         lhs: Box<Expression>,
+        op: AssignOp,
         rhs: Box<Expression>,
     },
     Return(Option<Expression>),
@@ -125,6 +126,37 @@ pub enum Statement {
     Exp(Expression),
 }
 
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub enum AssignOp {
+    /// '='
+    Set,
+    /// '+='
+    Add,
+    /// '-='
+    Subtract,
+    /// '*='
+    Multiply,
+    /// '/='
+    Divide,
+}
+
+impl TryFrom<TokenKind> for AssignOp {
+    type Error = String;
+    fn try_from(token: TokenKind) -> Result<AssignOp, String> {
+        match token {
+            TokenKind::Assign => Ok(AssignOp::Set),
+            TokenKind::PlusEqual => Ok(AssignOp::Add),
+            TokenKind::MinusEqual => Ok(AssignOp::Subtract),
+            TokenKind::StarEqual => Ok(AssignOp::Multiply),
+            TokenKind::SlashEqual => Ok(AssignOp::Divide),
+            other => Err(format!(
+                "Token {:?} cannot be converted into an AssignOp",
+                other
+            )),
+        }
+    }
+}
+
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub enum Expression {
     Int(usize),
@@ -134,12 +166,12 @@ pub enum Expression {
     Selff,
     Array(Vec<Expression>),
     FunctionCall {
-        fn_name: String,
+        expr: Box<Expression>,
         args: Vec<Expression>,
     },
     Variable(String),
     ArrayAccess {
-        name: String,
+        expr: Box<Expression>,
         index: Box<Expression>,
     },
     BinOp {
@@ -153,7 +185,7 @@ pub enum Expression {
     },
     FieldAccess {
         expr: Box<Expression>,
-        field: Box<Expression>,
+        field: String,
     },
 }
 
@@ -202,10 +234,6 @@ pub enum BinOp {
     NotEqual,
     And,
     Or,
-    AddAssign,
-    SubtractAssign,
-    MultiplyAssign,
-    DivideAssign,
 }
 
 impl TryFrom<TokenKind> for BinOp {
@@ -225,10 +253,6 @@ impl TryFrom<TokenKind> for BinOp {
             TokenKind::NotEqual => Ok(BinOp::NotEqual),
             TokenKind::And => Ok(BinOp::And),
             TokenKind::Or => Ok(BinOp::Or),
-            TokenKind::PlusEqual => Ok(BinOp::AddAssign),
-            TokenKind::MinusEqual => Ok(BinOp::SubtractAssign),
-            TokenKind::StarEqual => Ok(BinOp::MultiplyAssign),
-            TokenKind::SlashEqual => Ok(BinOp::DivideAssign),
             other => Err(format!(
                 "Token {:?} cannot be converted into a BinOp",
                 other
