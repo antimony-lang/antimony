@@ -26,6 +26,7 @@ use structopt::StructOpt;
 
 mod ast;
 mod builder;
+mod check;
 mod command;
 mod generator;
 mod lexer;
@@ -54,6 +55,8 @@ enum Command {
     },
     #[structopt()]
     Run { in_file: PathBuf },
+    #[structopt()]
+    Typecheck { in_file: PathBuf },
 }
 
 #[derive(StructOpt, Debug)]
@@ -91,6 +94,7 @@ fn run() -> Result<(), String> {
             command::build::build(&target, &in_file, &out_file)?
         }
         Command::Run { in_file } => command::run::run(opts.target.unwrap_or(Target::JS), in_file)?,
+        Command::Typecheck { in_file } => command::typecheck::check(in_file)?,
     };
 
     Ok(())
