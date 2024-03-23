@@ -668,9 +668,17 @@ impl Parser {
     fn parse_declare(&mut self) -> Result<Statement, String> {
         self.match_keyword(Keyword::Let)?;
         let name = self.match_identifier()?;
-        let ty = match self.peek()?.kind {
+        let token = self.peek()?;
+        let ty = match &token.kind {
             TokenKind::Colon => Some(self.parse_type()?),
-            _ => None,
+            TokenKind::Assign => None,
+            _ => {
+                // FIXME: context for this error message is not ideal
+                return Err(self.make_error_msg(
+                    token.pos,
+                    format!("Expected ':' or '=', found {:?}", token.kind),
+                ));
+            }
         };
 
         match self.peek()?.kind {

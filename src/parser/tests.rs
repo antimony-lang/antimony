@@ -103,6 +103,30 @@ fn test_parse_variable_declaration() {
 }
 
 #[test]
+fn test_parse_variable_uninitialized() {
+    let raw = "
+    fn main() {
+        let x: int
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_variable_disallow_untyped_uninitialized() {
+    let raw = "
+    fn main() {
+        let x
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_err());
+}
+
+#[test]
 fn test_parse_variable_reassignment() {
     let raw = "
     fn main() {
@@ -522,19 +546,6 @@ fn test_array_access_in_if() {
             arr[d]   = arr[d+1]
             arr[d+1] = swap
         }
-    }
-    ";
-    let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
-    assert!(tree.is_ok())
-}
-
-#[test]
-fn test_uninitialized_variables() {
-    let raw = "
-    fn main() {
-        let x
-        let y
     }
     ";
     let tokens = tokenize(raw).unwrap();
