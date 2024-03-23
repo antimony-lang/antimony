@@ -317,7 +317,10 @@ impl Parser {
         self.match_keyword(Keyword::Return)?;
         let peeked = self.peek()?;
         match peeked.kind {
-            TokenKind::SemiColon => Ok(Statement::Return(None)),
+            TokenKind::SemiColon => {
+                self.next()?;
+                Ok(Statement::Return(None))
+            }
             _ => Ok(Statement::Return(Some(self.parse_expression()?))),
         }
     }
