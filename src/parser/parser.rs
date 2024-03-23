@@ -17,7 +17,6 @@ use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::Position;
 use crate::lexer::{Token, TokenKind};
-use crate::parser::infer::infer;
 use crate::util::string_util::highlight_position_in_file;
 use std::convert::TryFrom;
 use std::iter::Peekable;
@@ -50,11 +49,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Module, String> {
-        let mut program = self.parse_module()?;
-        // infer types
-        infer(&mut program);
-
-        Ok(program)
+        self.parse_module()
     }
 
     pub(super) fn next(&mut self) -> Result<Token, String> {

@@ -21,9 +21,6 @@ use std::collections::HashSet;
 pub mod types;
 use types::Type;
 
-/// Table that contains all symbol and its types
-pub type SymbolTable = HashMap<String, Option<Type>>;
-
 #[derive(Debug, Clone)]
 pub struct Module {
     pub path: String,
@@ -38,16 +35,6 @@ impl Module {
         self.func.append(&mut other.func);
         self.structs.append(&mut other.structs);
         self.globals.append(&mut other.globals)
-    }
-
-    pub fn get_symbol_table(&self) -> SymbolTable {
-        let mut table = SymbolTable::new();
-
-        for func in self.func.clone() {
-            table.insert(func.name, func.ret_type);
-        }
-
-        table
     }
 }
 
