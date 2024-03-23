@@ -83,7 +83,7 @@ impl Parser {
         })
     }
 
-    fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
+    fn parse_typed_variable_list(&mut self) -> Result<Vec<TypedVariable>, String> {
         let mut args = Vec::new();
 
         // If there is an argument
@@ -101,12 +101,12 @@ impl Parser {
         Ok(args)
     }
 
-    fn parse_typed_variable(&mut self) -> Result<Variable, String> {
+    fn parse_typed_variable(&mut self) -> Result<TypedVariable, String> {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
-            return Ok(Variable {
+            return Ok(TypedVariable {
                 name,
-                ty: Some(self.parse_type()?),
+                ty: self.parse_type()?,
             });
         }
 
@@ -147,7 +147,7 @@ impl Parser {
 
         self.match_token(TokenKind::BraceOpen)?;
 
-        let arguments: Vec<Variable> = match self.peek()? {
+        let arguments: Vec<TypedVariable> = match self.peek()? {
             t if t.kind == TokenKind::BraceClose => Vec::new(),
             _ => self.parse_typed_variable_list()?,
         };

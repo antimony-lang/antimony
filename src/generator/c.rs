@@ -52,7 +52,11 @@ pub fn generate_struct(def: StructDef) -> String {
 
     def.fields.iter().for_each(|f| {
         // int counter;
-        buf += &format!("{} {};\n", generate_type(Either::Left(f.clone())), f.name,);
+        buf += &format!(
+            "{} {};\n",
+            generate_type(Either::Left(f.clone().into())),
+            f.name
+        );
     });
 
     // };
@@ -103,7 +107,13 @@ fn generate_function_signature(func: Function) -> String {
     let arguments: String = func
         .arguments
         .into_iter()
-        .map(|var| format!("{} {}", generate_type(Either::Left(var.clone())), var.name))
+        .map(|var| {
+            format!(
+                "{} {}",
+                generate_type(Either::Left(var.clone().into())),
+                var.name
+            )
+        })
         .collect::<Vec<String>>()
         .join(", ");
     let t = generate_type(Either::Right(func.ret_type));

@@ -48,7 +48,7 @@ impl Generator for JsGenerator {
     }
 }
 
-fn generate_arguments(args: Vec<Variable>) -> String {
+fn generate_arguments(args: Vec<TypedVariable>) -> String {
     args.into_iter()
         .map(|var| var.name)
         .collect::<Vec<String>>()

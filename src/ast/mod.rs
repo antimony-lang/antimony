@@ -54,7 +54,7 @@ impl Module {
 #[derive(Debug, Clone)]
 pub struct Function {
     pub name: String,
-    pub arguments: Vec<Variable>,
+    pub arguments: Vec<TypedVariable>,
     pub body: Statement,
     pub ret_type: Option<Type>,
 }
@@ -62,7 +62,7 @@ pub struct Function {
 #[derive(Debug, Clone)]
 pub struct StructDef {
     pub name: String,
-    pub fields: Vec<Variable>,
+    pub fields: Vec<TypedVariable>,
     pub methods: Vec<Function>,
 }
 
@@ -73,6 +73,27 @@ pub struct Variable {
 }
 
 impl AsRef<Variable> for Variable {
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
+impl From<TypedVariable> for Variable {
+    fn from(typed: TypedVariable) -> Self {
+        Self {
+            name: typed.name,
+            ty: Some(typed.ty),
+        }
+    }
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub struct TypedVariable {
+    pub name: String,
+    pub ty: Type,
+}
+
+impl AsRef<TypedVariable> for TypedVariable {
     fn as_ref(&self) -> &Self {
         self
     }

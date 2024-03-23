@@ -93,13 +93,7 @@ impl QbeGenerator {
         let mut offset = 0_u64;
 
         for field in &def.fields {
-            let ty = self.get_type(
-                field
-                    .ty
-                    .as_ref()
-                    .ok_or_else(|| "Structure field must have a type".to_owned())?
-                    .to_owned(),
-            )?;
+            let ty = self.get_type(&field.ty)?;
 
             meta.insert(field.name.clone(), (ty.clone(), offset));
             typedef.items.push((ty.clone(), 1));
@@ -120,19 +114,14 @@ impl QbeGenerator {
 
         let mut arguments: Vec<(qbe::Type, qbe::Value)> = Vec::new();
         for arg in &func.arguments {
-            let ty = self.get_type(
-                arg.ty
-                    .as_ref()
-                    .ok_or("Function arguments must have a type")?
-                    .to_owned(),
-            )?;
+            let ty = self.get_type(&arg.ty)?;
             let tmp = self.new_var(&ty, &arg.name)?;
 
             arguments.push((ty.into_abi(), tmp));
         }
 
         let return_ty = if let Some(ty) = &func.ret_type {
-            Some(self.get_type(ty.to_owned())?.into_abi())
+            Some(self.get_type(ty)?.into_abi())
         } else {
             None
         };
@@ -188,13 +177,10 @@ impl QbeGenerator {
                 self.scopes.pop();
             }
             Statement::Declare { variable, value } => {
-                let ty = self.get_type(
-                    variable
-                        .ty
-                        .as_ref()
-                        .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
-                        .to_owned(),
-                )?;
+                let ty =
+                    self.get_type(variable.ty.as_ref().ok_or_else(|| {
+                        format!("Missing type for variable '{}'", &variable.name)
+                    })?)?;
                 let tmp = self.new_var(&ty, &variable.name)?;
 
                 if let Some(expr) = value {
@@ -765,7 +751,7 @@ impl QbeGenerator {
     }
 
     /// Returns a QBE type for the given AST type
-    fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type> {
+    fn get_type(&self, ty: &Type) -> GeneratorResult<qbe::Type> {
         match ty {
             Type::Any => Err("'any' type is not supported".into()),
             Type::Int => Ok(qbe::Type::Word),
@@ -774,7 +760,7 @@ impl QbeGenerator {
             Type::Struct(name) => {
                 let (ty, ..) = self
                     .struct_map
-                    .get(&name)
+                    .get(name)
                     .ok_or_else(|| format!("Use of undeclared struct '{}'", name))?
                     .to_owned();
                 Ok(ty)
