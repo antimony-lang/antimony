@@ -160,10 +160,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Variable(val) => val,
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
-        Expression::Array {
-            capacity: _,
-            elements,
-        } => generate_array(elements),
+        Expression::Array(elements) => generate_array(elements),
         Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
         Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
         Expression::StructInitialization { name, fields } => {
@@ -318,10 +315,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
             Expression::Str(s) => super::string_syntax(s),
             Expression::Variable(s) => s,
-            Expression::Array {
-                capacity: _,
-                elements,
-            } => generate_array(elements),
+            Expression::Array(elements) => generate_array(elements),
             Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
             Expression::StructInitialization { name, fields } => {
                 generate_struct_initialization(name, fields)

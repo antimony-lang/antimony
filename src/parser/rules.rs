@@ -485,9 +485,8 @@ impl Parser {
         }
 
         self.match_token(TokenKind::SquareBraceClose)?;
-        let capacity = elements.len();
 
-        Ok(Expression::Array { capacity, elements })
+        Ok(Expression::Array(elements))
     }
 
     fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {

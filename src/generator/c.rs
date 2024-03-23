@@ -168,7 +168,7 @@ fn generate_expression(expr: Expression) -> String {
         Expression::Str(val) => super::string_syntax(val),
         Expression::Bool(b) => b.to_string(),
         Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
-        Expression::Array { capacity, elements } => generate_array(capacity, elements),
+        Expression::Array(elements) => generate_array(elements),
         Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
         Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
         Expression::StructInitialization { name: _, fields } => {
@@ -191,7 +191,7 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
     out_str
 }
 
-fn generate_array(_size: usize, elements: Vec<Expression>) -> String {
+fn generate_array(elements: Vec<Expression>) -> String {
     let mut out_str = String::from("[");
 
     out_str += &elements
@@ -270,10 +270,7 @@ fn generate_function_call(func: String, args: Vec<Expression>) -> String {
             Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
             Expression::Str(s) => super::string_syntax(s),
             Expression::Variable(s) => s,
-            Expression::Array {
-                capacity: _,
-                elements: _,
-            } => todo!(),
+            Expression::Array(_) => todo!(),
             Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
             Expression::StructInitialization { name: _, fields } => {
                 generate_struct_initialization(fields)

@@ -145,10 +145,7 @@ pub enum Expression {
     Bool(bool),
     /// Represents "self" keyword
     Selff,
-    Array {
-        capacity: usize,
-        elements: Vec<Expression>,
-    },
+    Array(Vec<Expression>),
     FunctionCall {
         fn_name: String,
         args: Vec<Expression>,
