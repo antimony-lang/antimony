@@ -18,6 +18,22 @@ use crate::lexer::*;
 use crate::parser::parse;
 
 #[test]
+fn test_parse_function_prototype() {
+    let raw = "fn external();";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_ok())
+}
+
+#[test]
+fn test_parse_function_prototype_with_return_type() {
+    let raw = "fn external(): int;";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_ok())
+}
+
+#[test]
 fn test_parse_empty_function() {
     let raw = "fn main() {}";
     let tokens = tokenize(raw).unwrap();
@@ -654,7 +670,7 @@ fn test_function_with_return_type() {
     let tokens = tokenize(raw).unwrap();
     let tree = parse(tokens, Some(raw.to_string()), "".into());
     assert!(tree.is_ok());
-    assert_eq!(tree.unwrap().func[0].ret_type, Some(Type::Int));
+    assert_eq!(tree.unwrap().func[0].callable.ret_type, Some(Type::Int));
 }
 
 #[test]

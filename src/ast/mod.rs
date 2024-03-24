@@ -39,18 +39,29 @@ impl Module {
 }
 
 #[derive(Debug, Clone)]
-pub struct Function {
+pub struct Callable {
     pub name: String,
     pub arguments: Vec<TypedVariable>,
-    pub body: Statement,
     pub ret_type: Option<Type>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Function {
+    pub callable: Callable,
+    pub body: Option<Statement>,
 }
 
 #[derive(Debug, Clone)]
 pub struct StructDef {
     pub name: String,
     pub fields: Vec<TypedVariable>,
-    pub methods: Vec<Function>,
+    pub methods: Vec<Method>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Method {
+    pub callable: Callable,
+    pub body: Statement,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]

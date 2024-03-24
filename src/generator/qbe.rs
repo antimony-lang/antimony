@@ -65,8 +65,10 @@ impl Generator for QbeGenerator {
         }
 
         for func in &prog.func {
-            let func = generator.generate_function(func)?;
-            buf.push_str(&format!("{}\n", func));
+            if func.body.is_some() {
+                let func = generator.generate_function(func)?;
+                buf.push_str(&format!("{}\n", func));
+            }
         }
 
         for def in &generator.typedefs {
@@ -113,15 +115,16 @@ impl QbeGenerator {
         // Function argument scope
         self.scopes.push(HashMap::new());
 
+        let callable = &func.callable;
         let mut arguments: Vec<(qbe::Type, qbe::Value)> = Vec::new();
-        for arg in &func.arguments {
+        for arg in &callable.arguments {
             let ty = self.get_type(&arg.ty)?;
             let tmp = self.new_var(&ty, &arg.name)?;
 
             arguments.push((ty.into_abi(), tmp));
         }
 
-        let return_ty = if let Some(ty) = &func.ret_type {
+        let return_ty = if let Some(ty) = &callable.ret_type {
             Some(self.get_type(ty)?.into_abi())
         } else {
             None
@@ -129,7 +132,7 @@ impl QbeGenerator {
 
         let mut qfunc = qbe::Function {
             linkage: qbe::Linkage::public(),
-            name: func.name.clone(),
+            name: callable.name.clone(),
             arguments,
             return_ty,
             blocks: Vec::new(),
@@ -137,7 +140,7 @@ impl QbeGenerator {
 
         qfunc.add_block("start".to_owned());
 
-        self.generate_statement(&mut qfunc, &func.body)?;
+        self.generate_statement(&mut qfunc, func.body.as_ref().unwrap())?;
 
         let returns = qfunc.last_block().statements.last().map_or(false, |i| {
             matches!(i, qbe::Statement::Volatile(qbe::Instr::Ret(_)))
@@ -145,12 +148,12 @@ impl QbeGenerator {
         // Automatically add return in void functions unless it already returns,
         // non-void functions raise an error
         if !returns {
-            if func.ret_type.is_none() {
+            if callable.ret_type.is_none() {
                 qfunc.add_instr(qbe::Instr::Ret(None));
             } else {
                 return Err(format!(
                     "Function '{}' does not return in all code paths",
-                    &func.name
+                    &callable.name
                 ));
             }
         }

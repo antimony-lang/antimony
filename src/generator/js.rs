@@ -56,24 +56,30 @@ fn generate_arguments(args: Vec<TypedVariable>) -> String {
 }
 
 fn generate_function(func: Function) -> String {
-    let arguments: String = generate_arguments(func.arguments);
+    let callable = func.callable;
+    let body = match func.body {
+        Some(body) => body,
+        None => return String::new(),
+    };
+    let arguments: String = generate_arguments(callable.arguments);
 
-    let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
+    let mut raw = format!("function {N}({A})", N = callable.name, A = arguments);
 
-    raw += &generate_block(func.body, None);
+    raw += &generate_block(body, None);
     raw += "\n";
     raw
 }
 
-fn generate_method(subject: String, func: Function) -> String {
+fn generate_method(subject: String, method: Method) -> String {
+    let callable = method.callable;
     let mut buf = format!(
         "{}.prototype.{} = function({})",
         subject,
-        func.name,
-        generate_arguments(func.arguments)
+        callable.name,
+        generate_arguments(callable.arguments)
     );
 
-    buf += &generate_block(func.body, None);
+    buf += &generate_block(method.body, None);
     buf += "\n";
 
     buf

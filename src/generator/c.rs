@@ -96,15 +96,19 @@ pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
 fn generate_function(func: Function) -> String {
     let mut buf = String::new();
     buf += &format!("{} ", &generate_function_signature(func.clone()));
-    if let Statement::Block { statements, scope } = func.body {
-        buf += &generate_block(statements, scope);
-    }
-
+    match func.body {
+        Some(Statement::Block { statements, scope }) => {
+            buf += &generate_block(statements, scope);
+        }
+        Some(_) => unreachable!(),
+        None => return String::new(),
+    };
     buf
 }
 
 fn generate_function_signature(func: Function) -> String {
-    let arguments: String = func
+    let callable = func.callable;
+    let arguments: String = callable
         .arguments
         .into_iter()
         .map(|var| {
@@ -116,8 +120,8 @@ fn generate_function_signature(func: Function) -> String {
         })
         .collect::<Vec<String>>()
         .join(", ");
-    let t = generate_type(Either::Right(func.ret_type));
-    format!("{T} {N}({A})", T = t, N = func.name, A = arguments)
+    let t = generate_type(Either::Right(callable.ret_type));
+    format!("{T} {N}({A})", T = t, N = callable.name, A = arguments)
 }
 
 fn generate_block(block: Vec<Statement>, _scope: Vec<Variable>) -> String {

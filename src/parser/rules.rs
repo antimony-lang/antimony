@@ -65,7 +65,7 @@ impl Parser {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::Keyword(Keyword::Function) => {
-                    methods.push(self.parse_function()?);
+                    methods.push(self.parse_method()?);
                 }
                 TokenKind::Identifier(_) => fields.push(self.parse_typed_variable()?),
                 _ => {
@@ -138,10 +138,28 @@ impl Parser {
         Ok(Statement::Block { statements, scope })
     }
 
-    /// To reduce code duplication, this method can be either be used to parse a function or a method.
-    /// If a function is parsed, the `fn` keyword is matched.
-    /// If a method is parsed, `fn` will be omitted
     fn parse_function(&mut self) -> Result<Function, String> {
+        let callable = self.parse_callable()?;
+
+        let body = match self.peek()?.kind {
+            TokenKind::SemiColon => {
+                self.next()?;
+                None
+            }
+            _ => Some(self.parse_block()?),
+        };
+
+        Ok(Function { callable, body })
+    }
+
+    fn parse_method(&mut self) -> Result<Method, String> {
+        let callable = self.parse_callable()?;
+        let body = self.parse_block()?;
+
+        Ok(Method { callable, body })
+    }
+
+    fn parse_callable(&mut self) -> Result<Callable, String> {
         self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
 
@@ -159,12 +177,9 @@ impl Parser {
             _ => None,
         };
 
-        let body = self.parse_block()?;
-
-        Ok(Function {
+        Ok(Callable {
             name,
             arguments,
-            body,
             ret_type: ty,
         })
     }
