@@ -15,7 +15,6 @@
  */
 use crate::command::build;
 use crate::generator::Target;
-use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
@@ -27,28 +26,19 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
 
     match target {
         Target::JS => {
-            let process = Command::new("node")
+            let mut process = Command::new("node")
                 .stdin(Stdio::piped())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
                 .spawn()
                 .map_err(|e| format!("Could not spawn Node.js process: {}", e))?;
 
             process
                 .stdin
+                .as_ref()
                 .unwrap()
                 .write_all(&buf)
                 .map_err(|e| format!("Could not write to Node.js process: {}", e))?;
 
-            let mut s = Vec::new();
-            process
-                .stdout
-                .unwrap()
-                .read_to_end(&mut s)
-                .map_err(|e| format!("Could not read from child process: {}", e))?;
-            std::io::stdout()
-                .write_all(&s)
-                .map_err(|e| format!("Could not write to stdout: {}", e))?;
+            process.wait().unwrap();
         }
         _ => todo!(),
     }
