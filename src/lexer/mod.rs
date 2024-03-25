@@ -120,10 +120,6 @@ pub enum TokenKind {
     CurlyBracesOpen,
     /// "}"
     CurlyBracesClose,
-    /// "\t"
-    Tab,
-    /// "\n"
-    CarriageReturn,
     /// Unknown token, not expected by the lexer, e.g. "№"
     Unknown,
 }
@@ -335,8 +331,6 @@ impl Cursor<'_> {
                     TokenKind::Keyword(kind)
                 }
             }
-            '\n' => CarriageReturn,
-            '\t' => Tab,
             _ => Unknown,
         };
 
