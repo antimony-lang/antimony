@@ -177,12 +177,12 @@
 <p>Functions are pervasive in Antimony code. You’ve already seen one of the most important functions in the language: the <code>main</code> function, which is the entry point of many programs. You've also seen the <code>fn</code> keyword, which allows you to declare new functions.</p>
 <p>Antimony code uses snake_case as the conventional style for function and variable names. In snake case, all letters are lowercase and underscores separate words. Here’s a program that contains an example function definition:</p>
 <pre><code>fn main() {
-    println(&quot;Hello, world!&quot;)
+    println("Hello, world!")
     another_function()
 }
 
 fn another_function() {
-    println(&quot;Another function.&quot;)
+    println("Another function.")
 }
 </code></pre>
 <p>We can call any function we’ve defined by entering its name followed by a set of parentheses. Because <code>another_function</code> is defined in the program, it can be called from inside the main function. Note that we defined <code>another_function</code> after the <code>main</code> function in the source code; we could have defined it before as well. Antimony doesn’t care where you define your functions, only that they’re defined somewhere.</p>

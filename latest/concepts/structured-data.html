@@ -208,16 +208,16 @@ struct User {
 }
 
 let alice = new User {
-    email: &quot;alice@example.com&quot;
-    username: &quot;alice&quot;
+    email: "alice@example.com"
+    username: "alice"
     sign_in_count: 1
     active: true
 }
 </code></pre>
 <p>To get a specific value from a struct, we can use dot notation. If we wanted just alice's email address, we could use <code>alice.email</code> wherever we wanted to use this value. Fields of structs can also be reassigned using the dot notation:</p>
 <pre><code>let alice = new User {
-    email: &quot;alice@example.com&quot;
-    username: &quot;alice&quot;
+    email: "alice@example.com"
+    username: "alice"
     sign_in_count: 1
     active: true
 }
@@ -231,14 +231,14 @@ alice.sign_in_count = 2
     last_name: string
 
     fn full_name(): string {
-        return self.first_name + &quot; &quot; + self.last_name
+        return self.first_name + " " + self.last_name
     }
 }
 </code></pre>
 <p>Every instance of the <code>User</code> struct can now call <code>full_name()</code>. Note the usage of the word <code>self</code>. <code>self</code> is a special keyword referencing the struct instance the method was called on. Say we had the following instance of <code>User</code>, and called the <code>full_name()</code> method on it.</p>
 <pre><code>let alice = new User {
-    first_name: &quot;Jon&quot;
-    last_name: &quot;Doe&quot;
+    first_name: "Jon"
+    last_name: "Doe"
 }
 
 println(alice.full_name())

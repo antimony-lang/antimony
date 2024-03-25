@@ -182,12 +182,12 @@
     let f: bool = false // with explicit type annotation
 }
 </code></pre>
-<p>The main way to use Boolean values is through conditionals, such as an <code>if</code> expression. We’ll cover how <code>if</code> expressions work in the <a href="introduction/control-flow.html">&quot;Control Flow&quot;</a> section.</p>
+<p>The main way to use Boolean values is through conditionals, such as an <code>if</code> expression. We’ll cover how <code>if</code> expressions work in the <a href="introduction/control-flow.html">"Control Flow"</a> section.</p>
 <h2 id="the-integer-type"><a class="header" href="#the-integer-type">The Integer type</a></h2>
 <p>The <code>integer</code> datatype represents a 4 byte decimal number.</p>
 <pre><code>fn main() {
     let sum: int = 1 + 2
-    println(&quot;1 + 2 is &quot;, sum)
+    println("1 + 2 is ", sum)
 }
 </code></pre>
 <pre><code>$ sb run main.sb
@@ -205,8 +205,8 @@ let hexadecimal = 0xFF
 <h2 id="the-string-type"><a class="header" href="#the-string-type">The String type</a></h2>
 <p>A string is a sequence of characters.</p>
 <pre><code>fn main() {
-    let name: string = &quot;Jon&quot;
-    println(&quot;Hello &quot; + name)
+    let name: string = "Jon"
+    println("Hello " + name)
 }
 </code></pre>
 <pre><code>$ sb run main.sb
@@ -215,7 +215,7 @@ Hello Jon
 <h2 id="the-array-type"><a class="header" href="#the-array-type">The Array type</a></h2>
 <p>Arrays represent a sequence of values. They can hold any number of values of a specific type.</p>
 <pre><code>fn main() {
-    let fruits: string[] = [&quot;Banana&quot;, &quot;Apple&quot;, &quot;Pineapple&quot;]
+    let fruits: string[] = ["Banana", "Apple", "Pineapple"]
 
     for fruit in fruits {
         println(fruit)
@@ -242,7 +242,7 @@ for element in arr {
 <pre><code>fn main() {
 
     print_anything(5)
-    print_anything(&quot;Hello&quot;)
+    print_anything("Hello")
 }
 
 fn print_anything(x: any) {
@@ -256,7 +256,7 @@ Hello
 <p><code>any</code> can also be used in conjunction with the array notation to allow a mixture of types within an array.</p>
 <pre><code>fn main() {
 
-    let arr = [1, &quot;Two&quot;, 3]
+    let arr = [1, "Two", 3]
 
     for x in arr {
         println(x)

@@ -176,15 +176,15 @@
                         <h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
 <p>Deciding whether or not to run some code depending on if a condition is true and deciding to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Antimony code are <code>if</code> expressions and loops.</p>
 <h2 id="if-expressions"><a class="header" href="#if-expressions"><code>if</code> Expressions</a></h2>
-<p>An <code>if</code> expression allows you to branch your code depending on conditions. You provide a condition and then state, &quot;If this condition is met, run this block of code. If the condition is not met, do not run this block of code.&quot;</p>
+<p>An <code>if</code> expression allows you to branch your code depending on conditions. You provide a condition and then state, "If this condition is met, run this block of code. If the condition is not met, do not run this block of code."</p>
 <p>Here is a basic example of an <code>if</code> expression:</p>
 <pre><code>fn main() {
     let number = 3
 
     if number &lt; 5 {
-        println(&quot;condition was true&quot;)
+        println("condition was true")
     } else {
-        println(&quot;condition was false&quot;)
+        println("condition was false")
     }
 }
 </code></pre>
@@ -210,13 +210,13 @@ condition was false
     let number = 6
 
     if number % 4 == 0 {
-        println(&quot;number is divisible by 4&quot;)
+        println("number is divisible by 4")
     } else if number % 3 == 0 {
-        println(&quot;number is divisible by 3&quot;)
+        println("number is divisible by 3")
     } else if number % 2 == 0 {
-        println(&quot;number is divisible by 2&quot;)
+        println("number is divisible by 2")
     } else {
-        println(&quot;number is not divisible by 4, 3, or 2&quot;)
+        println("number is not divisible by 4, 3, or 2")
     }
 }
 </code></pre>
@@ -230,10 +230,10 @@ number is divisible by 3
 <pre><code>    let x = 42
 
     match x {
-        1 =&gt; println(&quot;x is 1&quot;)
-        2 =&gt; println(&quot;x is 2&quot;)
-        42 =&gt; println(&quot;The answer to the universe and everything!&quot;)
-        else =&gt; println(&quot;This will not be called&quot;)
+        1 =&gt; println("x is 1")
+        2 =&gt; println("x is 2")
+        42 =&gt; println("The answer to the universe and everything!")
+        else =&gt; println("This will not be called")
     }
 </code></pre>
 <p>In this example, we check the value of <code>x</code>, and execute some code based on the value. Instead of having to type <code>x == 1</code>, <code>x == 2</code> and so on, we instead provide the value only once, and decide what to do for each case. We can optionally provide a <code>else</code> case, which will be executed if no other case was triggered.</p>
@@ -241,11 +241,11 @@ number is divisible by 3
 <pre><code>fn invert(x: bool): bool {
     match x {
         true =&gt; {
-            println(&quot;The value is true&quot;)
+            println("The value is true")
             return false
         }
         false =&gt; {
-            println(&quot;The value is false&quot;)
+            println("The value is false")
             return true
         }
     }
@@ -267,7 +267,7 @@ number is divisible by 3
         number = number - 1
     }
 
-    println(&quot;LIFTOFF!!!&quot;)
+    println("LIFTOFF!!!")
 }
 </code></pre>
 <h3 id="looping-through-a-collection-with-for"><a class="header" href="#looping-through-a-collection-with-for">Looping Through a Collection with <code>for</code></a></h3>
@@ -277,7 +277,7 @@ number is divisible by 3
     let index = 0
 
     while index &lt; 5 {
-        println(&quot;the value is: &quot; + a[index])
+        println("the value is: " + a[index])
 
         index += 1
     }
@@ -298,7 +298,7 @@ the value is: 50
     let a = [10, 20, 30, 40, 50]
 
     for element in a {
-        println(&quot;the value is: &quot; + element)
+        println("the value is: " + element)
     }
 }
 </code></pre>

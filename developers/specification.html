@@ -184,13 +184,13 @@ strongly typed and supports multiple compile-targets. Programs are constructed
 from modules, whose properties allow efficient management of dependencies.</p>
 <h2 id="notation"><a class="header" href="#notation">Notation</a></h2>
 <p>The syntax is specified using altered Extended Backus-Naur Form (EBNF):</p>
-<pre><code>Production  = production_name &quot;=&quot; [ Expression ] &quot;.&quot; .
-Expression  = Alternative { &quot;|&quot; Alternative } .
+<pre><code>Production  = production_name "=" [ Expression ] "." .
+Expression  = Alternative { "|" Alternative } .
 Alternative = Term { Term } .
-Term        = production_name | token [ &quot;...&quot; token ] | Group | Option | Repetition .
-Group       = &quot;(&quot; Expression &quot;)&quot; .
-Option      = &quot;[&quot; Expression &quot;]&quot; .
-Repetition  = &quot;{&quot; Expression &quot;}&quot; .
+Term        = production_name | token [ "..." token ] | Group | Option | Repetition .
+Group       = "(" Expression ")" .
+Option      = "[" Expression "]" .
+Repetition  = "{" Expression "}" .
 </code></pre>
 <p>Productions are expressions constructed from terms and the following operators,
 in increasing precedence:</p>
@@ -200,7 +200,7 @@ in increasing precedence:</p>
 {}  repetition (0 to n times)
 </code></pre>
 <p>Lower-case production names are used to identify lexical tokens. Non-terminals
-are in CamelCase. Lexical tokens are enclosed in double quotes <code>&quot;&quot;</code> or single
+are in CamelCase. Lexical tokens are enclosed in double quotes <code>""</code> or single
 quotes <code>''</code>.</p>
 <p>The form <code>a ... b</code> represents the set of characters from <code>a</code> through <code>b</code> as
 alternatives. The horizontal ellipsis <code>...</code> is also used elsewhere in the spec
@@ -222,16 +222,16 @@ disallow the NUL character (U+0000) in the source text.</p>
 <p>The following terms are used to denote specific Unicode character classes:</p>
 <pre><code>newline        = /* the Unicode code point U+000A */ .
 unicode_char   = /* an arbitrary Unicode code point except newline */ .
-unicode_letter = /* a Unicode code point classified as &quot;Letter&quot; */ .
-unicode_digit  = /* a Unicode code point classified as &quot;Number, decimal digit&quot; */ .
+unicode_letter = /* a Unicode code point classified as "Letter" */ .
+unicode_digit  = /* a Unicode code point classified as "Number, decimal digit" */ .
 </code></pre>
 <h3 id="letters-and-digits"><a class="header" href="#letters-and-digits">Letters and digits</a></h3>
 <p>The underscore character <code>_</code> (U+005F) is considered a letter.</p>
-<pre><code>letter        = unicode_letter | &quot;_&quot; .
-decimal_digit = &quot;0&quot; ... &quot;9&quot; .
-binary_digit  = &quot;0&quot; | &quot;1&quot; .
-octal_digit   = &quot;0&quot; ... &quot;7&quot; .
-hex_digit     = &quot;0&quot; ... &quot;9&quot; | &quot;A&quot; ... &quot;F&quot; | &quot;a&quot; ... &quot;f&quot; .
+<pre><code>letter        = unicode_letter | "_" .
+decimal_digit = "0" ... "9" .
+binary_digit  = "0" | "1" .
+octal_digit   = "0" ... "7" .
+hex_digit     = "0" ... "9" | "A" ... "F" | "a" ... "f" .
 </code></pre>
 <h2 id="lexical-elements"><a class="header" href="#lexical-elements">Lexical elements</a></h2>
 <h3 id="comments"><a class="header" href="#comments">Comments</a></h3>
@@ -318,15 +318,15 @@ decimal zero. In hexadecimal literals, letters <code>a</code> through <code>f</c
 <p>For readability, an underscore character <code>_</code> may appear after a base prefix or
 between successive digits; such underscores do not change the literal's value.</p>
 <pre><code>int_lit        = decimal_lit | binary_lit | octal_lit | hex_lit .
-decimal_lit    = &quot;0&quot; | ( &quot;1&quot; … &quot;9&quot; ) [ [ &quot;_&quot; ] decimal_digits ] .
-binary_lit     = &quot;0&quot; ( &quot;b&quot; | &quot;B&quot; ) [ &quot;_&quot; ] binary_digits .
-octal_lit      = &quot;0&quot; [ &quot;o&quot; | &quot;O&quot; ] [ &quot;_&quot; ] octal_digits .
-hex_lit        = &quot;0&quot; ( &quot;x&quot; | &quot;X&quot; ) [ &quot;_&quot; ] hex_digits .
+decimal_lit    = "0" | ( "1" … "9" ) [ [ "_" ] decimal_digits ] .
+binary_lit     = "0" ( "b" | "B" ) [ "_" ] binary_digits .
+octal_lit      = "0" [ "o" | "O" ] [ "_" ] octal_digits .
+hex_lit        = "0" ( "x" | "X" ) [ "_" ] hex_digits .
 
-decimal_digits = decimal_digit { [ &quot;_&quot; ] decimal_digit } .
-binary_digits  = binary_digit { [ &quot;_&quot; ] binary_digit } .
-octal_digits   = octal_digit { [ &quot;_&quot; ] octal_digit } .
-hex_digits     = hex_digit { [ &quot;_&quot; ] hex_digit } .
+decimal_digits = decimal_digit { [ "_" ] decimal_digit } .
+binary_digits  = binary_digit { [ "_" ] binary_digit } .
+octal_digits   = octal_digit { [ "_" ] octal_digit } .
+hex_digits     = hex_digit { [ "_" ] hex_digit } .
 
 42
 4_2
@@ -352,12 +352,12 @@ _42         // an identifier, not an integer literal
 <h3 id="string-literals"><a class="header" href="#string-literals">String literals</a></h3>
 <p>A string literal represents a string constant obtained from concatenating a
 sequence of characters. String literals are character sequences between double
-quotes, as in &quot;bar&quot;. Within the quotes, any character may appear except newline
+quotes, as in "bar". Within the quotes, any character may appear except newline
 and unescaped double quote.</p>
 <p>If <code>\</code> character appears in the string, the character(s) following it <em>must</em> be
 interpreted specially:</p>
 <ol>
-<li><code>\</code> and <code>&quot;</code> are included unchanged (e.g. <code>&quot;C:\\Users&quot;</code> -&gt; <code>C:\Users</code>)</li>
+<li><code>\</code> and <code>"</code> are included unchanged (e.g. <code>"C:\\Users"</code> -&gt; <code>C:\Users</code>)</li>
 <li><code>n</code> emits the newline control chracter (U+000A)</li>
 <li><code>r</code> emits the carriage return control chracter (U+000D)</li>
 <li><code>b</code> emits the backspace control character (U+000C)</li>
@@ -366,23 +366,23 @@ interpreted specially:</p>
 <li>Unknown escape sequences <em>must</em> raise a compile error</li>
 </ol>
 <p>TODO: byte values</p>
-<p>TODO: Currently, <code>&quot;</code> and <code>'</code> are valid string characters. Remove <code>'</code> and only
+<p>TODO: Currently, <code>"</code> and <code>'</code> are valid string characters. Remove <code>'</code> and only
 use them for runes.</p>
 <pre><code>string_escape =
-    &quot;\n&quot; | # Newline (U+000A)
-    &quot;\r&quot; | # Carriage return (U+000D)
-    &quot;\t&quot; | # Horizontal tab (U+0009)
-    &quot;\f&quot; | # Form feed (U+000C)
-    &quot;\b&quot; | # Backspace (U+0008)
-    `\&quot;` | &quot;\\&quot;
+    "\n" | # Newline (U+000A)
+    "\r" | # Carriage return (U+000D)
+    "\t" | # Horizontal tab (U+0009)
+    "\f" | # Form feed (U+000C)
+    "\b" | # Backspace (U+0008)
+    `\"` | "\\"
 any = /* Any Unicode code point except newline (U+000A) and double quote (U+0022) */ .
-string_lit = `&quot;` { any | string_escape } `&quot;` .
+string_lit = `"` { any | string_escape } `"` .
 
-&quot;abc&quot;
-&quot;Hello, world!&quot;
-&quot;Hello\nworld&quot;
-&quot;C:\\Users&quot; # Should emit C:\Users
-&quot;日本語&quot;
+"abc"
+"Hello, world!"
+"Hello\nworld"
+"C:\\Users" # Should emit C:\Users
+"日本語"
 </code></pre>
 
                     </main>

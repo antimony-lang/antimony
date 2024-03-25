@@ -188,7 +188,7 @@
 <p>As per convention, the entrypoint for this project is the <code>main.sb</code> file in the root directory.</p>
 <p>There is a child-module called <code>some_logic</code> at the same directory-level.</p>
 <p>Below it, there is a directory called <code>foo</code>, containing the submodule <code>bar</code>. To address the <code>bar</code> module from our entrypoint, we'd import the following:</p>
-<pre><code>import &quot;foo/bar&quot;
+<pre><code>import "foo/bar"
 </code></pre>
 <blockquote>
 <p><strong>Note</strong>: File extensions in imports are optional. Importing <code>foo/bar.sb</code> would yield the same result as importing <code>foo/bar</code>.</p>
@@ -196,16 +196,16 @@
 <h2 id="module-entrypoints"><a class="header" href="#module-entrypoints">Module entrypoints</a></h2>
 <p>In the <code>foo</code> directory, there is another directory called <code>baz</code>, containing a single file named <code>module.sb</code>. This file is treated as a special file, since it serves as the entrypoint for that module. So, instead of importing the file explicitely:</p>
 <pre><code>// main.sb
-import &quot;foo/baz/module&quot;
+import "foo/baz/module"
 </code></pre>
 <p>we can simply import the module containing this file, and Antimony will import the contained <code>module.sb</code> instead.</p>
 <pre><code>// main.sb
-import &quot;foo/baz&quot;
+import "foo/baz"
 </code></pre>
 <h2 id="using-imported-modules"><a class="header" href="#using-imported-modules">Using imported modules</a></h2>
 <p>To use code defined in a separate module, we first need to import it. This is usually done at the top of the file, but it technically doesn't make a difference where in the document the import is defined. Once the module is imported, we can use the code inside it, as if it were in the current file.</p>
 <p>Let's say we have a module named <code>math.sb</code> in the same directory as out <code>main.sb</code>, and it defines the function <code>add(x: int, y: int): int</code>. To call it in our <code>main.sb</code>, we'd do the following:</p>
-<pre><code>import &quot;math&quot;
+<pre><code>import "math"
 
 fn main() {
     println(add(1, 2))
