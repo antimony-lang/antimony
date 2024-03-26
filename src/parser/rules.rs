@@ -15,9 +15,9 @@ use super::parser::Parser;
  * limitations under the License.
  */
 use super::{Error, Result};
-use crate::ast::types::Type;
+use crate::ast::types::{Type, TypeKind};
 use crate::ast::*;
-use crate::lexer::{Keyword, TokenKind, Value};
+use crate::lexer::{Keyword, Position, TokenKind, Value};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::convert::TryFrom;
@@ -54,8 +54,8 @@ impl Parser {
     }
 
     fn parse_struct_definition(&mut self) -> Result<StructDef> {
-        self.match_keyword(Keyword::Struct)?;
-        let name = self.match_identifier()?;
+        let pos = self.match_keyword(Keyword::Struct)?.pos;
+        let (name, _) = self.match_identifier()?;
 
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let mut fields = Vec::new();
@@ -77,6 +77,7 @@ impl Parser {
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
         Ok(StructDef {
+            pos,
             name,
             fields,
             methods,
@@ -105,6 +106,7 @@ impl Parser {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
             return Ok(TypedVariable {
+                pos: next.pos,
                 name,
                 ty: self.parse_type()?,
             });
@@ -117,7 +119,7 @@ impl Parser {
     }
 
     fn parse_block(&mut self) -> Result<Statement> {
-        self.match_token(TokenKind::CurlyBracesOpen)?;
+        let pos = self.match_token(TokenKind::CurlyBracesOpen)?.pos;
 
         let mut statements = vec![];
         let mut scope = vec![];
@@ -128,7 +130,7 @@ impl Parser {
 
             // If the current statement is a variable declaration,
             // let the scope know
-            if let Statement::Declare { variable, value: _ } = &statement {
+            if let StatementKind::Declare { variable, .. } = &statement.kind {
                 // TODO: Not sure if we should clone here
                 scope.push(variable.to_owned());
             }
@@ -138,7 +140,10 @@ impl Parser {
 
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::Block { statements, scope })
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Block { statements, scope },
+        })
     }
 
     fn parse_function(&mut self) -> Result<Function> {
@@ -163,8 +168,8 @@ impl Parser {
     }
 
     fn parse_callable(&mut self) -> Result<Callable> {
-        self.match_keyword(Keyword::Function)?;
-        let name = self.match_identifier()?;
+        let pos = self.match_keyword(Keyword::Function)?.pos;
+        let (name, _) = self.match_identifier()?;
 
         self.match_token(TokenKind::BraceOpen)?;
 
@@ -181,6 +186,7 @@ impl Parser {
         };
 
         Ok(Callable {
+            pos,
             name,
             arguments,
             ret_type: ty,
@@ -207,7 +213,10 @@ impl Parser {
         self.match_token(TokenKind::Colon)?;
         let next = self.peek()?;
         let typ = match next.kind {
-            TokenKind::Identifier(_) => Ok(Type::try_from(self.next()?.raw).unwrap()),
+            TokenKind::Identifier(_) => Ok(Type {
+                pos: next.pos,
+                kind: TypeKind::try_from(self.next()?.raw).unwrap(),
+            }),
             _ => Err(Error::new(next.pos, "Expected type".to_owned())),
         }?;
         if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
@@ -220,7 +229,10 @@ impl Parser {
                 Err(_) => None,
             };
             self.match_token(TokenKind::SquareBraceClose)?;
-            Ok(Type::Array(Box::new(typ), capacity))
+            Ok(Type {
+                pos: next.pos,
+                kind: TypeKind::Array(Box::new(typ), capacity),
+            })
         } else {
             Ok(typ)
         }
@@ -259,12 +271,15 @@ impl Parser {
         if AssignOp::try_from(suffix.kind).is_ok() {
             Ok(self.parse_assignment(expr)?)
         } else {
-            Ok(Statement::Exp(expr))
+            Ok(Statement {
+                pos: token.pos,
+                kind: StatementKind::Exp(expr),
+            })
         }
     }
 
     fn parse_function_call(&mut self, expr: Expression) -> Result<Expression> {
-        self.match_token(TokenKind::BraceOpen)?;
+        let pos = self.match_token(TokenKind::BraceOpen)?.pos;
 
         let mut args = Vec::new();
 
@@ -285,8 +300,8 @@ impl Parser {
                 TokenKind::SquareBraceOpen => {
                     // TODO: Expression parsing currently uses `next` instead of `peek`.
                     // We have to eat that token here until that is resolved
-                    self.match_token(TokenKind::SquareBraceOpen)?;
-                    args.push(self.parse_array()?);
+                    let pos = self.match_token(TokenKind::SquareBraceOpen)?.pos;
+                    args.push(self.parse_array(pos)?);
                 }
                 _ => {
                     return Err(self.make_error(TokenKind::BraceClose, next));
@@ -295,22 +310,28 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        Ok(Expression::FunctionCall {
-            expr: Box::new(expr),
-            args,
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::FunctionCall {
+                expr: Box::new(expr),
+                args,
+            },
         })
     }
 
     fn parse_return(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::Return)?;
+        let pos = self.match_keyword(Keyword::Return)?.pos;
         let peeked = self.peek()?;
-        match peeked.kind {
-            TokenKind::SemiColon => {
-                self.next()?;
-                Ok(Statement::Return(None))
-            }
-            _ => Ok(Statement::Return(Some(self.parse_expression()?))),
-        }
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Return(match peeked.kind {
+                TokenKind::SemiColon => {
+                    self.next()?;
+                    None
+                }
+                _ => Some(self.parse_expression()?),
+            }),
+        })
     }
 
     fn parse_expression(&mut self) -> Result<Expression> {
@@ -325,12 +346,15 @@ impl Parser {
                 expr
             }
             // true | false
-            TokenKind::Keyword(Keyword::Boolean) => Expression::Bool(
-                token
-                    .raw
-                    .parse::<bool>()
-                    .map_err(|e| Error::new(token.pos, e.to_string()))?,
-            ),
+            TokenKind::Keyword(Keyword::Boolean) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Bool(
+                    token
+                        .raw
+                        .parse::<bool>()
+                        .map_err(|e| Error::new(token.pos, e.to_string()))?,
+                ),
+            },
             // 5
             TokenKind::Literal(Value::Int) => {
                 // Ignore spacing character (E.g. 1_000_000)
@@ -348,16 +372,28 @@ impl Parser {
                     c => c.parse::<usize>(),
                 }
                 .map_err(|e| Error::new(token.pos, e.to_string()))?;
-                Expression::Int(val)
+                Expression {
+                    pos: token.pos,
+                    kind: ExpressionKind::Int(val),
+                }
             }
             // "A string"
-            TokenKind::Literal(Value::Str(string)) => Expression::Str(string),
+            TokenKind::Literal(Value::Str(string)) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Str(string),
+            },
             // self
-            TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
+            TokenKind::Keyword(Keyword::Selff) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Selff,
+            },
             // name
-            TokenKind::Identifier(val) => Expression::Variable(val),
+            TokenKind::Identifier(val) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Variable(val),
+            },
             // [1, 2, 3]
-            TokenKind::SquareBraceOpen => self.parse_array()?,
+            TokenKind::SquareBraceOpen => self.parse_array(token.pos)?,
             // new Foo {}
             TokenKind::Keyword(Keyword::New) => self.parse_struct_initialization()?,
             other => {
@@ -390,24 +426,27 @@ impl Parser {
     }
 
     fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression> {
-        self.match_token(TokenKind::Dot)?;
+        let pos = self.match_token(TokenKind::Dot)?.pos;
 
-        let field = self.match_identifier()?;
-        let expr = Expression::FieldAccess {
+        let (field, _) = self.match_identifier()?;
+        let expr = ExpressionKind::FieldAccess {
             expr: Box::new(lhs),
             field,
         };
-        Ok(expr)
+        Ok(Expression { pos, kind: expr })
     }
 
     /// TODO: Cleanup
     fn parse_struct_initialization(&mut self) -> Result<Expression> {
-        let name = self.match_identifier()?;
+        let (name, pos) = self.match_identifier()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let fields = self.parse_struct_fields()?;
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Expression::StructInitialization { name, fields })
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::StructInitialization { name, fields },
+        })
     }
 
     fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>> {
@@ -442,20 +481,12 @@ impl Parser {
         ))
     }
 
-    fn parse_array(&mut self) -> Result<Expression> {
+    fn parse_array(&mut self, pos: Position) -> Result<Expression> {
         let mut elements = Vec::new();
         loop {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::SquareBraceClose => {}
-                TokenKind::Literal(Value::Int) => {
-                    let value = self
-                        .next()?
-                        .raw
-                        .parse::<usize>()
-                        .map_err(|e| Error::new(next.pos, e.to_string()))?;
-                    elements.push(Expression::Int(value));
-                }
                 _ => {
                     let expr = self.parse_expression()?;
                     elements.push(expr);
@@ -469,45 +500,60 @@ impl Parser {
 
         self.match_token(TokenKind::SquareBraceClose)?;
 
-        Ok(Expression::Array(elements))
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::Array(elements),
+        })
     }
 
     fn parse_array_access(&mut self, expr: Expression) -> Result<Expression> {
-        self.match_token(TokenKind::SquareBraceOpen)?;
+        let pos = self.match_token(TokenKind::SquareBraceOpen)?.pos;
         let index = self.parse_expression()?;
         self.match_token(TokenKind::SquareBraceClose)?;
 
-        Ok(Expression::ArrayAccess {
-            expr: Box::new(expr),
-            index: Box::new(index),
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::ArrayAccess {
+                expr: Box::new(expr),
+                index: Box::new(index),
+            },
         })
     }
 
     fn parse_while_loop(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::While)?;
+        let pos = self.match_keyword(Keyword::While)?.pos;
         let condition = self.parse_expression()?;
         let body = self.parse_block()?;
 
-        Ok(Statement::While {
-            condition,
-            body: Box::new(body),
+        Ok(Statement {
+            pos,
+            kind: StatementKind::While {
+                condition,
+                body: Box::new(body),
+            },
         })
     }
 
     fn parse_break(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::Break)?;
-        Ok(Statement::Break)
+        let pos = self.match_keyword(Keyword::Break)?.pos;
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Break,
+        })
     }
 
     fn parse_continue(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::Continue)?;
-        Ok(Statement::Continue)
+        let pos = self.match_keyword(Keyword::Continue)?.pos;
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Continue,
+        })
     }
 
     fn parse_for_loop(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::For)?;
+        let pos = self.match_keyword(Keyword::For)?.pos;
 
-        let ident = self.match_identifier()?;
+        let (ident, ident_pos) = self.match_identifier()?;
         let ident_ty = match self.peek()?.kind {
             TokenKind::Colon => Some(self.parse_type()?),
             _ => None,
@@ -517,18 +563,22 @@ impl Parser {
 
         let body = self.parse_block()?;
 
-        Ok(Statement::For {
-            ident: Variable {
-                name: ident,
-                ty: ident_ty,
+        Ok(Statement {
+            pos,
+            kind: StatementKind::For {
+                ident: Variable {
+                    pos: ident_pos,
+                    name: ident,
+                    ty: ident_ty,
+                },
+                expr,
+                body: Box::new(body),
             },
-            expr,
-            body: Box::new(body),
         })
     }
 
     fn parse_match_statement(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::Match)?;
+        let pos = self.match_keyword(Keyword::Match)?.pos;
         let subject = self.parse_expression()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let mut arms: Vec<MatchArm> = Vec::new();
@@ -556,7 +606,10 @@ impl Parser {
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
-        Ok(Statement::Match { subject, arms })
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Match { subject, arms },
+        })
     }
 
     fn parse_match_arm(&mut self) -> Result<MatchArm> {
@@ -579,7 +632,7 @@ impl Parser {
     }
 
     fn parse_conditional_statement(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::If)?;
+        let pos = self.match_keyword(Keyword::If)?.pos;
         let condition = self.parse_expression()?;
 
         let body = self.parse_block()?;
@@ -599,16 +652,22 @@ impl Parser {
                     Some(branch) => branch,
                     None => self.parse_conditional_statement()?,
                 };
-                Ok(Statement::If {
-                    condition,
-                    body: Box::new(body),
-                    else_branch: Some(Box::new(else_branch)),
+                Ok(Statement {
+                    pos,
+                    kind: StatementKind::If {
+                        condition,
+                        body: Box::new(body),
+                        else_branch: Some(Box::new(else_branch)),
+                    },
                 })
             }
-            _ => Ok(Statement::If {
-                condition,
-                body: Box::new(body),
-                else_branch: None,
+            _ => Ok(Statement {
+                pos,
+                kind: StatementKind::If {
+                    condition,
+                    body: Box::new(body),
+                    else_branch: None,
+                },
             }),
         }
     }
@@ -620,18 +679,21 @@ impl Parser {
     /// ```
     /// In this case, the function call has already been evaluated, and needs to be passed to this function.
     fn parse_bin_op(&mut self, lhs: Expression) -> Result<Expression> {
-        let op = self.match_operator()?;
+        let (op, pos) = self.match_operator()?;
 
-        Ok(Expression::BinOp {
-            lhs: Box::from(lhs),
-            op,
-            rhs: Box::from(self.parse_expression()?),
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::BinOp {
+                lhs: Box::from(lhs),
+                op,
+                rhs: Box::from(self.parse_expression()?),
+            },
         })
     }
 
     fn parse_declare(&mut self) -> Result<Statement> {
-        self.match_keyword(Keyword::Let)?;
-        let name = self.match_identifier()?;
+        let pos = self.match_keyword(Keyword::Let)?.pos;
+        let (name, name_pos) = self.match_identifier()?;
         let token = self.peek()?;
         let ty = match &token.kind {
             TokenKind::Colon => Some(self.parse_type()?),
@@ -648,27 +710,46 @@ impl Parser {
             TokenKind::Assign => {
                 self.match_token(TokenKind::Assign)?;
                 let expr = self.parse_expression()?;
-                Ok(Statement::Declare {
-                    variable: Variable { name, ty },
-                    value: Some(expr),
+                Ok(Statement {
+                    pos,
+                    kind: StatementKind::Declare {
+                        variable: Variable {
+                            pos: name_pos,
+                            name,
+                            ty,
+                        },
+                        value: Some(expr),
+                    },
                 })
             }
-            _ => Ok(Statement::Declare {
-                variable: Variable { name, ty },
-                value: None,
+            _ => Ok(Statement {
+                pos,
+                kind: StatementKind::Declare {
+                    variable: Variable {
+                        pos: name_pos,
+                        name,
+                        ty,
+                    },
+                    value: None,
+                },
             }),
         }
     }
 
     fn parse_assignment(&mut self, lhs: Expression) -> Result<Statement> {
-        let op = AssignOp::try_from(self.next()?.kind).unwrap();
+        let token = self.next()?;
+        let pos = token.pos;
+        let op = AssignOp::try_from(token.kind).unwrap();
 
         let expr = self.parse_expression()?;
 
-        Ok(Statement::Assign {
-            lhs: Box::new(lhs),
-            op,
-            rhs: Box::new(expr),
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Assign {
+                lhs: Box::new(lhs),
+                op,
+                rhs: Box::new(expr),
+            },
         })
     }
 }

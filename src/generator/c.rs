@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::ast::types::Type;
+use crate::ast::types::TypeKind;
 use crate::ast::*;
 use crate::generator::{Generator, GeneratorResult};
 use crate::util::Either;
@@ -65,28 +65,28 @@ pub fn generate_struct(def: StructDef) -> String {
     buf
 }
 
-pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
+pub(super) fn generate_type(t: Either<Variable, Option<TypeKind>>) -> String {
     let (ty, name) = match t {
-        Either::Left(var) => (var.ty, Some(var.name)),
+        Either::Left(var) => (var.ty.map(|ty| ty.kind), Some(var.name)),
         Either::Right(ty) => (ty, None),
     };
     match ty {
         Some(t) => match t {
-            Type::Int => "int".into(),
-            Type::Str => "char *".into(),
-            Type::Any => "void *".into(),
-            Type::Bool => "bool".into(),
-            Type::Struct(name) => format!("struct {}", name),
-            Type::Array(t, capacity) => match name {
+            TypeKind::Int => "int".into(),
+            TypeKind::Str => "char *".into(),
+            TypeKind::Any => "void *".into(),
+            TypeKind::Bool => "bool".into(),
+            TypeKind::Struct(name) => format!("struct {}", name),
+            TypeKind::Array(t, capacity) => match name {
                 Some(n) => format!(
                     "{T} {N}[{C}]",
-                    T = generate_type(Either::Right(Some(*t))),
+                    T = generate_type(Either::Right(Some(t.kind))),
                     N = n,
                     C = capacity
                         .map(|val| val.to_string())
                         .unwrap_or_else(|| "".to_string()),
                 ),
-                None => format!("{}[]", generate_type(Either::Right(Some(*t)))),
+                None => format!("{}[]", generate_type(Either::Right(Some(t.kind)))),
             },
         },
         None => "void".into(),
@@ -97,7 +97,10 @@ fn generate_function(func: Function) -> String {
     let mut buf = String::new();
     buf += &format!("{} ", &generate_function_signature(func.clone()));
     match func.body {
-        Some(Statement::Block { statements, scope }) => {
+        Some(Statement {
+            kind: StatementKind::Block { statements, scope },
+            ..
+        }) => {
             buf += &generate_block(statements, scope);
         }
         Some(_) => unreachable!(),
@@ -120,7 +123,7 @@ fn generate_function_signature(func: Function) -> String {
         })
         .collect::<Vec<String>>()
         .join(", ");
-    let t = generate_type(Either::Right(callable.ret_type));
+    let t = generate_type(Either::Right(callable.ret_type.map(|ty| ty.kind)));
     format!("{T} {N}({A})", T = t, N = callable.name, A = arguments)
 }
 
@@ -137,26 +140,26 @@ fn generate_block(block: Vec<Statement>, _scope: Vec<Variable>) -> String {
 }
 
 fn generate_statement(statement: Statement) -> String {
-    let state = match statement {
-        Statement::Return(ret) => generate_return(ret),
-        Statement::Declare { variable, value } => generate_declare(variable, value),
-        Statement::Exp(val) => generate_expression(val) + ";\n",
-        Statement::If {
+    let state = match statement.kind {
+        StatementKind::Return(ret) => generate_return(ret),
+        StatementKind::Declare { variable, value } => generate_declare(variable, value),
+        StatementKind::Exp(val) => generate_expression(val) + ";\n",
+        StatementKind::If {
             condition,
             body,
             else_branch,
         } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
-        Statement::Assign { lhs, op, rhs } => generate_assign(*lhs, op, *rhs),
-        Statement::Block { statements, scope } => generate_block(statements, scope),
-        Statement::While { condition, body } => generate_while_loop(condition, *body),
-        Statement::For {
+        StatementKind::Assign { lhs, op, rhs } => generate_assign(*lhs, op, *rhs),
+        StatementKind::Block { statements, scope } => generate_block(statements, scope),
+        StatementKind::While { condition, body } => generate_while_loop(condition, *body),
+        StatementKind::For {
             ident: _,
             expr: _,
             body: _,
         } => todo!(),
-        Statement::Continue => todo!(),
-        Statement::Break => todo!(),
-        Statement::Match {
+        StatementKind::Continue => todo!(),
+        StatementKind::Break => todo!(),
+        StatementKind::Match {
             subject: _,
             arms: _,
         } => todo!(),
@@ -166,20 +169,20 @@ fn generate_statement(statement: Statement) -> String {
 }
 
 fn generate_expression(expr: Expression) -> String {
-    match expr {
-        Expression::Int(val) => val.to_string(),
-        Expression::Variable(val) => val,
-        Expression::Str(val) => super::string_syntax(val),
-        Expression::Bool(b) => b.to_string(),
-        Expression::FunctionCall { expr, args } => generate_function_call(*expr, args),
-        Expression::Array(elements) => generate_array(elements),
-        Expression::ArrayAccess { expr, index } => generate_array_access(*expr, *index),
-        Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-        Expression::StructInitialization { name: _, fields } => {
+    match expr.kind {
+        ExpressionKind::Int(val) => val.to_string(),
+        ExpressionKind::Variable(val) => val,
+        ExpressionKind::Str(val) => super::string_syntax(val),
+        ExpressionKind::Bool(b) => b.to_string(),
+        ExpressionKind::FunctionCall { expr, args } => generate_function_call(*expr, args),
+        ExpressionKind::Array(elements) => generate_array(elements),
+        ExpressionKind::ArrayAccess { expr, index } => generate_array_access(*expr, *index),
+        ExpressionKind::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
+        ExpressionKind::StructInitialization { name: _, fields } => {
             generate_struct_initialization(fields)
         }
-        Expression::FieldAccess { expr, field } => generate_field_access(*expr, field),
-        Expression::Selff => todo!(),
+        ExpressionKind::FieldAccess { expr, field } => generate_field_access(*expr, field),
+        ExpressionKind::Selff => todo!(),
     }
 }
 
@@ -189,7 +192,7 @@ fn generate_while_loop(expr: Expression, body: Statement) -> String {
     out_str += &generate_expression(expr);
     out_str += ") ";
 
-    if let Statement::Block { statements, scope } = body {
+    if let StatementKind::Block { statements, scope } = body.kind {
         out_str += &generate_block(statements, scope);
     }
     out_str
@@ -200,9 +203,9 @@ fn generate_array(elements: Vec<Expression>) -> String {
 
     out_str += &elements
         .iter()
-        .map(|el| match el {
-            Expression::Int(i) => i.to_string(),
-            Expression::Str(s) => super::string_syntax(s.to_owned()),
+        .map(|el| match &el.kind {
+            ExpressionKind::Int(i) => i.to_string(),
+            ExpressionKind::Str(s) => super::string_syntax(s.to_owned()),
             _ => todo!("Not yet implemented"),
         })
         .collect::<Vec<String>>()
@@ -227,8 +230,8 @@ fn generate_conditional(
 ) -> String {
     let expr_str = generate_expression(expr);
 
-    let body = match if_state {
-        Statement::Block {
+    let body = match if_state.kind {
+        StatementKind::Block {
             statements,
             scope: _,
         } => statements,

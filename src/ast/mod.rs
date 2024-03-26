@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::lexer::{Keyword, Token, TokenKind, Value};
+use crate::lexer::{self, Keyword, Position, Token, TokenKind, Value};
 use core::convert::TryFrom;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -39,6 +39,7 @@ impl Module {
 
 #[derive(Debug, Clone)]
 pub struct Callable {
+    pub pos: Position,
     pub name: String,
     pub arguments: Vec<TypedVariable>,
     pub ret_type: Option<Type>,
@@ -52,6 +53,7 @@ pub struct Function {
 
 #[derive(Debug, Clone)]
 pub struct StructDef {
+    pub pos: Position,
     pub name: String,
     pub fields: Vec<TypedVariable>,
     pub methods: Vec<Method>,
@@ -65,6 +67,7 @@ pub struct Method {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Variable {
+    pub pos: Position,
     pub name: String,
     pub ty: Option<Type>,
 }
@@ -78,6 +81,7 @@ impl AsRef<Variable> for Variable {
 impl From<TypedVariable> for Variable {
     fn from(typed: TypedVariable) -> Self {
         Self {
+            pos: typed.pos,
             name: typed.name,
             ty: Some(typed.ty),
         }
@@ -86,6 +90,7 @@ impl From<TypedVariable> for Variable {
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 pub struct TypedVariable {
+    pub pos: Position,
     pub name: String,
     pub ty: Type,
 }
@@ -97,7 +102,13 @@ impl AsRef<TypedVariable> for TypedVariable {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Statement {
+pub struct Statement {
+    pub pos: Position,
+    pub kind: StatementKind,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum StatementKind {
     /// (Statements, Scoped variables)
     Block {
         statements: Vec<Statement>,
@@ -168,7 +179,13 @@ impl TryFrom<TokenKind> for AssignOp {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Expression {
+pub struct Expression {
+    pub pos: Position,
+    pub kind: ExpressionKind,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum ExpressionKind {
     Int(usize),
     Str(String),
     Bool(bool),
@@ -200,25 +217,43 @@ pub enum Expression {
 }
 
 impl TryFrom<Token> for Expression {
-    type Error = String;
+    type Error = lexer::Error;
 
-    fn try_from(token: Token) -> std::result::Result<Self, String> {
+    fn try_from(token: Token) -> lexer::Result<Self> {
         let kind = token.kind;
+        let pos = token.pos;
         match kind {
-            TokenKind::Identifier(val) => Ok(Expression::Variable(val)),
-            TokenKind::Literal(Value::Int) => Ok(Expression::Int(
-                token
-                    .raw
-                    .parse()
-                    .map_err(|_| "Int value could not be parsed")?,
+            TokenKind::Identifier(val) => Ok(Expression {
+                pos,
+                kind: ExpressionKind::Variable(val),
+            }),
+            TokenKind::Literal(Value::Int) => Ok(Expression {
+                pos,
+                kind: ExpressionKind::Int(token.raw.parse().map_err(|_| {
+                    lexer::Error::new(pos, "Int value could not be parsed".to_owned())
+                })?),
+            }),
+            TokenKind::Keyword(Keyword::Boolean) => Ok(Expression {
+                pos,
+                kind: ExpressionKind::Bool(match token.raw.as_ref() {
+                    "true" => true,
+                    "false" => false,
+                    _ => {
+                        return Err(lexer::Error::new(
+                            pos,
+                            "Boolean value could not be parsed".to_owned(),
+                        ))
+                    }
+                }),
+            }),
+            TokenKind::Literal(Value::Str(string)) => Ok(Expression {
+                pos,
+                kind: ExpressionKind::Str(string),
+            }),
+            _ => Err(lexer::Error::new(
+                pos,
+                "Value could not be parsed".to_owned(),
             )),
-            TokenKind::Keyword(Keyword::Boolean) => match token.raw.as_ref() {
-                "true" => Ok(Expression::Bool(true)),
-                "false" => Ok(Expression::Bool(false)),
-                _ => Err("Boolean value could not be parsed".into()),
-            },
-            TokenKind::Literal(Value::Str(string)) => Ok(Expression::Str(string)),
-            _ => Err("Value could not be parsed".into()),
         }
     }
 }

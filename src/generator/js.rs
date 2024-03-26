@@ -16,7 +16,7 @@
 use crate::ast::*;
 use crate::generator::{Generator, GeneratorResult};
 use std::collections::HashMap;
-use types::Type;
+use types::{Type, TypeKind};
 
 pub struct JsGenerator;
 
@@ -116,8 +116,8 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
     }
 
     // TODO: Prepend statements
-    let statements = match block {
-        Statement::Block {
+    let statements = match block.kind {
+        StatementKind::Block {
             statements,
             scope: _,
         } => statements,
@@ -134,45 +134,45 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
 }
 
 fn generate_statement(statement: Statement) -> String {
-    let state = match statement {
-        Statement::Return(ret) => generate_return(ret),
-        Statement::Declare { variable, value } => generate_declare(variable, value),
-        Statement::Exp(val) => generate_expression(val),
-        Statement::If {
+    let state = match statement.kind {
+        StatementKind::Return(ret) => generate_return(ret),
+        StatementKind::Declare { variable, value } => generate_declare(variable, value),
+        StatementKind::Exp(val) => generate_expression(val),
+        StatementKind::If {
             condition,
             body,
             else_branch,
         } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
-        Statement::Assign { lhs, op, rhs } => generate_assign(*lhs, op, *rhs),
-        Statement::Block {
+        StatementKind::Assign { lhs, op, rhs } => generate_assign(*lhs, op, *rhs),
+        StatementKind::Block {
             statements: _,
             scope: _,
         } => generate_block(statement, None),
-        Statement::While { condition, body } => generate_while_loop(condition, *body),
-        Statement::For { ident, expr, body } => generate_for_loop(ident, expr, *body),
-        Statement::Continue => generate_continue(),
-        Statement::Break => generate_break(),
-        Statement::Match { subject, arms } => generate_match(subject, arms),
+        StatementKind::While { condition, body } => generate_while_loop(condition, *body),
+        StatementKind::For { ident, expr, body } => generate_for_loop(ident, expr, *body),
+        StatementKind::Continue => generate_continue(),
+        StatementKind::Break => generate_break(),
+        StatementKind::Match { subject, arms } => generate_match(subject, arms),
     };
 
     format!("{};\n", state)
 }
 
 fn generate_expression(expr: Expression) -> String {
-    match expr {
-        Expression::Int(val) => val.to_string(),
-        Expression::Selff => "this".to_string(),
-        Expression::Str(val) => super::string_syntax(val),
-        Expression::Variable(val) => val,
-        Expression::Bool(b) => b.to_string(),
-        Expression::FunctionCall { expr, args } => generate_function_call(*expr, args),
-        Expression::Array(elements) => generate_array(elements),
-        Expression::ArrayAccess { expr, index } => generate_array_access(*expr, *index),
-        Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-        Expression::StructInitialization { name, fields } => {
+    match expr.kind {
+        ExpressionKind::Int(val) => val.to_string(),
+        ExpressionKind::Selff => "this".to_string(),
+        ExpressionKind::Str(val) => super::string_syntax(val),
+        ExpressionKind::Variable(val) => val,
+        ExpressionKind::Bool(b) => b.to_string(),
+        ExpressionKind::FunctionCall { expr, args } => generate_function_call(*expr, args),
+        ExpressionKind::Array(elements) => generate_array(elements),
+        ExpressionKind::ArrayAccess { expr, index } => generate_array_access(*expr, *index),
+        ExpressionKind::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
+        ExpressionKind::StructInitialization { name, fields } => {
             generate_struct_initialization(name, fields)
         }
-        Expression::FieldAccess { expr, field } => generate_field_access(*expr, field),
+        ExpressionKind::FieldAccess { expr, field } => generate_field_access(*expr, field),
     }
 }
 
@@ -267,8 +267,8 @@ fn generate_conditional(
 ) -> String {
     let expr_str = generate_expression(expr);
 
-    let body = match if_state {
-        Statement::Block {
+    let body = match if_state.kind {
+        StatementKind::Block {
             statements,
             scope: _,
         } => statements,
@@ -308,7 +308,10 @@ fn generate_declare<V: AsRef<Variable>>(identifier: V, val: Option<Expression>) 
             // But this works:
             // var x = [];
             // x[0] = 1;
-            Some(Type::Array(_, _)) => format!("var {} = []", ident.name),
+            Some(Type {
+                kind: TypeKind::Array(_, _),
+                ..
+            }) => format!("var {} = []", ident.name),
             _ => format!("var {}", ident.name),
         },
     }

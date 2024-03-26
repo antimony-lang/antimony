@@ -1,3 +1,4 @@
+use crate::lexer::Position;
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -16,7 +17,13 @@
 use std::convert::TryFrom;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
-pub enum Type {
+pub struct Type {
+    pub pos: Position,
+    pub kind: TypeKind,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone)]
+pub enum TypeKind {
     Any,
     Int,
     Str,
@@ -25,7 +32,7 @@ pub enum Type {
     Struct(String),
 }
 
-impl TryFrom<String> for Type {
+impl TryFrom<String> for TypeKind {
     type Error = String;
     fn try_from(s: String) -> Result<Self, Self::Error> {
         match s.as_ref() {

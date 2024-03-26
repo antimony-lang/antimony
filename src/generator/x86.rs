@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::ast::{Function, Module, Statement};
+use crate::ast::{Function, Module, Statement, StatementKind};
 use crate::generator::{Generator, GeneratorResult};
 
 struct Assembly {
@@ -76,12 +76,22 @@ impl X86Generator {
         let callable = func.callable;
 
         let has_return: bool = match &func.body {
-            Some(Statement::Block {
-                statements,
-                scope: _,
-            }) => statements
-                .iter()
-                .any(|s| matches!(*s, Statement::Return(_))),
+            Some(Statement {
+                kind:
+                    StatementKind::Block {
+                        statements,
+                        scope: _,
+                    },
+                ..
+            }) => statements.iter().any(|s| {
+                matches!(
+                    *s,
+                    Statement {
+                        kind: StatementKind::Return(_),
+                        ..
+                    }
+                )
+            }),
             Some(_) => panic!("Function body should be of type Block"),
             None => return asm,
         };

@@ -15,7 +15,7 @@
  */
 use super::{Error, Result};
 use crate::ast::*;
-use crate::lexer::{Keyword, Token, TokenKind};
+use crate::lexer::{Keyword, Position, Token, TokenKind};
 use std::convert::TryFrom;
 use std::iter::Peekable;
 use std::vec::IntoIter;
@@ -104,23 +104,25 @@ impl Parser {
         }
     }
 
-    pub(super) fn match_keyword(&mut self, keyword: Keyword) -> Result<()> {
+    pub(super) fn match_keyword(&mut self, keyword: Keyword) -> Result<Token> {
         let token = self.next()?;
         match &token.kind {
-            TokenKind::Keyword(ref k) if k == &keyword => Ok(()),
+            TokenKind::Keyword(ref k) if k == &keyword => Ok(token),
             _ => Err(self.make_error(TokenKind::SemiColon, token)),
         }
     }
 
-    pub(super) fn match_operator(&mut self) -> Result<BinOp> {
+    pub(super) fn match_operator(&mut self) -> Result<(BinOp, Position)> {
         let token = self.next()?;
-        BinOp::try_from(token.kind.clone()).map_err(|err| Error::new(token.pos, err))
+        BinOp::try_from(token.kind.clone())
+            .map_err(|err| Error::new(token.pos, err))
+            .map(|op| (op, token.pos))
     }
 
-    pub(super) fn match_identifier(&mut self) -> Result<String> {
+    pub(super) fn match_identifier(&mut self) -> Result<(String, Position)> {
         let token = self.next()?;
         match &token.kind {
-            TokenKind::Identifier(n) => Ok(n.to_string()),
+            TokenKind::Identifier(n) => Ok((n.to_string(), token.pos)),
             other => Err(Error::new(
                 token.pos,
                 format!("Expected Identifier, found {:?}", other),

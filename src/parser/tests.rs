@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::ast::{types::Type, Module};
+use crate::ast::{
+    types::{Type, TypeKind},
+    Module,
+};
 use crate::lexer::{tokenize, FileTable};
 use crate::parser::{parse, Result};
 
@@ -627,7 +630,13 @@ fn test_function_with_return_type() {
     ";
     let tree = test_parse(raw.to_owned());
     assert!(tree.is_ok());
-    assert_eq!(tree.unwrap().func[0].callable.ret_type, Some(Type::Int));
+    assert!(matches!(
+        tree.unwrap().func[0].callable.ret_type,
+        Some(Type {
+            kind: TypeKind::Int,
+            ..
+        })
+    ));
 }
 
 #[test]

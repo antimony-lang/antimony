@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 use super::{Generator, GeneratorResult};
-use crate::ast::types::Type;
+use crate::ast::types::{Type, TypeKind};
 use crate::ast::*;
 use crate::util::Either;
 use std::collections::HashMap;
@@ -169,8 +169,8 @@ impl QbeGenerator {
         func: &mut qbe::Function,
         stmt: &Statement,
     ) -> GeneratorResult<()> {
-        match stmt {
-            Statement::Block {
+        match &stmt.kind {
+            StatementKind::Block {
                 statements,
                 scope: _,
             } => {
@@ -180,7 +180,7 @@ impl QbeGenerator {
                 }
                 self.scopes.pop();
             }
-            Statement::Declare { variable, value } => {
+            StatementKind::Declare { variable, value } => {
                 let ty =
                     self.get_type(variable.ty.as_ref().ok_or_else(|| {
                         format!("Missing type for variable '{}'", &variable.name)
@@ -192,10 +192,10 @@ impl QbeGenerator {
                     func.assign_instr(tmp, ty, qbe::Instr::Copy(result));
                 }
             }
-            Statement::Assign { lhs, op, rhs } => {
+            StatementKind::Assign { lhs, op, rhs } => {
                 self.generate_assignment(func, lhs, *op, Either::Right(rhs))?;
             }
-            Statement::Return(val) => match val {
+            StatementKind::Return(val) => match val {
                 Some(expr) => {
                     let (_, result) = self.generate_expression(func, expr)?;
                     // TODO: Cast to function return type
@@ -203,31 +203,31 @@ impl QbeGenerator {
                 }
                 None => func.add_instr(qbe::Instr::Ret(None)),
             },
-            Statement::If {
+            StatementKind::If {
                 condition,
                 body,
                 else_branch,
             } => {
                 self.generate_if(func, condition, body, else_branch)?;
             }
-            Statement::While { condition, body } => {
+            StatementKind::While { condition, body } => {
                 self.generate_while(func, condition, body)?;
             }
-            Statement::Break => {
+            StatementKind::Break => {
                 if let Some(label) = &self.loop_labels.last() {
                     func.add_instr(qbe::Instr::Jmp(format!("{}.end", label)));
                 } else {
                     return Err("break used outside of a loop".to_owned());
                 }
             }
-            Statement::Continue => {
+            StatementKind::Continue => {
                 if let Some(label) = &self.loop_labels.last() {
                     func.add_instr(qbe::Instr::Jmp(format!("{}.cond", label)));
                 } else {
                     return Err("continue used outside of a loop".to_owned());
                 }
             }
-            Statement::Exp(expr) => {
+            StatementKind::Exp(expr) => {
                 self.generate_expression(func, expr)?;
             }
             _ => todo!("statement: {:?}", stmt),
@@ -241,8 +241,8 @@ impl QbeGenerator {
         func: &mut qbe::Function,
         expr: &Expression,
     ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
-        match expr {
-            Expression::Int(literal) => {
+        match &expr.kind {
+            ExpressionKind::Int(literal) => {
                 let tmp = self.new_temporary();
                 func.assign_instr(
                     tmp.clone(),
@@ -252,8 +252,8 @@ impl QbeGenerator {
 
                 Ok((qbe::Type::Word, tmp))
             }
-            Expression::Str(string) => self.generate_string(string),
-            Expression::Bool(literal) => {
+            ExpressionKind::Str(string) => self.generate_string(string),
+            ExpressionKind::Bool(literal) => {
                 let tmp = self.new_temporary();
                 func.assign_instr(
                     tmp.clone(),
@@ -263,15 +263,15 @@ impl QbeGenerator {
 
                 Ok((qbe::Type::Word, tmp))
             }
-            Expression::Array(elements) => self.generate_array(func, elements),
-            Expression::FunctionCall { expr, args } => {
+            ExpressionKind::Array(elements) => self.generate_array(func, elements),
+            ExpressionKind::FunctionCall { expr, args } => {
                 let mut new_args: Vec<(qbe::Type, qbe::Value)> = Vec::new();
                 for arg in args.iter() {
                     new_args.push(self.generate_expression(func, arg)?);
                 }
 
-                let fn_name = match expr.as_ref() {
-                    Expression::Variable(name) => name.to_owned(),
+                let fn_name = match &expr.as_ref().kind {
+                    ExpressionKind::Variable(name) => name.to_owned(),
                     _ => todo!("methods"),
                 };
 
@@ -285,12 +285,12 @@ impl QbeGenerator {
 
                 Ok((qbe::Type::Word, tmp))
             }
-            Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
-            Expression::BinOp { lhs, op, rhs } => self.generate_binop(func, lhs, op, rhs),
-            Expression::StructInitialization { name, fields } => {
+            ExpressionKind::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
+            ExpressionKind::BinOp { lhs, op, rhs } => self.generate_binop(func, lhs, op, rhs),
+            ExpressionKind::StructInitialization { name, fields } => {
                 self.generate_struct_init(func, name, fields)
             }
-            Expression::FieldAccess { expr, field } => {
+            ExpressionKind::FieldAccess { expr, field } => {
                 self.generate_field_access(func, expr, field)
             }
             _ => todo!("expression: {:?}", expr),
@@ -498,8 +498,8 @@ impl QbeGenerator {
             Either::Left(qval) => qval,
             Either::Right(expr) => self.generate_expression(func, expr)?.1,
         };
-        match lhs {
-            Expression::Variable(name) => {
+        match &lhs.kind {
+            ExpressionKind::Variable(name) => {
                 let (vty, tmp) = self.get_var(name)?;
                 func.assign_instr(
                     tmp.to_owned(),
@@ -507,7 +507,7 @@ impl QbeGenerator {
                     qbe::Instr::Copy(rhs),
                 );
             }
-            Expression::FieldAccess { expr, field } => {
+            ExpressionKind::FieldAccess { expr, field } => {
                 let (src, ty, offset) = self.resolve_field_access(expr, field)?;
 
                 let field_ptr = self.new_temporary();
@@ -519,7 +519,7 @@ impl QbeGenerator {
 
                 func.add_instr(qbe::Instr::Store(ty, field_ptr, rhs));
             }
-            Expression::ArrayAccess { .. } => todo!(),
+            ExpressionKind::ArrayAccess { .. } => todo!(),
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
         }
 
@@ -599,10 +599,10 @@ impl QbeGenerator {
         obj: &Expression,
         field: &str,
     ) -> GeneratorResult<(qbe::Value, qbe::Type, u64)> {
-        let (ty, src) = match obj {
-            Expression::Variable(var) => self.get_var(var)?.to_owned(),
-            Expression::FieldAccess { .. } => todo!("nested field access"),
-            Expression::Selff => unimplemented!("methods"),
+        let (ty, src) = match &obj.kind {
+            ExpressionKind::Variable(var) => self.get_var(var)?.to_owned(),
+            ExpressionKind::FieldAccess { .. } => todo!("nested field access"),
+            ExpressionKind::Selff => unimplemented!("methods"),
             other => {
                 return Err(format!(
                     "Invalid field access type: expected variable, field access or 'self', got {:?}",
@@ -757,12 +757,12 @@ impl QbeGenerator {
 
     /// Returns a QBE type for the given AST type
     fn get_type(&self, ty: &Type) -> GeneratorResult<qbe::Type> {
-        match ty {
-            Type::Any => Err("'any' type is not supported".into()),
-            Type::Int => Ok(qbe::Type::Word),
-            Type::Bool => Ok(qbe::Type::Byte),
-            Type::Str => Ok(qbe::Type::Long),
-            Type::Struct(name) => {
+        match &ty.kind {
+            TypeKind::Any => Err("'any' type is not supported".into()),
+            TypeKind::Int => Ok(qbe::Type::Word),
+            TypeKind::Bool => Ok(qbe::Type::Byte),
+            TypeKind::Str => Ok(qbe::Type::Long),
+            TypeKind::Struct(name) => {
                 let (ty, ..) = self
                     .struct_map
                     .get(name)
@@ -770,7 +770,7 @@ impl QbeGenerator {
                     .to_owned();
                 Ok(ty)
             }
-            Type::Array(..) => Ok(qbe::Type::Long),
+            TypeKind::Array(..) => Ok(qbe::Type::Long),
         }
     }
 }
