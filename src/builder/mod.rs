@@ -19,13 +19,13 @@ use crate::lexer;
 use crate::parser;
 use crate::Lib;
 use crate::PathBuf;
-use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
 
 pub struct Builder {
     in_file: PathBuf,
+    files: lexer::FileTable,
     modules: Vec<Module>,
 }
 
@@ -33,40 +33,16 @@ impl Builder {
     pub fn new(entrypoint: PathBuf) -> Self {
         Self {
             in_file: entrypoint,
+            files: lexer::FileTable::new(),
             modules: Vec::new(),
         }
     }
 
-    fn get_base_path(&self) -> Result<PathBuf, String> {
-        Ok(self
-            .in_file
-            .parent()
-            .ok_or("File does not have a parent")?
-            .to_path_buf())
-    }
-
     pub fn build(&mut self, target: &Target) -> Result<(), String> {
-        let in_file = self.in_file.clone();
-        // Resolve path deltas between working directory and entrypoint
-        let base_directory = self.get_base_path()?;
-
-        // During building, we change the environment directory.
-        // After we're done, we have to set it back to the initial directory.
-        let initial_directory = env::current_dir().expect("Current directory does not exist");
-        if let Ok(resolved_delta) = in_file.strip_prefix(&base_directory) {
-            // TODO: This error could probably be handled better
-            let _ = env::set_current_dir(base_directory);
-            self.in_file = resolved_delta.to_path_buf();
-        }
         self.build_module(self.in_file.clone(), &mut Vec::new())?;
-
-        // Append standard library
         if matches!(target, Target::JS) {
             self.build_stdlib()?;
         }
-
-        // Change back to the initial directory
-        env::set_current_dir(initial_directory).expect("Could not set current directory");
         Ok(())
     }
 
@@ -89,12 +65,11 @@ impl Builder {
 
         file.read_to_string(&mut contents)
             .expect("Could not read file");
-        let tokens = lexer::tokenize(&contents)?;
-        let module = parser::parse(
-            tokens,
-            Some(contents),
-            resolved_file_path.display().to_string(),
-        )?;
+
+        let file = self.files.insert(resolved_file_path.clone(), contents);
+
+        let tokens = lexer::tokenize(file, &self.files).map_err(|err| err.format(&self.files))?;
+        let module = parser::parse(tokens).map_err(|err| err.format(&self.files))?;
         for import in &module.imports {
             // Prevent circular imports
             if seen.contains(import) {
@@ -157,11 +132,13 @@ impl Builder {
         for file in assets {
             let stdlib_raw =
                 Lib::get(&file).expect("Standard library not found. This should not occur.");
-            let stblib_str =
+            let stdlib_str =
                 std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
-            let stdlib_tokens = lexer::tokenize(stblib_str)?;
-            let module = parser::parse(stdlib_tokens, Some(stblib_str.into()), file.to_string())
-                .expect("Could not parse stdlib");
+            let file = self
+                .files
+                .insert(format!("std:{}", file).into(), stdlib_str.to_owned());
+            let stdlib_tokens = lexer::tokenize(file, &self.files).expect("Could not parse stdlib");
+            let module = parser::parse(stdlib_tokens).expect("Could not parse stdlib");
             self.modules.push(module);
         }
 

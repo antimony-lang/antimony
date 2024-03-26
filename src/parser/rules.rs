@@ -1,9 +1,4 @@
 use super::parser::Parser;
-use crate::ast::types::Type;
-use crate::ast::*;
-use crate::lexer::Keyword;
-use crate::lexer::{TokenKind, Value};
-use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -19,11 +14,16 @@ use std::collections::HashMap;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use super::{Error, Result};
+use crate::ast::types::{Type, TypeKind};
+use crate::ast::*;
+use crate::lexer::{Keyword, Position, TokenKind, Value};
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::convert::TryFrom;
 
 impl Parser {
-    pub fn parse_module(&mut self) -> Result<Module, String> {
+    pub fn parse_module(&mut self) -> Result<Module> {
         let mut functions = Vec::new();
         let mut structs = Vec::new();
         let mut imports = HashSet::new();
@@ -39,7 +39,7 @@ impl Parser {
                 TokenKind::Keyword(Keyword::Struct) => {
                     structs.push(self.parse_struct_definition()?)
                 }
-                _ => return Err(format!("Unexpected token: {}", next.raw)),
+                _ => return Err(Error::new(next.pos, "Unexpected token".to_owned())),
             }
         }
 
@@ -49,14 +49,13 @@ impl Parser {
             func: functions,
             structs,
             globals,
-            path: self.path.clone(),
             imports,
         })
     }
 
-    fn parse_struct_definition(&mut self) -> Result<StructDef, String> {
-        self.match_keyword(Keyword::Struct)?;
-        let name = self.match_identifier()?;
+    fn parse_struct_definition(&mut self) -> Result<StructDef> {
+        let pos = self.match_keyword(Keyword::Struct)?.pos;
+        let (name, _) = self.match_identifier()?;
 
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let mut fields = Vec::new();
@@ -65,25 +64,27 @@ impl Parser {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::Keyword(Keyword::Function) => {
-                    methods.push(self.parse_function()?);
+                    methods.push(self.parse_method()?);
                 }
                 TokenKind::Identifier(_) => fields.push(self.parse_typed_variable()?),
                 _ => {
-                    return Err(
-                        self.make_error_msg(next.pos, "Expected struct field or method".into())
-                    )
+                    return Err(Error::new(
+                        next.pos,
+                        "Expected struct field or method".into(),
+                    ))
                 }
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
         Ok(StructDef {
+            pos,
             name,
             fields,
             methods,
         })
     }
 
-    fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
+    fn parse_typed_variable_list(&mut self) -> Result<Vec<TypedVariable>> {
         let mut args = Vec::new();
 
         // If there is an argument
@@ -101,20 +102,24 @@ impl Parser {
         Ok(args)
     }
 
-    fn parse_typed_variable(&mut self) -> Result<Variable, String> {
+    fn parse_typed_variable(&mut self) -> Result<TypedVariable> {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
-            return Ok(Variable {
+            return Ok(TypedVariable {
+                pos: next.pos,
                 name,
-                ty: Some(self.parse_type()?),
+                ty: self.parse_type()?,
             });
         }
 
-        Err(format!("Argument could not be parsed: {}", next.raw))
+        Err(Error::new(
+            next.pos,
+            "Argument could not be parsed".to_owned(),
+        ))
     }
 
-    fn parse_block(&mut self) -> Result<Statement, String> {
-        self.match_token(TokenKind::CurlyBracesOpen)?;
+    fn parse_block(&mut self) -> Result<Statement> {
+        let pos = self.match_token(TokenKind::CurlyBracesOpen)?.pos;
 
         let mut statements = vec![];
         let mut scope = vec![];
@@ -125,7 +130,7 @@ impl Parser {
 
             // If the current statement is a variable declaration,
             // let the scope know
-            if let Statement::Declare { variable, value: _ } = &statement {
+            if let StatementKind::Declare { variable, .. } = &statement.kind {
                 // TODO: Not sure if we should clone here
                 scope.push(variable.to_owned());
             }
@@ -135,19 +140,40 @@ impl Parser {
 
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::Block { statements, scope })
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Block { statements, scope },
+        })
     }
 
-    /// To reduce code duplication, this method can be either be used to parse a function or a method.
-    /// If a function is parsed, the `fn` keyword is matched.
-    /// If a method is parsed, `fn` will be omitted
-    fn parse_function(&mut self) -> Result<Function, String> {
-        self.match_keyword(Keyword::Function)?;
-        let name = self.match_identifier()?;
+    fn parse_function(&mut self) -> Result<Function> {
+        let callable = self.parse_callable()?;
+
+        let body = match self.peek()?.kind {
+            TokenKind::SemiColon => {
+                self.next()?;
+                None
+            }
+            _ => Some(self.parse_block()?),
+        };
+
+        Ok(Function { callable, body })
+    }
+
+    fn parse_method(&mut self) -> Result<Method> {
+        let callable = self.parse_callable()?;
+        let body = self.parse_block()?;
+
+        Ok(Method { callable, body })
+    }
+
+    fn parse_callable(&mut self) -> Result<Callable> {
+        let pos = self.match_keyword(Keyword::Function)?.pos;
+        let (name, _) = self.match_identifier()?;
 
         self.match_token(TokenKind::BraceOpen)?;
 
-        let arguments: Vec<Variable> = match self.peek()? {
+        let arguments: Vec<TypedVariable> = match self.peek()? {
             t if t.kind == TokenKind::BraceClose => Vec::new(),
             _ => self.parse_typed_variable_list()?,
         };
@@ -159,37 +185,39 @@ impl Parser {
             _ => None,
         };
 
-        let body = self.parse_block()?;
-
-        Ok(Function {
+        Ok(Callable {
+            pos,
             name,
             arguments,
-            body,
             ret_type: ty,
         })
     }
 
-    fn parse_import(&mut self) -> Result<String, String> {
+    fn parse_import(&mut self) -> Result<String> {
         self.match_keyword(Keyword::Import)?;
         let token = self.next()?;
         let path = match token.kind {
             TokenKind::Literal(Value::Str(path)) => path,
             other => {
-                return Err(
-                    self.make_error_msg(token.pos, format!("Expected string, got {:?}", other))
-                )
+                return Err(Error::new(
+                    token.pos,
+                    format!("Expected string, got {:?}", other),
+                ))
             }
         };
 
         Ok(path)
     }
 
-    fn parse_type(&mut self) -> Result<Type, String> {
+    fn parse_type(&mut self) -> Result<Type> {
         self.match_token(TokenKind::Colon)?;
         let next = self.peek()?;
         let typ = match next.kind {
-            TokenKind::Identifier(_) => Type::try_from(self.next()?.raw),
-            _ => Err("Expected type".into()),
+            TokenKind::Identifier(_) => Ok(Type {
+                pos: next.pos,
+                kind: TypeKind::try_from(self.next()?.raw).unwrap(),
+            }),
+            _ => Err(Error::new(next.pos, "Expected type".to_owned())),
         }?;
         if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
             self.match_token(TokenKind::SquareBraceOpen)?;
@@ -201,81 +229,57 @@ impl Parser {
                 Err(_) => None,
             };
             self.match_token(TokenKind::SquareBraceClose)?;
-            Ok(Type::Array(Box::new(typ), capacity))
+            Ok(Type {
+                pos: next.pos,
+                kind: TypeKind::Array(Box::new(typ), capacity),
+            })
         } else {
             Ok(typ)
         }
     }
 
-    fn parse_statement(&mut self) -> Result<Statement, String> {
+    fn parse_statement(&mut self) -> Result<Statement> {
         let token = self.peek()?;
-        match &token.kind {
-            TokenKind::CurlyBracesOpen => self.parse_block(),
-            TokenKind::BraceOpen | TokenKind::Keyword(Keyword::Selff) => {
-                Ok(Statement::Exp(self.parse_expression()?))
-            }
-            TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
-            TokenKind::Keyword(Keyword::Return) => self.parse_return(),
-            TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
-            TokenKind::Keyword(Keyword::While) => self.parse_while_loop(),
-            TokenKind::Keyword(Keyword::Break) => self.parse_break(),
-            TokenKind::Keyword(Keyword::Continue) => self.parse_continue(),
-            TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
-            TokenKind::Keyword(Keyword::Match) => self.parse_match_statement(),
-            TokenKind::Identifier(_) => {
-                let ident = self.match_identifier()?;
-                let expr = if self.peek_token(TokenKind::Dot).is_ok() {
-                    self.parse_field_access(Expression::Variable(ident.clone()))?
-                } else {
-                    Expression::Variable(ident.clone())
-                };
-
-                // TODO: Use match statement
-                if self.peek_token(TokenKind::BraceOpen).is_ok() {
-                    let state = self.parse_function_call(Some(ident))?;
-                    Ok(Statement::Exp(state))
-                } else if self.peek_token(TokenKind::Assign).is_ok() {
-                    let state = self.parse_assignent(Some(expr))?;
-                    Ok(state)
-                } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
-                    let expr = self.parse_array_access(Some(ident))?;
-
-                    let next = self.peek()?;
-                    match next.kind {
-                        TokenKind::Assign => self.parse_assignent(Some(expr)),
-                        _ => Ok(Statement::Exp(expr)),
-                    }
-                } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-                    // Parse Binary operation
-                    let expr = Expression::Variable(ident);
-                    let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
-                    Ok(state)
-                } else if self.peek_token(TokenKind::Dot).is_ok() {
-                    Ok(Statement::Exp(
-                        self.parse_field_access(Expression::Variable(ident))?,
-                    ))
-                } else {
-                    Ok(Statement::Exp(expr))
-                }
-            }
-            TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
+        let expr = match &token.kind {
+            TokenKind::CurlyBracesOpen => return self.parse_block(),
+            TokenKind::Keyword(Keyword::Let) => return self.parse_declare(),
+            TokenKind::Keyword(Keyword::Return) => return self.parse_return(),
+            TokenKind::Keyword(Keyword::If) => return self.parse_conditional_statement(),
+            TokenKind::Keyword(Keyword::While) => return self.parse_while_loop(),
+            TokenKind::Keyword(Keyword::Break) => return self.parse_break(),
+            TokenKind::Keyword(Keyword::Continue) => return self.parse_continue(),
+            TokenKind::Keyword(Keyword::For) => return self.parse_for_loop(),
+            TokenKind::Keyword(Keyword::Match) => return self.parse_match_statement(),
+            TokenKind::BraceOpen
+            | TokenKind::Keyword(Keyword::Selff)
+            | TokenKind::Identifier(_)
+            | TokenKind::Literal(_) => self.parse_expression()?,
             TokenKind::Keyword(Keyword::Struct) => {
-                Err("Struct definitions inside functions are not allowed".to_string())
+                return Err(Error::new(
+                    token.pos,
+                    "Struct definitions inside functions are not allowed".to_owned(),
+                ))
             }
-            _ => Err(self.make_error_msg(token.pos, "Failed to parse statement".to_string())),
+            _ => {
+                return Err(Error::new(
+                    token.pos,
+                    "Failed to parse statement".to_owned(),
+                ))
+            }
+        };
+        let suffix = self.peek()?;
+        if AssignOp::try_from(suffix.kind).is_ok() {
+            Ok(self.parse_assignment(expr)?)
+        } else {
+            Ok(Statement {
+                pos: token.pos,
+                kind: StatementKind::Exp(expr),
+            })
         }
     }
 
-    /// Parses a function call from tokens.
-    /// The name of the function needs to be passed here, because we have already passed it with our cursor.
-    /// If no function name is provided, the next token will be fetched
-    fn parse_function_call(&mut self, func_name: Option<String>) -> Result<Expression, String> {
-        let fn_name = match func_name {
-            Some(name) => name,
-            None => self.next()?.raw,
-        };
-
-        self.match_token(TokenKind::BraceOpen)?;
+    fn parse_function_call(&mut self, expr: Expression) -> Result<Expression> {
+        let pos = self.match_token(TokenKind::BraceOpen)?.pos;
 
         let mut args = Vec::new();
 
@@ -296,8 +300,8 @@ impl Parser {
                 TokenKind::SquareBraceOpen => {
                     // TODO: Expression parsing currently uses `next` instead of `peek`.
                     // We have to eat that token here until that is resolved
-                    self.match_token(TokenKind::SquareBraceOpen)?;
-                    args.push(self.parse_array()?);
+                    let pos = self.match_token(TokenKind::SquareBraceOpen)?.pos;
+                    args.push(self.parse_array(pos)?);
                 }
                 _ => {
                     return Err(self.make_error(TokenKind::BraceClose, next));
@@ -306,26 +310,35 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        let expr = Expression::FunctionCall { fn_name, args };
-        match self.peek()?.kind {
-            TokenKind::Dot => self.parse_field_access(expr),
-            _ => Ok(expr),
-        }
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::FunctionCall {
+                expr: Box::new(expr),
+                args,
+            },
+        })
     }
 
-    fn parse_return(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::Return)?;
+    fn parse_return(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::Return)?.pos;
         let peeked = self.peek()?;
-        match peeked.kind {
-            TokenKind::SemiColon => Ok(Statement::Return(None)),
-            _ => Ok(Statement::Return(Some(self.parse_expression()?))),
-        }
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Return(match peeked.kind {
+                TokenKind::SemiColon => {
+                    self.next()?;
+                    None
+                }
+                _ => Some(self.parse_expression()?),
+            }),
+        })
     }
 
-    fn parse_expression(&mut self) -> Result<Expression, String> {
+    fn parse_expression(&mut self) -> Result<Expression> {
         let token = self.next()?;
 
-        let expr = match token.kind {
+        // TODO: don't mut
+        let mut expr = match token.kind {
             // (1 + 2)
             TokenKind::BraceOpen => {
                 let expr = self.parse_expression()?;
@@ -333,9 +346,15 @@ impl Parser {
                 expr
             }
             // true | false
-            TokenKind::Keyword(Keyword::Boolean) => {
-                Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
-            }
+            TokenKind::Keyword(Keyword::Boolean) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Bool(
+                    token
+                        .raw
+                        .parse::<bool>()
+                        .map_err(|e| Error::new(token.pos, e.to_string()))?,
+                ),
+            },
             // 5
             TokenKind::Literal(Value::Int) => {
                 // Ignore spacing character (E.g. 1_000_000)
@@ -343,91 +362,94 @@ impl Parser {
                 let val = match clean_str {
                     c if c.starts_with("0b") => {
                         usize::from_str_radix(token.raw.trim_start_matches("0b"), 2)
-                            .map_err(|e| e.to_string())?
                     }
                     c if c.starts_with("0o") => {
                         usize::from_str_radix(token.raw.trim_start_matches("0o"), 8)
-                            .map_err(|e| e.to_string())?
                     }
                     c if c.starts_with("0x") => {
                         usize::from_str_radix(token.raw.trim_start_matches("0x"), 16)
-                            .map_err(|e| e.to_string())?
                     }
-                    c => c.parse::<usize>().map_err(|e| e.to_string())?,
-                };
-                Expression::Int(val)
-            }
-            // "A string"
-            TokenKind::Literal(Value::Str(string)) => Expression::Str(string),
-            // self
-            TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
-            TokenKind::Identifier(val) => {
-                let next = self.peek()?;
-                match &next.kind {
-                    // foo()
-                    TokenKind::BraceOpen => self.parse_function_call(Some(val))?,
-                    // arr[0]
-                    TokenKind::SquareBraceOpen => self.parse_array_access(Some(val))?,
-                    // some_var
-                    _ => Expression::Variable(val),
+                    c => c.parse::<usize>(),
+                }
+                .map_err(|e| Error::new(token.pos, e.to_string()))?;
+                Expression {
+                    pos: token.pos,
+                    kind: ExpressionKind::Int(val),
                 }
             }
+            // "A string"
+            TokenKind::Literal(Value::Str(string)) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Str(string),
+            },
+            // self
+            TokenKind::Keyword(Keyword::Selff) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Selff,
+            },
+            // name
+            TokenKind::Identifier(val) => Expression {
+                pos: token.pos,
+                kind: ExpressionKind::Variable(val),
+            },
             // [1, 2, 3]
-            TokenKind::SquareBraceOpen => self.parse_array()?,
+            TokenKind::SquareBraceOpen => self.parse_array(token.pos)?,
             // new Foo {}
             TokenKind::Keyword(Keyword::New) => self.parse_struct_initialization()?,
-            other => return Err(format!("Expected Expression, found {:?}", other)),
+            other => {
+                return Err(Error::new(
+                    token.pos,
+                    format!("Expected Expression, found {:?}", other),
+                ))
+            }
         };
 
         // Check if the parsed expression continues
-        if self.peek_token(TokenKind::Dot).is_ok() {
-            // foo.bar
-            self.parse_field_access(expr)
-        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-            // 1 + 2
-            self.parse_bin_op(Some(expr))
-        } else {
-            // Nope, the expression was fully parsed
-            Ok(expr)
+        loop {
+            if self.peek_token(TokenKind::Dot).is_ok() {
+                // foo.bar
+                expr = self.parse_field_access(expr)?;
+            } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
+                // foo[0]
+                expr = self.parse_array_access(expr)?;
+            } else if self.peek_token(TokenKind::BraceOpen).is_ok() {
+                // foo(a, b)
+                expr = self.parse_function_call(expr)?;
+            } else if BinOp::try_from(self.peek()?.kind).is_ok() {
+                // a + b
+                expr = self.parse_bin_op(expr)?;
+            } else {
+                // The expression was fully parsed
+                return Ok(expr);
+            }
         }
     }
 
-    fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
-        self.match_token(TokenKind::Dot)?;
+    fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression> {
+        let pos = self.match_token(TokenKind::Dot)?.pos;
 
-        // Only possible options are identifier or function call,
-        // So it's safe to assume that the next token should be an identifier
-        let id = self.match_identifier()?;
-        let next = self.peek()?;
-
-        let field = match next.kind {
-            TokenKind::BraceOpen => self.parse_function_call(Some(id))?,
-            _ => Expression::Variable(id),
-        };
-        let expr = Expression::FieldAccess {
+        let (field, _) = self.match_identifier()?;
+        let expr = ExpressionKind::FieldAccess {
             expr: Box::new(lhs),
-            field: Box::new(field),
+            field,
         };
-        if self.peek_token(TokenKind::Dot).is_ok() {
-            self.parse_field_access(expr)
-        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-            self.parse_bin_op(Some(expr))
-        } else {
-            Ok(expr)
-        }
+        Ok(Expression { pos, kind: expr })
     }
 
     /// TODO: Cleanup
-    fn parse_struct_initialization(&mut self) -> Result<Expression, String> {
-        let name = self.match_identifier()?;
+    fn parse_struct_initialization(&mut self) -> Result<Expression> {
+        let (name, pos) = self.match_identifier()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let fields = self.parse_struct_fields()?;
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Expression::StructInitialization { name, fields })
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::StructInitialization { name, fields },
+        })
     }
 
-    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>, String> {
+    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>> {
         let mut map = HashMap::new();
 
         // If there is a field
@@ -446,30 +468,25 @@ impl Parser {
         Ok(map)
     }
 
-    fn parse_struct_field(&mut self) -> Result<(String, Box<Expression>), String> {
+    fn parse_struct_field(&mut self) -> Result<(String, Box<Expression>)> {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
             self.match_token(TokenKind::Colon)?;
             return Ok((name, Box::new(self.parse_expression()?)));
         }
 
-        Err(format!("Struct field could not be parsed: {}", next.raw))
+        Err(Error::new(
+            next.pos,
+            format!("Struct field could not be parsed: {}", next.raw),
+        ))
     }
 
-    fn parse_array(&mut self) -> Result<Expression, String> {
+    fn parse_array(&mut self, pos: Position) -> Result<Expression> {
         let mut elements = Vec::new();
         loop {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::SquareBraceClose => {}
-                TokenKind::Literal(Value::Int) => {
-                    let value = self
-                        .next()?
-                        .raw
-                        .parse::<usize>()
-                        .map_err(|e| e.to_string())?;
-                    elements.push(Expression::Int(value));
-                }
                 _ => {
                     let expr = self.parse_expression()?;
                     elements.push(expr);
@@ -482,52 +499,61 @@ impl Parser {
         }
 
         self.match_token(TokenKind::SquareBraceClose)?;
-        let capacity = elements.len();
 
-        Ok(Expression::Array { capacity, elements })
-    }
-
-    fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {
-        let name = match arr_name {
-            Some(name) => name,
-            None => self.next()?.raw,
-        };
-
-        self.match_token(TokenKind::SquareBraceOpen)?;
-        let expr = self.parse_expression()?;
-        self.match_token(TokenKind::SquareBraceClose)?;
-
-        Ok(Expression::ArrayAccess {
-            name,
-            index: Box::new(expr),
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::Array(elements),
         })
     }
 
-    fn parse_while_loop(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::While)?;
+    fn parse_array_access(&mut self, expr: Expression) -> Result<Expression> {
+        let pos = self.match_token(TokenKind::SquareBraceOpen)?.pos;
+        let index = self.parse_expression()?;
+        self.match_token(TokenKind::SquareBraceClose)?;
+
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::ArrayAccess {
+                expr: Box::new(expr),
+                index: Box::new(index),
+            },
+        })
+    }
+
+    fn parse_while_loop(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::While)?.pos;
         let condition = self.parse_expression()?;
         let body = self.parse_block()?;
 
-        Ok(Statement::While {
-            condition,
-            body: Box::new(body),
+        Ok(Statement {
+            pos,
+            kind: StatementKind::While {
+                condition,
+                body: Box::new(body),
+            },
         })
     }
 
-    fn parse_break(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::Break)?;
-        Ok(Statement::Break)
+    fn parse_break(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::Break)?.pos;
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Break,
+        })
     }
 
-    fn parse_continue(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::Continue)?;
-        Ok(Statement::Continue)
+    fn parse_continue(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::Continue)?.pos;
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Continue,
+        })
     }
 
-    fn parse_for_loop(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::For)?;
+    fn parse_for_loop(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::For)?.pos;
 
-        let ident = self.match_identifier()?;
+        let (ident, ident_pos) = self.match_identifier()?;
         let ident_ty = match self.peek()?.kind {
             TokenKind::Colon => Some(self.parse_type()?),
             _ => None,
@@ -537,18 +563,22 @@ impl Parser {
 
         let body = self.parse_block()?;
 
-        Ok(Statement::For {
-            ident: Variable {
-                name: ident,
-                ty: ident_ty,
+        Ok(Statement {
+            pos,
+            kind: StatementKind::For {
+                ident: Variable {
+                    pos: ident_pos,
+                    name: ident,
+                    ty: ident_ty,
+                },
+                expr,
+                body: Box::new(body),
             },
-            expr,
-            body: Box::new(body),
         })
     }
 
-    fn parse_match_statement(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::Match)?;
+    fn parse_match_statement(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::Match)?.pos;
         let subject = self.parse_expression()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let mut arms: Vec<MatchArm> = Vec::new();
@@ -563,7 +593,7 @@ impl Parser {
                 | TokenKind::Keyword(Keyword::Boolean) => arms.push(self.parse_match_arm()?),
                 TokenKind::Keyword(Keyword::Else) => {
                     if has_else {
-                        return Err(self.make_error_msg(
+                        return Err(Error::new(
                             next.pos,
                             "Multiple else arms are not allowed".to_string(),
                         ));
@@ -572,14 +602,17 @@ impl Parser {
                     arms.push(self.parse_match_arm()?);
                 }
                 TokenKind::CurlyBracesClose => break,
-                _ => return Err(self.make_error_msg(next.pos, "Illegal token".to_string())),
+                _ => return Err(Error::new(next.pos, "Illegal token".to_string())),
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
-        Ok(Statement::Match { subject, arms })
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Match { subject, arms },
+        })
     }
 
-    fn parse_match_arm(&mut self) -> Result<MatchArm, String> {
+    fn parse_match_arm(&mut self) -> Result<MatchArm> {
         let next = self.peek()?;
 
         match next.kind {
@@ -598,8 +631,8 @@ impl Parser {
         }
     }
 
-    fn parse_conditional_statement(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::If)?;
+    fn parse_conditional_statement(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::If)?.pos;
         let condition = self.parse_expression()?;
 
         let body = self.parse_block()?;
@@ -619,16 +652,22 @@ impl Parser {
                     Some(branch) => branch,
                     None => self.parse_conditional_statement()?,
                 };
-                Ok(Statement::If {
-                    condition,
-                    body: Box::new(body),
-                    else_branch: Some(Box::new(else_branch)),
+                Ok(Statement {
+                    pos,
+                    kind: StatementKind::If {
+                        condition,
+                        body: Box::new(body),
+                        else_branch: Some(Box::new(else_branch)),
+                    },
                 })
             }
-            _ => Ok(Statement::If {
-                condition,
-                body: Box::new(body),
-                else_branch: None,
+            _ => Ok(Statement {
+                pos,
+                kind: StatementKind::If {
+                    condition,
+                    body: Box::new(body),
+                    else_branch: None,
+                },
             }),
         }
     }
@@ -639,67 +678,78 @@ impl Parser {
     /// foo(1) * 2
     /// ```
     /// In this case, the function call has already been evaluated, and needs to be passed to this function.
-    fn parse_bin_op(&mut self, lhs: Option<Expression>) -> Result<Expression, String> {
-        let left = match lhs {
-            Some(lhs) => lhs,
-            None => {
-                let prev = self.prev().ok_or("Expected token")?;
-                match &prev.kind {
-                    TokenKind::Identifier(_) | TokenKind::Literal(_) | TokenKind::Keyword(_) => {
-                        Ok(Expression::try_from(prev)?)
-                    }
-                    _ => Err(self
-                        .make_error_msg(prev.pos, "Failed to parse binary operation".to_string())),
-                }?
-            }
-        };
+    fn parse_bin_op(&mut self, lhs: Expression) -> Result<Expression> {
+        let (op, pos) = self.match_operator()?;
 
-        let op = self.match_operator()?;
-
-        Ok(Expression::BinOp {
-            lhs: Box::from(left),
-            op,
-            rhs: Box::from(self.parse_expression()?),
+        Ok(Expression {
+            pos,
+            kind: ExpressionKind::BinOp {
+                lhs: Box::from(lhs),
+                op,
+                rhs: Box::from(self.parse_expression()?),
+            },
         })
     }
 
-    fn parse_declare(&mut self) -> Result<Statement, String> {
-        self.match_keyword(Keyword::Let)?;
-        let name = self.match_identifier()?;
-        let ty = match self.peek()?.kind {
+    fn parse_declare(&mut self) -> Result<Statement> {
+        let pos = self.match_keyword(Keyword::Let)?.pos;
+        let (name, name_pos) = self.match_identifier()?;
+        let token = self.peek()?;
+        let ty = match &token.kind {
             TokenKind::Colon => Some(self.parse_type()?),
-            _ => None,
+            TokenKind::Assign => None,
+            _ => {
+                return Err(Error::new(
+                    token.pos,
+                    format!("Expected ':' or '=', found {:?}", token.kind),
+                ));
+            }
         };
 
         match self.peek()?.kind {
             TokenKind::Assign => {
                 self.match_token(TokenKind::Assign)?;
                 let expr = self.parse_expression()?;
-                Ok(Statement::Declare {
-                    variable: Variable { name, ty },
-                    value: Some(expr),
+                Ok(Statement {
+                    pos,
+                    kind: StatementKind::Declare {
+                        variable: Variable {
+                            pos: name_pos,
+                            name,
+                            ty,
+                        },
+                        value: Some(expr),
+                    },
                 })
             }
-            _ => Ok(Statement::Declare {
-                variable: Variable { name, ty },
-                value: None,
+            _ => Ok(Statement {
+                pos,
+                kind: StatementKind::Declare {
+                    variable: Variable {
+                        pos: name_pos,
+                        name,
+                        ty,
+                    },
+                    value: None,
+                },
             }),
         }
     }
 
-    fn parse_assignent(&mut self, name: Option<Expression>) -> Result<Statement, String> {
-        let name = match name {
-            Some(name) => name,
-            None => Expression::Variable(self.match_identifier()?),
-        };
-
-        self.match_token(TokenKind::Assign)?;
+    fn parse_assignment(&mut self, lhs: Expression) -> Result<Statement> {
+        let token = self.next()?;
+        let pos = token.pos;
+        let op = AssignOp::try_from(token.kind).unwrap();
 
         let expr = self.parse_expression()?;
 
-        Ok(Statement::Assign {
-            lhs: Box::new(name),
-            rhs: Box::new(expr),
+        Ok(Statement {
+            pos,
+            kind: StatementKind::Assign {
+                lhs: Box::new(lhs),
+                op,
+                rhs: Box::new(expr),
+            },
         })
     }
 }

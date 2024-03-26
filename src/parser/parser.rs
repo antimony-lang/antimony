@@ -13,52 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use super::{Error, Result};
 use crate::ast::*;
-use crate::lexer::Keyword;
-use crate::lexer::Position;
-use crate::lexer::{Token, TokenKind};
-use crate::parser::infer::infer;
-use crate::util::string_util::highlight_position_in_file;
+use crate::lexer::{Keyword, Position, Token, TokenKind};
 use std::convert::TryFrom;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
 pub struct Parser {
-    pub path: String,
     tokens: Peekable<IntoIter<Token>>,
     peeked: Vec<Token>,
     current: Option<Token>,
-    prev: Option<Token>,
-    raw: Option<String>,
 }
 
 impl Parser {
     #[allow(clippy::needless_collect)] // TODO
-    pub fn new(tokens: Vec<Token>, raw: Option<String>, file_name: String) -> Parser {
+    pub fn new(tokens: Vec<Token>) -> Parser {
         let tokens_without_whitespace: Vec<Token> = tokens
             .into_iter()
             .filter(|token| token.kind != TokenKind::Whitespace && token.kind != TokenKind::Comment)
             .collect();
         Parser {
-            path: file_name,
             tokens: tokens_without_whitespace.into_iter().peekable(),
             peeked: vec![],
             current: None,
-            prev: None,
-            raw,
         }
     }
 
-    pub fn parse(&mut self) -> Result<Module, String> {
-        let mut program = self.parse_module()?;
-        // infer types
-        infer(&mut program);
-
-        Ok(program)
+    pub fn parse(&mut self) -> Result<Module> {
+        self.parse_module()
     }
 
-    pub(super) fn next(&mut self) -> Result<Token, String> {
-        self.prev = self.current.to_owned();
+    pub(super) fn next(&mut self) -> Result<Token> {
         let item = if self.peeked.is_empty() {
             self.tokens.next()
         } else {
@@ -66,10 +52,21 @@ impl Parser {
         };
 
         self.current = item.to_owned();
-        item.ok_or_else(|| "Expected token".into())
+        match item {
+            Some(Token {
+                kind: TokenKind::End,
+                pos,
+                ..
+            }) => Err(Error::new(
+                pos,
+                "Expected token, found End of file".to_owned(),
+            )),
+            Some(token) => Ok(token),
+            None => unreachable!(),
+        }
     }
 
-    pub(super) fn peek(&mut self) -> Result<Token, String> {
+    pub(super) fn peek(&mut self) -> Result<Token> {
         let token = self.next()?;
         self.push(token.to_owned());
         Ok(token)
@@ -80,66 +77,63 @@ impl Parser {
     }
 
     pub(super) fn has_more(&mut self) -> bool {
-        !self.peeked.is_empty() || self.tokens.peek().is_some()
+        if !self.peeked.is_empty() {
+            return true;
+        }
+        match self.tokens.peek() {
+            None => false,
+            Some(Token {
+                kind: TokenKind::End,
+                ..
+            }) => false,
+            Some(_) => true,
+        }
     }
 
-    pub(super) fn match_token(&mut self, token_kind: TokenKind) -> Result<Token, String> {
+    pub(super) fn match_token(&mut self, token_kind: TokenKind) -> Result<Token> {
         match self.next()? {
             token if token.kind == token_kind => Ok(token),
             other => Err(self.make_error(token_kind, other)),
         }
     }
 
-    pub(super) fn peek_token(&mut self, token_kind: TokenKind) -> Result<Token, String> {
+    pub(super) fn peek_token(&mut self, token_kind: TokenKind) -> Result<Token> {
         match self.peek()? {
             token if token.kind == token_kind => Ok(token),
             other => Err(self.make_error(token_kind, other)),
         }
     }
 
-    pub(super) fn match_keyword(&mut self, keyword: Keyword) -> Result<(), String> {
+    pub(super) fn match_keyword(&mut self, keyword: Keyword) -> Result<Token> {
         let token = self.next()?;
         match &token.kind {
-            TokenKind::Keyword(ref k) if k == &keyword => Ok(()),
+            TokenKind::Keyword(ref k) if k == &keyword => Ok(token),
             _ => Err(self.make_error(TokenKind::SemiColon, token)),
         }
     }
 
-    pub(super) fn match_operator(&mut self) -> Result<BinOp, String> {
-        BinOp::try_from(self.next()?.kind)
+    pub(super) fn match_operator(&mut self) -> Result<(BinOp, Position)> {
+        let token = self.next()?;
+        BinOp::try_from(token.kind.clone())
+            .map_err(|err| Error::new(token.pos, err))
+            .map(|op| (op, token.pos))
     }
-    pub(super) fn match_identifier(&mut self) -> Result<String, String> {
+
+    pub(super) fn match_identifier(&mut self) -> Result<(String, Position)> {
         let token = self.next()?;
         match &token.kind {
-            TokenKind::Identifier(n) => Ok(n.to_string()),
-            other => {
-                Err(self
-                    .make_error_msg(token.pos, format!("Expected Identifier, found {:?}", other)))
-            }
+            TokenKind::Identifier(n) => Ok((n.to_string(), token.pos)),
+            other => Err(Error::new(
+                token.pos,
+                format!("Expected Identifier, found {:?}", other),
+            )),
         }
     }
 
-    pub(super) fn make_error(&mut self, token_kind: TokenKind, other: Token) -> String {
-        self.make_error_msg(
+    pub(super) fn make_error(&mut self, token_kind: TokenKind, other: Token) -> Error {
+        Error::new(
             other.pos,
             format!("Token {:?} not found, found {:?}", token_kind, other),
         )
-    }
-
-    pub(super) fn make_error_msg(&mut self, pos: Position, msg: String) -> String {
-        match &self.raw {
-            Some(raw_file) => format!(
-                "{}:{}: {}\n{}",
-                pos.line,
-                pos.offset,
-                msg,
-                highlight_position_in_file(raw_file.to_string(), pos)
-            ),
-            None => format!("{}:{}: {}", pos.line, pos.offset, msg),
-        }
-    }
-
-    pub(super) fn prev(&mut self) -> Option<Token> {
-        self.prev.clone()
     }
 }

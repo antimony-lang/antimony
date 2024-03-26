@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::ast::{Function, Module, Statement};
+use crate::ast::{Function, Module, Statement, StatementKind};
 use crate::generator::{Generator, GeneratorResult};
 
 struct Assembly {
@@ -55,13 +55,7 @@ impl X86Generator {
 
     fn gen_program(&mut self, prog: Module) -> Assembly {
         let mut asm = Assembly::new();
-        let Module {
-            func,
-            globals,
-            structs: _,
-            path: _,
-            imports: _,
-        } = prog;
+        let Module { func, globals, .. } = prog;
 
         asm.add(".intel_syntax noprefix");
         asm.add(".text");
@@ -79,19 +73,31 @@ impl X86Generator {
 
     fn gen_function(&mut self, func: Function) -> Assembly {
         let mut asm = Assembly::new();
+        let callable = func.callable;
 
         let has_return: bool = match &func.body {
-            Statement::Block {
-                statements,
-                scope: _,
-            } => statements
-                .iter()
-                .any(|s| matches!(*s, Statement::Return(_))),
-            _ => panic!("Function body should be of type Block"),
+            Some(Statement {
+                kind:
+                    StatementKind::Block {
+                        statements,
+                        scope: _,
+                    },
+                ..
+            }) => statements.iter().any(|s| {
+                matches!(
+                    *s,
+                    Statement {
+                        kind: StatementKind::Return(_),
+                        ..
+                    }
+                )
+            }),
+            Some(_) => panic!("Function body should be of type Block"),
+            None => return asm,
         };
 
-        asm.add(format!(".globl _{}", func.name));
-        asm.add(format!("_{}:", func.name));
+        asm.add(format!(".globl _{}", callable.name));
+        asm.add(format!("_{}:", callable.name));
         asm.add("push rbp");
         asm.add("mov rbp, rsp");
 

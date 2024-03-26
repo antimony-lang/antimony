@@ -16,7 +16,7 @@
 use crate::ast::*;
 use crate::generator::{Generator, GeneratorResult};
 use std::collections::HashMap;
-use types::Type;
+use types::{Type, TypeKind};
 
 pub struct JsGenerator;
 
@@ -48,7 +48,7 @@ impl Generator for JsGenerator {
     }
 }
 
-fn generate_arguments(args: Vec<Variable>) -> String {
+fn generate_arguments(args: Vec<TypedVariable>) -> String {
     args.into_iter()
         .map(|var| var.name)
         .collect::<Vec<String>>()
@@ -56,24 +56,30 @@ fn generate_arguments(args: Vec<Variable>) -> String {
 }
 
 fn generate_function(func: Function) -> String {
-    let arguments: String = generate_arguments(func.arguments);
+    let callable = func.callable;
+    let body = match func.body {
+        Some(body) => body,
+        None => return String::new(),
+    };
+    let arguments: String = generate_arguments(callable.arguments);
 
-    let mut raw = format!("function {N}({A})", N = func.name, A = arguments);
+    let mut raw = format!("function {N}({A})", N = callable.name, A = arguments);
 
-    raw += &generate_block(func.body, None);
+    raw += &generate_block(body, None);
     raw += "\n";
     raw
 }
 
-fn generate_method(subject: String, func: Function) -> String {
+fn generate_method(subject: String, method: Method) -> String {
+    let callable = method.callable;
     let mut buf = format!(
         "{}.prototype.{} = function({})",
         subject,
-        func.name,
-        generate_arguments(func.arguments)
+        callable.name,
+        generate_arguments(callable.arguments)
     );
 
-    buf += &generate_block(func.body, None);
+    buf += &generate_block(method.body, None);
     buf += "\n";
 
     buf
@@ -110,8 +116,8 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
     }
 
     // TODO: Prepend statements
-    let statements = match block {
-        Statement::Block {
+    let statements = match block.kind {
+        StatementKind::Block {
             statements,
             scope: _,
         } => statements,
@@ -128,48 +134,45 @@ fn generate_block(block: Statement, prepend: Option<String>) -> String {
 }
 
 fn generate_statement(statement: Statement) -> String {
-    let state = match statement {
-        Statement::Return(ret) => generate_return(ret),
-        Statement::Declare { variable, value } => generate_declare(variable, value),
-        Statement::Exp(val) => generate_expression(val),
-        Statement::If {
+    let state = match statement.kind {
+        StatementKind::Return(ret) => generate_return(ret),
+        StatementKind::Declare { variable, value } => generate_declare(variable, value),
+        StatementKind::Exp(val) => generate_expression(val),
+        StatementKind::If {
             condition,
             body,
             else_branch,
         } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
-        Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
-        Statement::Block {
+        StatementKind::Assign { lhs, op, rhs } => generate_assign(*lhs, op, *rhs),
+        StatementKind::Block {
             statements: _,
             scope: _,
         } => generate_block(statement, None),
-        Statement::While { condition, body } => generate_while_loop(condition, *body),
-        Statement::For { ident, expr, body } => generate_for_loop(ident, expr, *body),
-        Statement::Continue => generate_continue(),
-        Statement::Break => generate_break(),
-        Statement::Match { subject, arms } => generate_match(subject, arms),
+        StatementKind::While { condition, body } => generate_while_loop(condition, *body),
+        StatementKind::For { ident, expr, body } => generate_for_loop(ident, expr, *body),
+        StatementKind::Continue => generate_continue(),
+        StatementKind::Break => generate_break(),
+        StatementKind::Match { subject, arms } => generate_match(subject, arms),
     };
 
     format!("{};\n", state)
 }
 
 fn generate_expression(expr: Expression) -> String {
-    match expr {
-        Expression::Int(val) => val.to_string(),
-        Expression::Selff => "this".to_string(),
-        Expression::Str(val) => super::string_syntax(val),
-        Expression::Variable(val) => val,
-        Expression::Bool(b) => b.to_string(),
-        Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
-        Expression::Array {
-            capacity: _,
-            elements,
-        } => generate_array(elements),
-        Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
-        Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-        Expression::StructInitialization { name, fields } => {
+    match expr.kind {
+        ExpressionKind::Int(val) => val.to_string(),
+        ExpressionKind::Selff => "this".to_string(),
+        ExpressionKind::Str(val) => super::string_syntax(val),
+        ExpressionKind::Variable(val) => val,
+        ExpressionKind::Bool(b) => b.to_string(),
+        ExpressionKind::FunctionCall { expr, args } => generate_function_call(*expr, args),
+        ExpressionKind::Array(elements) => generate_array(elements),
+        ExpressionKind::ArrayAccess { expr, index } => generate_array_access(*expr, *index),
+        ExpressionKind::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
+        ExpressionKind::StructInitialization { name, fields } => {
             generate_struct_initialization(name, fields)
         }
-        Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
+        ExpressionKind::FieldAccess { expr, field } => generate_field_access(*expr, field),
     }
 }
 
@@ -249,8 +252,12 @@ fn generate_array(elements: Vec<Expression>) -> String {
     out_str
 }
 
-fn generate_array_access(name: String, expr: Expression) -> String {
-    format!("{n}[{e}]", n = name, e = generate_expression(expr))
+fn generate_array_access(expr: Expression, index: Expression) -> String {
+    format!(
+        "{}[{}]",
+        generate_expression(expr),
+        generate_expression(index)
+    )
 }
 
 fn generate_conditional(
@@ -260,8 +267,8 @@ fn generate_conditional(
 ) -> String {
     let expr_str = generate_expression(expr);
 
-    let body = match if_state {
-        Statement::Block {
+    let body = match if_state.kind {
+        StatementKind::Block {
             statements,
             scope: _,
         } => statements,
@@ -301,36 +308,26 @@ fn generate_declare<V: AsRef<Variable>>(identifier: V, val: Option<Expression>) 
             // But this works:
             // var x = [];
             // x[0] = 1;
-            Some(Type::Array(_, _)) => format!("var {} = []", ident.name),
+            Some(Type {
+                kind: TypeKind::Array(_, _),
+                ..
+            }) => format!("var {} = []", ident.name),
             _ => format!("var {}", ident.name),
         },
     }
 }
 
-fn generate_function_call(func: String, args: Vec<Expression>) -> String {
+fn generate_function_call(func: Expression, args: Vec<Expression>) -> String {
     let formatted_args = args
         .into_iter()
-        .map(|arg| match arg {
-            Expression::Int(i) => i.to_string(),
-            Expression::Bool(v) => v.to_string(),
-            Expression::Selff => "this".to_string(),
-            Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
-            Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
-            Expression::Str(s) => super::string_syntax(s),
-            Expression::Variable(s) => s,
-            Expression::Array {
-                capacity: _,
-                elements,
-            } => generate_array(elements),
-            Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-            Expression::StructInitialization { name, fields } => {
-                generate_struct_initialization(name, fields)
-            }
-            Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
-        })
+        .map(generate_expression)
         .collect::<Vec<String>>()
         .join(",");
-    format!("{N}({A})", N = func, A = formatted_args)
+    format!(
+        "{N}({A})",
+        N = generate_expression(func),
+        A = formatted_args
+    )
 }
 
 fn generate_return(ret: Option<Expression>) -> String {
@@ -355,10 +352,6 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::NotEqual => "!==",
         BinOp::Or => "||",
         BinOp::Subtraction => "-",
-        BinOp::AddAssign => "+=",
-        BinOp::SubtractAssign => "-=",
-        BinOp::MultiplyAssign => "*=",
-        BinOp::DivideAssign => "/=",
     };
     format!(
         "{l} {op} {r}",
@@ -382,18 +375,22 @@ fn generate_struct_initialization(
     out_str
 }
 
-fn generate_field_access(expr: Expression, field: Expression) -> String {
-    format!(
-        "{}.{}",
-        generate_expression(expr),
-        generate_expression(field)
-    )
+fn generate_field_access(expr: Expression, field: String) -> String {
+    format!("{}.{}", generate_expression(expr), field)
 }
 
-fn generate_assign(name: Expression, expr: Expression) -> String {
+fn generate_assign(name: Expression, op: AssignOp, expr: Expression) -> String {
+    let op_str = match op {
+        AssignOp::Set => "=",
+        AssignOp::Add => "+=",
+        AssignOp::Subtract => "-=",
+        AssignOp::Multiply => "*=",
+        AssignOp::Divide => "/=",
+    };
     format!(
-        "{} = {}",
+        "{} {} {}",
         generate_expression(name),
+        op_str,
         generate_expression(expr)
     )
 }
