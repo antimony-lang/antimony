@@ -26,6 +26,7 @@ use std::io::Write;
 
 pub struct Builder {
     in_file: PathBuf,
+    files: lexer::FileTable,
     modules: Vec<Module>,
 }
 
@@ -33,6 +34,7 @@ impl Builder {
     pub fn new(entrypoint: PathBuf) -> Self {
         Self {
             in_file: entrypoint,
+            files: lexer::FileTable::new(),
             modules: Vec::new(),
         }
     }
@@ -89,12 +91,11 @@ impl Builder {
 
         file.read_to_string(&mut contents)
             .expect("Could not read file");
-        let tokens = lexer::tokenize(&contents)?;
-        let module = parser::parse(
-            tokens,
-            Some(contents),
-            resolved_file_path.display().to_string(),
-        )?;
+
+        let file = self.files.insert(resolved_file_path.clone(), contents);
+
+        let tokens = lexer::tokenize(file, &self.files).map_err(|err| err.format(&self.files))?;
+        let module = parser::parse(tokens).map_err(|err| err.format(&self.files))?;
         for import in &module.imports {
             // Prevent circular imports
             if seen.contains(import) {
@@ -157,11 +158,13 @@ impl Builder {
         for file in assets {
             let stdlib_raw =
                 Lib::get(&file).expect("Standard library not found. This should not occur.");
-            let stblib_str =
+            let stdlib_str =
                 std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
-            let stdlib_tokens = lexer::tokenize(stblib_str)?;
-            let module = parser::parse(stdlib_tokens, Some(stblib_str.into()), file.to_string())
-                .expect("Could not parse stdlib");
+            let file = self
+                .files
+                .insert(format!("std:{}", file).into(), stdlib_str.to_owned());
+            let stdlib_tokens = lexer::tokenize(file, &self.files).expect("Could not parse stdlib");
+            let module = parser::parse(stdlib_tokens).expect("Could not parse stdlib");
             self.modules.push(module);
         }
 

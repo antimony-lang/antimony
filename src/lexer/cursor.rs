@@ -90,18 +90,11 @@ impl<'a> Cursor<'a> {
     /// Moves to the next character.
     pub(crate) fn bump(&mut self) -> Option<char> {
         let c = self.chars.next()?;
-        // If first token, the position should be set to 0
-        match self.pos.raw {
-            usize::MAX => self.pos.raw = 0,
-            _ => {
-                self.pos.raw += 1;
-                self.pos.offset += 1;
-            }
-        }
+        self.pos.column += 1;
 
         if c == '\n' {
             self.pos.line += 1;
-            self.pos.offset = 0;
+            self.pos.column = 0;
         }
 
         #[cfg(debug_assertions)]

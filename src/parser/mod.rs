@@ -18,11 +18,15 @@
 mod parser;
 mod rules;
 use crate::ast::Module;
-use crate::lexer::Token;
+use crate::lexer::{self, Token};
 #[cfg(test)]
 mod tests;
 
-pub fn parse(tokens: Vec<Token>, raw: Option<String>, path: String) -> Result<Module, String> {
-    let mut parser = parser::Parser::new(tokens, raw, path);
+pub type Error = lexer::Error;
+
+pub type Result<T> = lexer::Result<T>;
+
+pub fn parse(tokens: Vec<Token>) -> Result<Module> {
+    let mut parser = parser::Parser::new(tokens);
     parser.parse()
 }

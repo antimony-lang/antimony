@@ -23,6 +23,60 @@ use regex::Regex;
 #[cfg(test)]
 mod tests;
 
+mod file_table;
+pub use file_table::*;
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub struct Position {
+    pub file: FileId,
+    pub line: usize,
+    pub column: usize,
+}
+
+#[derive(Debug)]
+pub struct Error {
+    pub pos: Position,
+    pub msg: String,
+}
+
+impl Error {
+    pub fn new(pos: Position, msg: String) -> Error {
+        Error { pos, msg }
+    }
+
+    pub fn format(&self, file_table: &FileTable) -> String {
+        let mut buf = String::new();
+
+        buf.push_str(&format!(
+            "{}:{},{}: {}\n",
+            self.pos.file.path(file_table).to_string_lossy(),
+            self.pos.line,
+            self.pos.column,
+            self.msg
+        ));
+
+        let file_contents = self.pos.file.contents(file_table);
+        let line = file_contents.lines().nth(self.pos.line - 1).unwrap();
+        // TODO: do something better, code can be more than 9999 lines
+        buf.push_str(&format!("{:>4} | {}\n", self.pos.line, line));
+        buf.push_str("     | ");
+
+        buf.push_str(
+            &line
+                .chars()
+                .take(self.pos.column - 1)
+                .map(|c| if c == '\t' { '\t' } else { ' ' })
+                .collect::<String>(),
+        );
+        buf.push_str("^ ");
+        buf.push_str(&self.msg);
+
+        buf
+    }
+}
+
+pub type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Token {
     pub kind: TokenKind,
@@ -42,16 +96,11 @@ impl Token {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct Position {
-    pub line: usize,
-    pub offset: usize,
-    pub raw: usize,
-}
-
 /// Enum representing common lexeme types.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TokenKind {
+    /// End of file
+    End,
     /// Any whitespace characters sequence.
     Whitespace,
     Identifier(String),
@@ -152,25 +201,27 @@ pub enum Keyword {
 }
 
 /// Creates an iterator that produces tokens from the input string.
-pub fn tokenize(mut input: &str) -> Result<Vec<Token>, String> {
+pub fn tokenize(file: FileId, table: &FileTable) -> Result<Vec<Token>> {
     let mut pos = Position {
-        raw: usize::MAX,
+        file,
         line: 1,
-        offset: 0,
+        column: 0,
     };
 
     let mut tokens: Vec<Token> = Vec::new();
+    let mut input = file.contents(table).as_str();
     while !input.is_empty() {
         let token = first_token(input, &mut pos)?;
         input = &input[token.len..];
         tokens.push(token);
     }
-
+    pos.column += 1;
+    tokens.push(Token::new(TokenKind::End, 0, String::new(), pos));
     Ok(tokens)
 }
 
 /// Parses the first token from the provided input string.
-pub fn first_token(input: &str, pos: &mut Position) -> Result<Token, String> {
+pub fn first_token(input: &str, pos: &mut Position) -> Result<Token> {
     debug_assert!(!input.is_empty());
     Cursor::new(input, pos).advance_token()
 }
@@ -222,7 +273,7 @@ pub fn is_id_continue(c: char) -> bool {
 
 impl Cursor<'_> {
     /// Parses a token from the input string.
-    fn advance_token(&mut self) -> Result<Token, String> {
+    fn advance_token(&mut self) -> Result<Token> {
         // Original chars used to identify the token later on
         let original_chars = self.chars();
         // FIXME: Identical value, since it will be used twice and is not clonable later
@@ -385,7 +436,7 @@ impl Cursor<'_> {
         TokenKind::Literal(Value::Int)
     }
 
-    fn string(&mut self, end: char) -> Result<TokenKind, String> {
+    fn string(&mut self, end: char) -> Result<TokenKind> {
         Ok(TokenKind::Literal(Value::Str(self.eat_string(end)?)))
     }
 
@@ -496,7 +547,7 @@ impl Cursor<'_> {
         has_digits
     }
 
-    fn eat_escape(&mut self) -> Result<char, String> {
+    fn eat_escape(&mut self) -> Result<char> {
         let ch = self.first();
         let ch = match ch {
             'n' => '\n',       // Newline
@@ -506,7 +557,7 @@ impl Cursor<'_> {
             't' => '\t',       // Horizontal tab
             '"' | '\\' => ch,
             ch => {
-                return Err(self.make_error_msg(format!("Unknown escape sequence \\{}", ch)));
+                return Err(self.make_error(format!("Unknown escape sequence \\{}", ch)));
             }
         };
         self.bump();
@@ -514,11 +565,11 @@ impl Cursor<'_> {
         Ok(ch)
     }
 
-    fn eat_string(&mut self, end: char) -> Result<String, String> {
+    fn eat_string(&mut self, end: char) -> Result<String> {
         let mut buf = String::new();
         loop {
             match self.first() {
-                '\n' => return Err(self.make_error_msg("String does not end on same line".into())),
+                '\n' => return Err(self.make_error("String does not end on same line".into())),
                 '\\' => {
                     self.bump();
                     buf.push(self.eat_escape()?)
@@ -537,8 +588,10 @@ impl Cursor<'_> {
         Ok(buf)
     }
 
-    fn make_error_msg(&self, msg: String) -> String {
-        let pos = self.pos();
-        format!("{}:{}: {}", pos.line, pos.offset, msg)
+    fn make_error(&self, msg: String) -> Error {
+        Error {
+            pos: self.pos(),
+            msg,
+        }
     }
 }

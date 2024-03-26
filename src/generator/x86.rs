@@ -55,13 +55,7 @@ impl X86Generator {
 
     fn gen_program(&mut self, prog: Module) -> Assembly {
         let mut asm = Assembly::new();
-        let Module {
-            func,
-            globals,
-            structs: _,
-            path: _,
-            imports: _,
-        } = prog;
+        let Module { func, globals, .. } = prog;
 
         asm.add(".intel_syntax noprefix");
         asm.add(".text");

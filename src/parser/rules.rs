@@ -1,9 +1,4 @@
 use super::parser::Parser;
-use crate::ast::types::Type;
-use crate::ast::*;
-use crate::lexer::Keyword;
-use crate::lexer::{TokenKind, Value};
-use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -19,11 +14,16 @@ use std::collections::HashMap;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use super::{Error, Result};
+use crate::ast::types::Type;
+use crate::ast::*;
+use crate::lexer::{Keyword, TokenKind, Value};
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::convert::TryFrom;
 
 impl Parser {
-    pub fn parse_module(&mut self) -> Result<Module, String> {
+    pub fn parse_module(&mut self) -> Result<Module> {
         let mut functions = Vec::new();
         let mut structs = Vec::new();
         let mut imports = HashSet::new();
@@ -39,7 +39,7 @@ impl Parser {
                 TokenKind::Keyword(Keyword::Struct) => {
                     structs.push(self.parse_struct_definition()?)
                 }
-                _ => return Err(format!("Unexpected token: {}", next.raw)),
+                _ => return Err(Error::new(next.pos, "Unexpected token".to_owned())),
             }
         }
 
@@ -49,12 +49,11 @@ impl Parser {
             func: functions,
             structs,
             globals,
-            path: self.path.clone(),
             imports,
         })
     }
 
-    fn parse_struct_definition(&mut self) -> Result<StructDef, String> {
+    fn parse_struct_definition(&mut self) -> Result<StructDef> {
         self.match_keyword(Keyword::Struct)?;
         let name = self.match_identifier()?;
 
@@ -69,9 +68,10 @@ impl Parser {
                 }
                 TokenKind::Identifier(_) => fields.push(self.parse_typed_variable()?),
                 _ => {
-                    return Err(
-                        self.make_error_msg(next.pos, "Expected struct field or method".into())
-                    )
+                    return Err(Error::new(
+                        next.pos,
+                        "Expected struct field or method".into(),
+                    ))
                 }
             }
         }
@@ -83,7 +83,7 @@ impl Parser {
         })
     }
 
-    fn parse_typed_variable_list(&mut self) -> Result<Vec<TypedVariable>, String> {
+    fn parse_typed_variable_list(&mut self) -> Result<Vec<TypedVariable>> {
         let mut args = Vec::new();
 
         // If there is an argument
@@ -101,7 +101,7 @@ impl Parser {
         Ok(args)
     }
 
-    fn parse_typed_variable(&mut self) -> Result<TypedVariable, String> {
+    fn parse_typed_variable(&mut self) -> Result<TypedVariable> {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
             return Ok(TypedVariable {
@@ -110,10 +110,13 @@ impl Parser {
             });
         }
 
-        Err(format!("Argument could not be parsed: {}", next.raw))
+        Err(Error::new(
+            next.pos,
+            "Argument could not be parsed".to_owned(),
+        ))
     }
 
-    fn parse_block(&mut self) -> Result<Statement, String> {
+    fn parse_block(&mut self) -> Result<Statement> {
         self.match_token(TokenKind::CurlyBracesOpen)?;
 
         let mut statements = vec![];
@@ -138,7 +141,7 @@ impl Parser {
         Ok(Statement::Block { statements, scope })
     }
 
-    fn parse_function(&mut self) -> Result<Function, String> {
+    fn parse_function(&mut self) -> Result<Function> {
         let callable = self.parse_callable()?;
 
         let body = match self.peek()?.kind {
@@ -152,14 +155,14 @@ impl Parser {
         Ok(Function { callable, body })
     }
 
-    fn parse_method(&mut self) -> Result<Method, String> {
+    fn parse_method(&mut self) -> Result<Method> {
         let callable = self.parse_callable()?;
         let body = self.parse_block()?;
 
         Ok(Method { callable, body })
     }
 
-    fn parse_callable(&mut self) -> Result<Callable, String> {
+    fn parse_callable(&mut self) -> Result<Callable> {
         self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
 
@@ -184,27 +187,28 @@ impl Parser {
         })
     }
 
-    fn parse_import(&mut self) -> Result<String, String> {
+    fn parse_import(&mut self) -> Result<String> {
         self.match_keyword(Keyword::Import)?;
         let token = self.next()?;
         let path = match token.kind {
             TokenKind::Literal(Value::Str(path)) => path,
             other => {
-                return Err(
-                    self.make_error_msg(token.pos, format!("Expected string, got {:?}", other))
-                )
+                return Err(Error::new(
+                    token.pos,
+                    format!("Expected string, got {:?}", other),
+                ))
             }
         };
 
         Ok(path)
     }
 
-    fn parse_type(&mut self) -> Result<Type, String> {
+    fn parse_type(&mut self) -> Result<Type> {
         self.match_token(TokenKind::Colon)?;
         let next = self.peek()?;
         let typ = match next.kind {
-            TokenKind::Identifier(_) => Type::try_from(self.next()?.raw),
-            _ => Err("Expected type".into()),
+            TokenKind::Identifier(_) => Ok(Type::try_from(self.next()?.raw).unwrap()),
+            _ => Err(Error::new(next.pos, "Expected type".to_owned())),
         }?;
         if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
             self.match_token(TokenKind::SquareBraceOpen)?;
@@ -222,7 +226,7 @@ impl Parser {
         }
     }
 
-    fn parse_statement(&mut self) -> Result<Statement, String> {
+    fn parse_statement(&mut self) -> Result<Statement> {
         let token = self.peek()?;
         let expr = match &token.kind {
             TokenKind::CurlyBracesOpen => return self.parse_block(),
@@ -239,10 +243,16 @@ impl Parser {
             | TokenKind::Identifier(_)
             | TokenKind::Literal(_) => self.parse_expression()?,
             TokenKind::Keyword(Keyword::Struct) => {
-                return Err("Struct definitions inside functions are not allowed".to_string())
+                return Err(Error::new(
+                    token.pos,
+                    "Struct definitions inside functions are not allowed".to_owned(),
+                ))
             }
             _ => {
-                return Err(self.make_error_msg(token.pos, "Failed to parse statement".to_string()))
+                return Err(Error::new(
+                    token.pos,
+                    "Failed to parse statement".to_owned(),
+                ))
             }
         };
         let suffix = self.peek()?;
@@ -253,7 +263,7 @@ impl Parser {
         }
     }
 
-    fn parse_function_call(&mut self, expr: Expression) -> Result<Expression, String> {
+    fn parse_function_call(&mut self, expr: Expression) -> Result<Expression> {
         self.match_token(TokenKind::BraceOpen)?;
 
         let mut args = Vec::new();
@@ -291,7 +301,7 @@ impl Parser {
         })
     }
 
-    fn parse_return(&mut self) -> Result<Statement, String> {
+    fn parse_return(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::Return)?;
         let peeked = self.peek()?;
         match peeked.kind {
@@ -303,7 +313,7 @@ impl Parser {
         }
     }
 
-    fn parse_expression(&mut self) -> Result<Expression, String> {
+    fn parse_expression(&mut self) -> Result<Expression> {
         let token = self.next()?;
 
         // TODO: don't mut
@@ -315,9 +325,12 @@ impl Parser {
                 expr
             }
             // true | false
-            TokenKind::Keyword(Keyword::Boolean) => {
-                Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
-            }
+            TokenKind::Keyword(Keyword::Boolean) => Expression::Bool(
+                token
+                    .raw
+                    .parse::<bool>()
+                    .map_err(|e| Error::new(token.pos, e.to_string()))?,
+            ),
             // 5
             TokenKind::Literal(Value::Int) => {
                 // Ignore spacing character (E.g. 1_000_000)
@@ -325,18 +338,16 @@ impl Parser {
                 let val = match clean_str {
                     c if c.starts_with("0b") => {
                         usize::from_str_radix(token.raw.trim_start_matches("0b"), 2)
-                            .map_err(|e| e.to_string())?
                     }
                     c if c.starts_with("0o") => {
                         usize::from_str_radix(token.raw.trim_start_matches("0o"), 8)
-                            .map_err(|e| e.to_string())?
                     }
                     c if c.starts_with("0x") => {
                         usize::from_str_radix(token.raw.trim_start_matches("0x"), 16)
-                            .map_err(|e| e.to_string())?
                     }
-                    c => c.parse::<usize>().map_err(|e| e.to_string())?,
-                };
+                    c => c.parse::<usize>(),
+                }
+                .map_err(|e| Error::new(token.pos, e.to_string()))?;
                 Expression::Int(val)
             }
             // "A string"
@@ -349,7 +360,12 @@ impl Parser {
             TokenKind::SquareBraceOpen => self.parse_array()?,
             // new Foo {}
             TokenKind::Keyword(Keyword::New) => self.parse_struct_initialization()?,
-            other => return Err(format!("Expected Expression, found {:?}", other)),
+            other => {
+                return Err(Error::new(
+                    token.pos,
+                    format!("Expected Expression, found {:?}", other),
+                ))
+            }
         };
 
         // Check if the parsed expression continues
@@ -373,7 +389,7 @@ impl Parser {
         }
     }
 
-    fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
+    fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression> {
         self.match_token(TokenKind::Dot)?;
 
         let field = self.match_identifier()?;
@@ -385,7 +401,7 @@ impl Parser {
     }
 
     /// TODO: Cleanup
-    fn parse_struct_initialization(&mut self) -> Result<Expression, String> {
+    fn parse_struct_initialization(&mut self) -> Result<Expression> {
         let name = self.match_identifier()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let fields = self.parse_struct_fields()?;
@@ -394,7 +410,7 @@ impl Parser {
         Ok(Expression::StructInitialization { name, fields })
     }
 
-    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>, String> {
+    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>> {
         let mut map = HashMap::new();
 
         // If there is a field
@@ -413,17 +429,20 @@ impl Parser {
         Ok(map)
     }
 
-    fn parse_struct_field(&mut self) -> Result<(String, Box<Expression>), String> {
+    fn parse_struct_field(&mut self) -> Result<(String, Box<Expression>)> {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
             self.match_token(TokenKind::Colon)?;
             return Ok((name, Box::new(self.parse_expression()?)));
         }
 
-        Err(format!("Struct field could not be parsed: {}", next.raw))
+        Err(Error::new(
+            next.pos,
+            format!("Struct field could not be parsed: {}", next.raw),
+        ))
     }
 
-    fn parse_array(&mut self) -> Result<Expression, String> {
+    fn parse_array(&mut self) -> Result<Expression> {
         let mut elements = Vec::new();
         loop {
             let next = self.peek()?;
@@ -434,7 +453,7 @@ impl Parser {
                         .next()?
                         .raw
                         .parse::<usize>()
-                        .map_err(|e| e.to_string())?;
+                        .map_err(|e| Error::new(next.pos, e.to_string()))?;
                     elements.push(Expression::Int(value));
                 }
                 _ => {
@@ -453,7 +472,7 @@ impl Parser {
         Ok(Expression::Array(elements))
     }
 
-    fn parse_array_access(&mut self, expr: Expression) -> Result<Expression, String> {
+    fn parse_array_access(&mut self, expr: Expression) -> Result<Expression> {
         self.match_token(TokenKind::SquareBraceOpen)?;
         let index = self.parse_expression()?;
         self.match_token(TokenKind::SquareBraceClose)?;
@@ -464,7 +483,7 @@ impl Parser {
         })
     }
 
-    fn parse_while_loop(&mut self) -> Result<Statement, String> {
+    fn parse_while_loop(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::While)?;
         let condition = self.parse_expression()?;
         let body = self.parse_block()?;
@@ -475,17 +494,17 @@ impl Parser {
         })
     }
 
-    fn parse_break(&mut self) -> Result<Statement, String> {
+    fn parse_break(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::Break)?;
         Ok(Statement::Break)
     }
 
-    fn parse_continue(&mut self) -> Result<Statement, String> {
+    fn parse_continue(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::Continue)?;
         Ok(Statement::Continue)
     }
 
-    fn parse_for_loop(&mut self) -> Result<Statement, String> {
+    fn parse_for_loop(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::For)?;
 
         let ident = self.match_identifier()?;
@@ -508,7 +527,7 @@ impl Parser {
         })
     }
 
-    fn parse_match_statement(&mut self) -> Result<Statement, String> {
+    fn parse_match_statement(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::Match)?;
         let subject = self.parse_expression()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
@@ -524,7 +543,7 @@ impl Parser {
                 | TokenKind::Keyword(Keyword::Boolean) => arms.push(self.parse_match_arm()?),
                 TokenKind::Keyword(Keyword::Else) => {
                     if has_else {
-                        return Err(self.make_error_msg(
+                        return Err(Error::new(
                             next.pos,
                             "Multiple else arms are not allowed".to_string(),
                         ));
@@ -533,14 +552,14 @@ impl Parser {
                     arms.push(self.parse_match_arm()?);
                 }
                 TokenKind::CurlyBracesClose => break,
-                _ => return Err(self.make_error_msg(next.pos, "Illegal token".to_string())),
+                _ => return Err(Error::new(next.pos, "Illegal token".to_string())),
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
         Ok(Statement::Match { subject, arms })
     }
 
-    fn parse_match_arm(&mut self) -> Result<MatchArm, String> {
+    fn parse_match_arm(&mut self) -> Result<MatchArm> {
         let next = self.peek()?;
 
         match next.kind {
@@ -559,7 +578,7 @@ impl Parser {
         }
     }
 
-    fn parse_conditional_statement(&mut self) -> Result<Statement, String> {
+    fn parse_conditional_statement(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::If)?;
         let condition = self.parse_expression()?;
 
@@ -600,7 +619,7 @@ impl Parser {
     /// foo(1) * 2
     /// ```
     /// In this case, the function call has already been evaluated, and needs to be passed to this function.
-    fn parse_bin_op(&mut self, lhs: Expression) -> Result<Expression, String> {
+    fn parse_bin_op(&mut self, lhs: Expression) -> Result<Expression> {
         let op = self.match_operator()?;
 
         Ok(Expression::BinOp {
@@ -610,7 +629,7 @@ impl Parser {
         })
     }
 
-    fn parse_declare(&mut self) -> Result<Statement, String> {
+    fn parse_declare(&mut self) -> Result<Statement> {
         self.match_keyword(Keyword::Let)?;
         let name = self.match_identifier()?;
         let token = self.peek()?;
@@ -618,8 +637,7 @@ impl Parser {
             TokenKind::Colon => Some(self.parse_type()?),
             TokenKind::Assign => None,
             _ => {
-                // FIXME: context for this error message is not ideal
-                return Err(self.make_error_msg(
+                return Err(Error::new(
                     token.pos,
                     format!("Expected ':' or '=', found {:?}", token.kind),
                 ));
@@ -642,7 +660,7 @@ impl Parser {
         }
     }
 
-    fn parse_assignment(&mut self, lhs: Expression) -> Result<Statement, String> {
+    fn parse_assignment(&mut self, lhs: Expression) -> Result<Statement> {
         let op = AssignOp::try_from(self.next()?.kind).unwrap();
 
         let expr = self.parse_expression()?;

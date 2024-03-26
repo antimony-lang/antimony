@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pub mod string_util;
 
 /// Datatype that holds one of two types
 #[derive(Debug)]

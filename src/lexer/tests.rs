@@ -15,330 +15,503 @@
  */
 use crate::lexer::*;
 
+fn test_tokenize<F>(input: String, expected: F)
+where
+    F: Fn(FileId) -> Vec<Token>,
+{
+    let mut table = FileTable::new();
+    let file = table.insert("<test>".into(), input);
+    let tokens = tokenize(file, &table).unwrap();
+
+    assert_eq!(tokens, expected(file));
+}
+
+fn test_tokenize_ignoring_whitespace<F>(input: String, expected: F)
+where
+    F: Fn(FileId) -> Vec<Token>,
+{
+    let mut table = FileTable::new();
+    let file = table.insert("<test>".into(), input);
+    let tokens = tokenize(file, &table)
+        .unwrap()
+        .into_iter()
+        .filter(|token| token.kind != TokenKind::Whitespace)
+        .collect::<Vec<Token>>();
+
+    assert_eq!(tokens, expected(file));
+}
+
 #[test]
 fn test_basic_tokenizing() {
-    let raw = tokenize("1 = 2").unwrap();
-    let mut tokens = raw.into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "1".to_owned(),
-            pos: Position {
-                raw: 0,
-                line: 1,
-                offset: 0
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Whitespace,
-            raw: " ".to_owned(),
-            pos: Position {
-                raw: 1,
-                line: 1,
-                offset: 1
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Assign,
-            raw: "=".to_owned(),
-            pos: Position {
-                raw: 2,
-                line: 1,
-                offset: 2
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Whitespace,
-            raw: " ".to_owned(),
-            pos: Position {
-                raw: 3,
-                line: 1,
-                offset: 3
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "2".to_owned(),
-            pos: Position {
-                raw: 4,
-                line: 1,
-                offset: 4
-            }
-        }
-    );
+    test_tokenize("1 = 2".to_owned(), |file| {
+        vec![
+            Token {
+                len: 1,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "1".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 1,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::Whitespace,
+                raw: " ".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 2,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::Assign,
+                raw: "=".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 3,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::Whitespace,
+                raw: " ".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 4,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "2".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 5,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 6,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_tokenizing_without_whitespace() {
-    let mut tokens = tokenize("1=2").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "1".to_owned(),
-            pos: Position {
-                raw: 0,
-                line: 1,
-                offset: 0
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Assign,
-            raw: "=".to_owned(),
-            pos: Position {
-                raw: 1,
-                line: 1,
-                offset: 1
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 1,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "2".to_owned(),
-            pos: Position {
-                raw: 2,
-                line: 1,
-                offset: 2
-            }
-        }
-    );
+    test_tokenize("1=2".to_owned(), |file| {
+        vec![
+            Token {
+                len: 1,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "1".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 1,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::Assign,
+                raw: "=".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 2,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "2".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 3,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 4,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_string() {
-    let mut tokens = tokenize("'aaa' \"bbb\"").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 5,
-            kind: TokenKind::Literal(Value::Str("aaa".into())),
-            raw: "'aaa'".to_owned(),
-            pos: Position {
-                raw: 4,
-                line: 1,
-                offset: 4
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.nth(1).unwrap(),
-        Token {
-            len: 5,
-            kind: TokenKind::Literal(Value::Str("bbb".into())),
-            raw: "\"bbb\"".to_owned(),
-            pos: Position {
-                raw: 10,
-                line: 1,
-                offset: 10
-            }
-        }
-    );
+    test_tokenize_ignoring_whitespace("'aaa' \"bbb\"".to_owned(), |file| {
+        vec![
+            Token {
+                len: 5,
+                kind: TokenKind::Literal(Value::Str("aaa".into())),
+                raw: "'aaa'".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 5,
+                },
+            },
+            Token {
+                len: 5,
+                kind: TokenKind::Literal(Value::Str("bbb".into())),
+                raw: "\"bbb\"".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 11,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 12,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_string_markers_within_string() {
-    let mut tokens = tokenize("'\"aaa' \"'bbb\"").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 6,
-            kind: TokenKind::Literal(Value::Str("\"aaa".into())),
-            raw: "'\"aaa'".to_owned(),
-            pos: Position {
-                raw: 5,
-                line: 1,
-                offset: 5
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.nth(1).unwrap(),
-        Token {
-            len: 6,
-            kind: TokenKind::Literal(Value::Str("'bbb".into())),
-            raw: "\"'bbb\"".to_owned(),
-            pos: Position {
-                raw: 12,
-                line: 1,
-                offset: 12
-            }
-        }
-    );
+    test_tokenize_ignoring_whitespace("'\"aaa' \"'bbb\"".to_owned(), |file| {
+        vec![
+            Token {
+                len: 6,
+                kind: TokenKind::Literal(Value::Str("\"aaa".into())),
+                raw: "'\"aaa'".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 6,
+                },
+            },
+            Token {
+                len: 6,
+                kind: TokenKind::Literal(Value::Str("'bbb".into())),
+                raw: "\"'bbb\"".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 13,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 14,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_numbers() {
-    let mut tokens = tokenize("42").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 2,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "42".to_owned(),
-            pos: Position {
-                raw: 1,
-                line: 1,
-                offset: 1
-            }
-        }
-    );
+    test_tokenize("42".to_owned(), |file| {
+        vec![
+            Token {
+                len: 2,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "42".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 2,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 3,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_binary_numbers() {
-    let mut tokens = tokenize("0b101010").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 8,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "0b101010".to_owned(),
-            pos: Position {
-                raw: 7,
-                line: 1,
-                offset: 7
-            }
-        }
-    );
+    test_tokenize("0b101010".to_owned(), |file| {
+        vec![
+            Token {
+                len: 8,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "0b101010".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 8,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 9,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_octal_numbers() {
-    let mut tokens = tokenize("0o52").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 4,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "0o52".to_owned(),
-            pos: Position {
-                raw: 3,
-                line: 1,
-                offset: 3
-            }
-        }
-    );
+    test_tokenize("0o52".to_owned(), |file| {
+        vec![
+            Token {
+                len: 4,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "0o52".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 4,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 5,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_hex_numbers() {
-    let mut tokens = tokenize("0x2A").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 4,
-            kind: TokenKind::Literal(Value::Int),
-            raw: "0x2A".to_owned(),
-            pos: Position {
-                raw: 3,
-                line: 1,
-                offset: 3
-            }
-        }
-    );
+    test_tokenize("0x2A".to_owned(), |file| {
+        vec![
+            Token {
+                len: 4,
+                kind: TokenKind::Literal(Value::Int),
+                raw: "0x2A".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 4,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 5,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_functions() {
-    let mut tokens = tokenize("fn fib() {}").unwrap().into_iter();
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 2,
-            kind: TokenKind::Keyword(Keyword::Function),
-            raw: "fn".to_owned(),
-            pos: Position {
-                raw: 1,
-                line: 1,
-                offset: 1
-            }
-        }
-    );
+    test_tokenize_ignoring_whitespace("fn fib() {}".to_owned(), |file| {
+        vec![
+            Token {
+                len: 2,
+                kind: TokenKind::Keyword(Keyword::Function),
+                raw: "fn".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 2,
+                },
+            },
+            Token {
+                len: 3,
+                kind: TokenKind::Identifier("fib".into()),
+                raw: "fib".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 6,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::BraceOpen,
+                raw: "(".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 7,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::BraceClose,
+                raw: ")".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 8,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::CurlyBracesOpen,
+                raw: "{".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 10,
+                },
+            },
+            Token {
+                len: 1,
+                kind: TokenKind::CurlyBracesClose,
+                raw: "}".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 11,
+                },
+            },
+            Token {
+                len: 0,
+                kind: TokenKind::End,
+                raw: "".to_owned(),
+                pos: Position {
+                    file,
+                    line: 1,
+                    column: 12,
+                },
+            },
+        ]
+    });
 }
 
 #[test]
 fn test_comments() {
-    let mut tokens = tokenize(
+    test_tokenize_ignoring_whitespace(
         "// foo
-fn fib() {}
-        ",
-    )
-    .unwrap()
-    .into_iter()
-    .filter(|t| {
-        t.kind != TokenKind::Whitespace
-            && t.kind != TokenKind::Tab
-            && t.kind != TokenKind::CarriageReturn
-    });
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 6,
-            kind: TokenKind::Comment,
-            raw: "// foo".to_owned(),
-            pos: Position {
-                raw: 5,
-                line: 1,
-                offset: 5
-            }
-        }
-    );
-
-    assert_eq!(
-        tokens.next().unwrap(),
-        Token {
-            len: 2,
-            kind: TokenKind::Keyword(Keyword::Function),
-            raw: "fn".to_owned(),
-            pos: Position {
-                raw: 8,
-                line: 2,
-                offset: 2
-            }
-        }
+fn fib() {}"
+            .to_owned(),
+        |file| {
+            vec![
+                Token {
+                    len: 6,
+                    kind: TokenKind::Comment,
+                    raw: "// foo".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 1,
+                        column: 6,
+                    },
+                },
+                Token {
+                    len: 2,
+                    kind: TokenKind::Keyword(Keyword::Function),
+                    raw: "fn".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 2,
+                        column: 2,
+                    },
+                },
+                Token {
+                    len: 3,
+                    kind: TokenKind::Identifier("fib".into()),
+                    raw: "fib".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 2,
+                        column: 6,
+                    },
+                },
+                Token {
+                    len: 1,
+                    kind: TokenKind::BraceOpen,
+                    raw: "(".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 2,
+                        column: 7,
+                    },
+                },
+                Token {
+                    len: 1,
+                    kind: TokenKind::BraceClose,
+                    raw: ")".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 2,
+                        column: 8,
+                    },
+                },
+                Token {
+                    len: 1,
+                    kind: TokenKind::CurlyBracesOpen,
+                    raw: "{".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 2,
+                        column: 10,
+                    },
+                },
+                Token {
+                    len: 1,
+                    kind: TokenKind::CurlyBracesClose,
+                    raw: "}".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 2,
+                        column: 11,
+                    },
+                },
+                Token {
+                    len: 0,
+                    kind: TokenKind::End,
+                    raw: "".to_owned(),
+                    pos: Position {
+                        file,
+                        line: 2,
+                        column: 12,
+                    },
+                },
+            ]
+        },
     );
 }

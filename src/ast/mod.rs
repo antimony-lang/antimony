@@ -1,6 +1,3 @@
-use crate::lexer::*;
-use core::convert::TryFrom;
-use std::collections::HashMap;
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -16,6 +13,9 @@ use std::collections::HashMap;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::lexer::{Keyword, Token, TokenKind, Value};
+use core::convert::TryFrom;
+use std::collections::HashMap;
 use std::collections::HashSet;
 
 pub mod types;
@@ -23,7 +23,6 @@ use types::Type;
 
 #[derive(Debug, Clone)]
 pub struct Module {
-    pub path: String,
     pub imports: HashSet<String>,
     pub func: Vec<Function>,
     pub structs: Vec<StructDef>,
