@@ -1,4 +1,3 @@
-use std::fs;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -14,76 +13,38 @@ use std::fs;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use std::io::Error;
-use std::process::Command;
+use crate::command::run;
+use crate::generator::Target;
 
-fn test_directory(dir_in: &str) -> Result<(), Error> {
-    let dir_out = format!("{}_out", dir_in);
+fn test_directory(dir_in: &str) -> Result<(), String> {
     let dir = std::env::current_dir().unwrap();
 
-    let examples = std::fs::read_dir(dir.join(dir_in))?;
-
-    let _ = fs::create_dir(&dir_out);
-
-    let out_file_suffix = ".js";
+    let examples = std::fs::read_dir(dir.join(dir_in)).map_err(|err| err.to_string())?;
 
     for ex in examples {
-        let example = ex?;
+        let example = ex.map_err(|err| err.to_string())?;
         let in_file = dir.join(dir_in).join(example.file_name());
 
         // We don't want to build submodules, since they don't run without a main function
         if in_file.is_dir() {
             continue;
         }
-        let out_file = dir.join(&dir_out).join(
-            example
-                .file_name()
-                .into_string()
-                .unwrap()
-                .replace(".sb", out_file_suffix),
-        );
-        let success = Command::new("cargo")
-            .arg("run")
-            .arg("build")
-            .arg(&in_file)
-            .arg("-o")
-            .arg(&out_file)
-            .spawn()?
-            .wait()?
-            .success();
-        assert!(success, "{:?}", &in_file);
 
-        let node_installed = Command::new("node").arg("-v").spawn()?.wait()?.success();
-        if node_installed {
-            let execution = Command::new("node")
-                .arg(out_file)
-                .spawn()?
-                .wait()?
-                .success();
-            assert!(execution, "{:?}", &in_file)
-        }
+        run::run(Target::JS, in_file)?;
     }
     Ok(())
 }
 
 #[test]
-fn test_examples() -> Result<(), Error> {
+fn test_examples() -> Result<(), String> {
     test_directory("examples")?;
     Ok(())
 }
 
 #[test]
-fn test_testcases() -> Result<(), Error> {
+fn test_testcases() -> Result<(), String> {
     let dir = std::env::current_dir().unwrap();
 
     let in_file = dir.join("tests/main.sb");
-    let success = Command::new("cargo")
-        .arg("run")
-        .arg("run")
-        .arg(&in_file)
-        .spawn()?
-        .wait()?
-        .success();
-    assert!(success, "{:?}", &in_file);
-    Ok(())
+    run::run(Target::JS, in_file)
 }

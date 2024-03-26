@@ -19,7 +19,6 @@ use crate::lexer;
 use crate::parser;
 use crate::Lib;
 use crate::PathBuf;
-use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
@@ -39,36 +38,11 @@ impl Builder {
         }
     }
 
-    fn get_base_path(&self) -> Result<PathBuf, String> {
-        Ok(self
-            .in_file
-            .parent()
-            .ok_or("File does not have a parent")?
-            .to_path_buf())
-    }
-
     pub fn build(&mut self, target: &Target) -> Result<(), String> {
-        let in_file = self.in_file.clone();
-        // Resolve path deltas between working directory and entrypoint
-        let base_directory = self.get_base_path()?;
-
-        // During building, we change the environment directory.
-        // After we're done, we have to set it back to the initial directory.
-        let initial_directory = env::current_dir().expect("Current directory does not exist");
-        if let Ok(resolved_delta) = in_file.strip_prefix(&base_directory) {
-            // TODO: This error could probably be handled better
-            let _ = env::set_current_dir(base_directory);
-            self.in_file = resolved_delta.to_path_buf();
-        }
         self.build_module(self.in_file.clone(), &mut Vec::new())?;
-
-        // Append standard library
         if matches!(target, Target::JS) {
             self.build_stdlib()?;
         }
-
-        // Change back to the initial directory
-        env::set_current_dir(initial_directory).expect("Could not set current directory");
         Ok(())
     }
 
