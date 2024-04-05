@@ -66,3 +66,33 @@ fn add_one(x: int): int {
 $ sb run main.sb
 2
 ```
+
+# Simplified Function Syntax for Single Statements
+
+Antimony supports a more concise syntax for functions that perform a single operation. This syntax is particularly useful for simple tasks, such as arithmetic operations, printing to the console, or returning a single expression. Instead of wrapping the function's body in curly braces, you can define the function using an equals sign (`=`) followed by the expression that constitutes the function's body.
+
+## Syntax
+
+The syntax for this simplified function declaration is as follows:
+
+```
+fn function_name(parameters): return_type = expression
+```
+
+This syntax removes the need for curly braces and the `return` keyword for single-statement functions, making the code cleaner and more readable.
+
+## Examples
+
+Below are examples demonstrating how to use this syntax:
+
+**Defining a function that adds two numbers**:
+
+```
+fn add(x: int, y: int): int = x + y
+```
+
+**Defining a function that concatenates two strings**:
+
+```
+fn concat(a: string, b: string): string = a + b
+```
