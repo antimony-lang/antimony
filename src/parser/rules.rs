@@ -3,7 +3,6 @@ use crate::ast::types::Type;
 use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
-use core::panic;
 use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
@@ -160,15 +159,20 @@ impl Parser {
             _ => None,
         };
 
-        let peeked_kind = self.peek()?.kind; 
+        let peeked_kind = self.peek()?.kind;
         let body = if peeked_kind == TokenKind::CurlyBracesOpen {
             self.parse_block()?
         } else if peeked_kind == TokenKind::Assign {
             self.parse_inline_function()?
         } else {
             let token = self.peek()?;
-            let mut error = self.make_error_msg(token.pos, format!("Expected `{{` or `=`, got {}", token.raw));
-            let hint = self.make_hint_msg(format!("Try the following:\nfn {name}(...) = expression\nOr\nfn {name}(...) {{ ... }}"));
+            let mut error = self.make_error_msg(
+                token.pos,
+                format!("Expected `{{` or `=`, got {}", token.raw),
+            );
+            let hint = self.make_hint_msg(format!(
+                "Try the following:\nfn {name}(...) = expression\nOr\nfn {name}(...) {{ ... }}"
+            ));
             error.push_str(&hint);
             return Err(error);
         };
@@ -182,7 +186,7 @@ impl Parser {
     }
 
     fn parse_inline_function(&mut self) -> Result<Statement, String> {
-        self.next()?; 
+        self.next()?;
         let expr = self.parse_expression()?;
         let return_statment = Statement::Return(Some(expr));
         let statements = vec![return_statment];

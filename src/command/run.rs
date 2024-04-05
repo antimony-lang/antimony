@@ -15,12 +15,12 @@
  */
 use crate::command::build;
 use crate::generator::Target;
+use std::fs::OpenOptions;
 use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::process::Stdio;
-use std::fs::OpenOptions;
 
 pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
     let mut buf = Box::<Vec<u8>>::default();
@@ -53,37 +53,38 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
         }
         Target::Qbe => {
             let dir_path = "./"; // TODO: Use this for changind build directory
-            let filename = in_file.file_stem().unwrap().to_str().unwrap(); 
-            let ssa_path = format!("{dir_path}{}.ssa", filename); 
-            let asm_path = format!("{dir_path}{}.s", filename); 
+            let filename = in_file.file_stem().unwrap().to_str().unwrap();
+            let ssa_path = format!("{dir_path}{}.ssa", filename);
+            let asm_path = format!("{dir_path}{}.s", filename);
             let exe_path = format!("{dir_path}{}.exe", filename);
 
             let mut ssa_file = OpenOptions::new()
-                        .read(true)
-                        .write(true)
-                        .create(true)
-                        .open(&ssa_path).unwrap();
+                .read(true)
+                .write(true)
+                .create(true)
+                .open(&ssa_path)
+                .unwrap();
             let buff = *buf;
             ssa_file.write_all(&buff).unwrap();
-
 
             // SSA to ASM
             Command::new("qbe")
                 .arg(&ssa_path)
                 .arg("-o")
                 .arg(&asm_path)
-                .spawn().unwrap();
+                .spawn()
+                .unwrap();
 
             // ASM to EXE
             Command::new("gcc")
                 .arg(&asm_path)
                 .arg("-o")
                 .arg(&exe_path)
-                .spawn().unwrap(); 
+                .spawn()
+                .unwrap();
 
             // Run the EXE
-            Command::new(exe_path)
-                .spawn().unwrap();
+            Command::new(exe_path).spawn().unwrap();
         }
         _ => todo!(),
     }
