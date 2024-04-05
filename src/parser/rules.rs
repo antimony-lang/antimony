@@ -159,7 +159,23 @@ impl Parser {
             _ => None,
         };
 
-        let body = self.parse_block()?;
+        let peeked_kind = self.peek()?.kind;
+        let body = match peeked_kind {
+            TokenKind::CurlyBracesOpen => self.parse_block()?,
+            TokenKind::Assign => self.parse_inline_function()?,
+            _ => {
+                let token = self.peek()?;
+                let mut error = self.make_error_msg(
+                    token.pos,
+                    format!("Expected `{{` or `=`, got {}", token.raw),
+                );
+                let hint = self.make_hint_msg(format!(
+                    "Try the following:\nfn {name}(...) = expression\nOr\nfn {name}(...) {{ ... }}"
+                ));
+                error.push_str(&hint);
+                return Err(error);
+            }
+        };
 
         Ok(Function {
             name,
@@ -167,6 +183,15 @@ impl Parser {
             body,
             ret_type: ty,
         })
+    }
+
+    fn parse_inline_function(&mut self) -> Result<Statement, String> {
+        self.next()?;
+        let expr = self.parse_expression()?;
+        let return_statment = Statement::Return(Some(expr));
+        let statements = vec![return_statment];
+        let scope = vec![];
+        Ok(Statement::Block { statements, scope })
     }
 
     fn parse_import(&mut self) -> Result<String, String> {
@@ -380,16 +405,17 @@ impl Parser {
         };
 
         // Check if the parsed expression continues
-        if self.peek_token(TokenKind::Dot).is_ok() {
-            // foo.bar
-            self.parse_field_access(expr)
-        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-            // 1 + 2
-            self.parse_bin_op(Some(expr))
-        } else {
-            // Nope, the expression was fully parsed
-            Ok(expr)
+        if let Ok(next) = self.peek() {
+            if next.kind == TokenKind::Dot {
+                // foo.bar
+                return self.parse_field_access(expr);
+            } else if BinOp::try_from(next.kind).is_ok() {
+                // 1 + 2
+                return self.parse_bin_op(Some(expr));
+            }
         }
+        // Nope, the expression was fully parsed
+        Ok(expr)
     }
 
     fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {

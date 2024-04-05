@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-xxx
+**Features**
+
+- Support for shorthand function bodies ([#94](https://github.com/antimony-lang/antimony/pull/94))
 
 ## v0.7.0 (2022-06-15)
 
