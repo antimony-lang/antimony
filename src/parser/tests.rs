@@ -38,6 +38,16 @@ fn test_parse_function_with_return() {
 }
 
 #[test]
+fn test_parse_inline_function() {
+    let raw = "
+    fn main() = 1 
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_ok())
+}
+
+#[test]
 fn test_parse_redundant_semicolon() {
     let raw = "
     fn main() {
