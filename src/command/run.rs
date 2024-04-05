@@ -62,6 +62,7 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
                 .read(true)
                 .write(true)
                 .create(true)
+                .truncate(true)
                 .open(&ssa_path)
                 .unwrap();
             let buff = *buf;
