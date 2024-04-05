@@ -22,7 +22,7 @@ dependencies = [
 
 [[package]]
 name = "antimony-lang"
-version = "0.7.0"
+version = "0.8.0"
 dependencies = [
  "inkwell",
  "lazy_static",

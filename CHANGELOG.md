@@ -2,9 +2,19 @@
 
 ## Unreleased
 
+xxx
+
+## v0.8.0 (2024-04-05)
+
 **Features**
 
 - Support for shorthand function bodies ([#94](https://github.com/antimony-lang/antimony/pull/94))
+
+**Maintenance**
+
+- Bump dependency [structopt](https://crates.io/crates/structopt) from `0.3.21` to `0.3.26`
+- Bump dependency [inkwell](https://crates.io/crates/inkwell) from `0.1.0-beta.2` to `0.4.0`
+- Bump dependency [regex](https://crates.io/crates/regex) from `1.5.5` to `1.10.4`
 
 ## v0.7.0 (2022-06-15)
 
