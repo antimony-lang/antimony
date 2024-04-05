@@ -405,16 +405,17 @@ impl Parser {
         };
 
         // Check if the parsed expression continues
-        if self.peek_token(TokenKind::Dot).is_ok() {
-            // foo.bar
-            self.parse_field_access(expr)
-        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-            // 1 + 2
-            self.parse_bin_op(Some(expr))
-        } else {
-            // Nope, the expression was fully parsed
-            Ok(expr)
+        if let Ok(next) = self.peek() {
+            if next.kind == TokenKind::Dot {
+                // foo.bar
+                return self.parse_field_access(expr);
+            } else if BinOp::try_from(next.kind).is_ok() {
+                // 1 + 2
+                return self.parse_bin_op(Some(expr));
+            }
         }
+        // Nope, the expression was fully parsed
+        Ok(expr)
     }
 
     fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
