@@ -381,6 +381,21 @@ fn add_one(x: int): int {
 <pre><code>$ sb run main.sb
 2
 </code></pre>
+<h1 id="simplified-function-syntax-for-single-statements"><a class="header" href="#simplified-function-syntax-for-single-statements">Simplified Function Syntax for Single Statements</a></h1>
+<p>Antimony supports a more concise syntax for functions that perform a single operation. This syntax is particularly useful for simple tasks, such as arithmetic operations, printing to the console, or returning a single expression. Instead of wrapping the function's body in curly braces, you can define the function using an equals sign (<code>=</code>) followed by the expression that constitutes the function's body.</p>
+<h2 id="syntax"><a class="header" href="#syntax">Syntax</a></h2>
+<p>The syntax for this simplified function declaration is as follows:</p>
+<pre><code>fn function_name(parameters): return_type = expression
+</code></pre>
+<p>This syntax removes the need for curly braces and the <code>return</code> keyword for single-statement functions, making the code cleaner and more readable.</p>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<p>Below are examples demonstrating how to use this syntax:</p>
+<p><strong>Defining a function that adds two numbers</strong>:</p>
+<pre><code>fn add(x: int, y: int): int = x + y
+</code></pre>
+<p><strong>Defining a function that concatenates two strings</strong>:</p>
+<pre><code>fn concat(a: string, b: string): string = a + b
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="comments"><a class="header" href="#comments">Comments</a></h1>
 <p>All programmers strive to make their code easy to understand, but sometimes extra explanation is warranted. In these cases, programmers leave notes, or comments, in their source code that the compiler will ignore but people reading the source code may find useful.</p>
 <p>Here’s a simple comment:</p>
