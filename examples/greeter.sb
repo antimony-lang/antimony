@@ -1,5 +1,5 @@
+fn greet(name: string) = "Hello " + name
+
 fn main() {
     println(greet("World"))
 }
-
-fn greet(name: string) = "Hello " + name

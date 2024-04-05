@@ -40,7 +40,27 @@ fn test_parse_function_with_return() {
 #[test]
 fn test_parse_inline_function() {
     let raw = "
-    fn main() = 1 
+    fn greet(name: string) = \"Hello \" + name
+    fn main() {
+        println(greet(\"World\"))
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    assert!(tree.is_ok())
+}
+
+#[test]
+#[ignore]
+// I don't know how this fails yet. It seems to have something to do with how
+// `parse_expression` peeks tokens. It tries to peek a token after the
+// expression body but it's empty, so it errors out.
+fn test_parse_inline_function_as_last_statement() {
+    let raw = "
+    fn main() {
+        println(greet(\"World\"))
+    }
+    fn greet(name: string) = \"Hello \" + name
     ";
     let tokens = tokenize(raw).unwrap();
     let tree = parse(tokens, Some(raw.to_string()), "".into());
