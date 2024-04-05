@@ -160,21 +160,21 @@ impl Parser {
         };
 
         let peeked_kind = self.peek()?.kind;
-        let body = if peeked_kind == TokenKind::CurlyBracesOpen {
-            self.parse_block()?
-        } else if peeked_kind == TokenKind::Assign {
-            self.parse_inline_function()?
-        } else {
-            let token = self.peek()?;
-            let mut error = self.make_error_msg(
-                token.pos,
-                format!("Expected `{{` or `=`, got {}", token.raw),
-            );
-            let hint = self.make_hint_msg(format!(
-                "Try the following:\nfn {name}(...) = expression\nOr\nfn {name}(...) {{ ... }}"
-            ));
-            error.push_str(&hint);
-            return Err(error);
+        let body = match peeked_kind {
+            TokenKind::CurlyBracesOpen => self.parse_block()?,
+            TokenKind::Assign => self.parse_inline_function()?,
+            _ => {
+                let token = self.peek()?;
+                let mut error = self.make_error_msg(
+                    token.pos,
+                    format!("Expected `{{` or `=`, got {}", token.raw),
+                );
+                let hint = self.make_hint_msg(format!(
+                    "Try the following:\nfn {name}(...) = expression\nOr\nfn {name}(...) {{ ... }}"
+                ));
+                error.push_str(&hint);
+                return Err(error);
+            }
         };
 
         Ok(Function {
