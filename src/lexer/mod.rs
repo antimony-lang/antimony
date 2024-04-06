@@ -15,11 +15,15 @@
  */
 pub(crate) mod cursor;
 
+use std::fmt::Display;
+
 use self::TokenKind::*;
 use cursor::Cursor;
 
 #[cfg(test)]
 mod tests;
+
+mod display;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Token {
