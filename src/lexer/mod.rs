@@ -15,8 +15,6 @@
  */
 pub(crate) mod cursor;
 
-use std::fmt::Display;
-
 use self::TokenKind::*;
 use cursor::Cursor;
 
