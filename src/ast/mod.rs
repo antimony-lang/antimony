@@ -1,5 +1,6 @@
 use crate::lexer::*;
 use core::convert::TryFrom;
+use indextree::Arena;
 use std::collections::HashMap;
 /**
  * Copyright 2021 Garrit Franke
@@ -20,6 +21,18 @@ use std::collections::HashSet;
 
 pub mod types;
 use types::Type;
+
+#[derive(Debug, Clone)]
+pub enum ASTNode {
+    ModuleNode(Module),
+    FunctionNode(Function),
+    StructDefNode(StructDef),
+    VariableNode(Variable),
+    StatementNode(Statement),
+    ExpressionNode(Expression),
+    MatchArmNode(MatchArm),
+    BinOpNode(BinOp),
+}
 
 /// Table that contains all symbol and its types
 pub type SymbolTable = HashMap<String, Option<Type>>;
