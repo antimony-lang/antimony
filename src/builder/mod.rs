@@ -90,10 +90,7 @@ impl Builder {
         file.read_to_string(&mut contents)
             .expect("Could not read file");
         let tokens = lexer::tokenize(&contents)?;
-        let module = parser::parse(
-            tokens,
-            Some(contents)
-        )?;
+        let module = parser::parse(tokens, Some(contents))?;
         for import in &module.imports {
             // Prevent circular imports
             if seen.contains(import) {
