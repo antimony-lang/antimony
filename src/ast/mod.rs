@@ -26,7 +26,6 @@ pub type SymbolTable = HashMap<String, Option<Type>>;
 
 #[derive(Debug, Clone)]
 pub struct Module {
-    pub path: String,
     pub imports: HashSet<String>,
     pub func: Vec<Function>,
     pub structs: Vec<StructDef>,

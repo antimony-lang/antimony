@@ -49,7 +49,6 @@ impl Parser {
             func: functions,
             structs,
             globals,
-            path: self.path.clone(),
             imports,
         })
     }

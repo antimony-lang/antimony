@@ -23,7 +23,7 @@ use crate::lexer::Token;
 #[cfg(test)]
 mod tests;
 
-pub fn parse(tokens: Vec<Token>, raw: Option<String>, path: String) -> Result<Module, String> {
-    let mut parser = parser::Parser::new(tokens, raw, path);
+pub fn parse(tokens: Vec<Token>, raw: Option<String>) -> Result<Module, String> {
+    let mut parser = parser::Parser::new(tokens, raw);
     parser.parse()
 }

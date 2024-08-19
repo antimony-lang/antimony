@@ -92,8 +92,7 @@ impl Builder {
         let tokens = lexer::tokenize(&contents)?;
         let module = parser::parse(
             tokens,
-            Some(contents),
-            resolved_file_path.display().to_string(),
+            Some(contents)
         )?;
         for import in &module.imports {
             // Prevent circular imports
@@ -160,7 +159,7 @@ impl Builder {
             let stblib_str =
                 std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
             let stdlib_tokens = lexer::tokenize(stblib_str)?;
-            let module = parser::parse(stdlib_tokens, Some(stblib_str.into()), file.to_string())
+            let module = parser::parse(stdlib_tokens, Some(stblib_str.into()))
                 .expect("Could not parse stdlib");
             self.modules.push(module);
         }

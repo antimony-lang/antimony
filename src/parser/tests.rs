@@ -21,7 +21,7 @@ use crate::parser::parse;
 fn test_parse_empty_function() {
     let raw = "fn main() {}";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -33,7 +33,7 @@ fn test_parse_function_with_return() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -46,7 +46,7 @@ fn test_parse_inline_function() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -63,7 +63,7 @@ fn test_parse_inline_function_as_last_statement() {
     fn greet(name: string) = \"Hello \" + name
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -75,7 +75,7 @@ fn test_parse_redundant_semicolon() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_err())
 }
 
@@ -85,7 +85,7 @@ fn test_parse_no_function_context() {
     let x = 1
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_err())
 }
 
@@ -103,7 +103,7 @@ fn test_parse_multiple_functions() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -116,7 +116,7 @@ fn test_parse_variable_declaration() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -130,7 +130,7 @@ fn test_parse_variable_reassignment() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -144,7 +144,7 @@ fn test_parse_variable_declaration_added() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -156,7 +156,7 @@ fn test_parse_function_with_args() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -172,7 +172,7 @@ fn test_parse_function_call() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -188,7 +188,7 @@ fn test_parse_return_function_call() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -204,7 +204,7 @@ fn test_parse_function_call_multiple_arguments() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -220,7 +220,7 @@ fn test_parse_nexted_function_call() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -232,7 +232,7 @@ fn test_parse_basic_ops() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -244,7 +244,7 @@ fn test_parse_compound_ops() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -256,7 +256,7 @@ fn test_parse_compound_ops_with_function_call() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -268,7 +268,7 @@ fn test_parse_compound_ops_with_strings() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -280,7 +280,7 @@ fn test_parse_compound_ops_with_identifier() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -292,7 +292,7 @@ fn test_parse_compound_ops_with_identifier_first() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -304,7 +304,7 @@ fn test_parse_compound_ops_return() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -318,7 +318,7 @@ fn test_parse_basic_conditional() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -333,7 +333,7 @@ fn test_parse_basic_conditional_with_multiple_statements() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -350,7 +350,7 @@ fn test_parse_conditional_else_if_branch() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -369,7 +369,7 @@ fn test_parse_conditional_multiple_else_if_branch_branches() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -386,7 +386,7 @@ fn test_parse_conditional_else_branch() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -407,7 +407,7 @@ fn test_parse_conditional_elseif_else_branch() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -420,7 +420,7 @@ fn test_int_array() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -432,7 +432,7 @@ fn test_string_array() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -447,7 +447,7 @@ fn test_basic_while_loop() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -462,7 +462,7 @@ fn test_while_loop_boolean_expression() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -479,7 +479,7 @@ fn test_boolean_arithmetic() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -498,7 +498,7 @@ fn test_array_access_in_loop() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -512,7 +512,7 @@ fn test_array_access_standalone() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -527,7 +527,7 @@ fn test_array_access_assignment() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -543,7 +543,7 @@ fn test_array_access_in_if() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -556,7 +556,7 @@ fn test_uninitialized_variables() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -568,7 +568,7 @@ fn test_function_call_math() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -580,7 +580,7 @@ fn test_function_multiple_args() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -592,7 +592,7 @@ fn test_array_position_assignment() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -606,7 +606,7 @@ fn test_typed_declare() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok())
 }
 
@@ -618,7 +618,7 @@ fn test_no_function_args_without_type() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_err())
 }
 
@@ -630,7 +630,7 @@ fn test_function_with_return_type() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
     assert_eq!(tree.unwrap().func[0].ret_type, Some(Type::Int));
 }
@@ -647,7 +647,7 @@ fn test_booleans_in_function_call() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -667,7 +667,7 @@ fn test_late_initializing_variable() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -683,7 +683,7 @@ fn test_simple_for_loop() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -701,7 +701,7 @@ fn test_nested_for_loop() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -719,7 +719,7 @@ fn test_nested_array() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -732,7 +732,7 @@ fn test_simple_nested_expression() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -752,7 +752,7 @@ fn test_continue() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -772,7 +772,7 @@ fn test_break() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -790,7 +790,7 @@ fn test_complex_nested_expressions() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -802,7 +802,7 @@ fn test_array_as_argument() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -824,7 +824,7 @@ fn test_struct_initialization() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }
 
@@ -832,28 +832,28 @@ fn test_struct_initialization() {
 fn test_arithmetic() {
     // These should pass
     let raw = "fn main() {1*1}";
-    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()), raw.into());
+    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()));
     assert!(tree.is_ok());
 
     let raw = "fn main() {2+3*4}";
-    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()), raw.into());
+    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()));
     assert!(tree.is_ok());
 
     let raw = "fn main() {(2+2)*3}";
-    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()), raw.into());
+    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()));
     assert!(tree.is_ok());
 
     // These should fail
     let raw = "fn main() {(22+)+1}";
-    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()), raw.into());
+    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()));
     assert!(tree.is_err());
 
     let raw = "fn main() {1++1}";
-    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()), raw.into());
+    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()));
     assert!(tree.is_err());
 
     let raw = "fn main() {3)+1}";
-    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()), raw.into());
+    let tree = parse(tokenize(raw).unwrap(), Some(raw.to_string()));
     assert!(tree.is_err());
 }
 
@@ -868,6 +868,6 @@ fn test_array_capacity() {
     }
     ";
     let tokens = tokenize(raw).unwrap();
-    let tree = parse(tokens, Some(raw.to_string()), "".into());
+    let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok());
 }

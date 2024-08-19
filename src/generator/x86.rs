@@ -59,7 +59,6 @@ impl X86Generator {
             func,
             globals,
             structs: _,
-            path: _,
             imports: _,
         } = prog;
 
