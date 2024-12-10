@@ -16,6 +16,7 @@
 use super::{Generator, GeneratorResult};
 use crate::ast::types::Type;
 use crate::ast::*;
+use std::cmp;
 use std::collections::HashMap;
 
 pub struct QbeGenerator {
@@ -78,16 +79,40 @@ impl Generator for QbeGenerator {
 }
 
 impl QbeGenerator {
+    /// Calculate the alignment requirement for a type
+    fn type_alignment(&self, ty: &qbe::Type) -> u64 {
+        match ty {
+            qbe::Type::Byte => 1,
+            qbe::Type::Halfword => 2,
+            qbe::Type::Word | qbe::Type::Single => 4,
+            qbe::Type::Long | qbe::Type::Double => 8,
+            qbe::Type::Aggregate(ref name) => {
+                let td = self.typedefs.iter().find(|&x| x.name.eq(name)).unwrap();
+                // Aggregate type's alignment is the maximum alignment of its fields
+                td.items
+                    .iter()
+                    .map(|(ty, _)| self.type_alignment(ty))
+                    .max()
+                    .unwrap_or(1)
+            }
+        }
+    }
+
+    /// Calculate the aligned offset for a field
+    fn align_offset(&self, offset: u64, alignment: u64) -> u64 {
+        (offset + alignment - 1) & !(alignment - 1)
+    }
     /// Returns an aggregate type for a structure (note: has side effects)
     fn generate_struct(&mut self, def: &StructDef) -> GeneratorResult<qbe::TypeDef> {
         self.tmp_counter += 1;
         let mut typedef = qbe::TypeDef {
             name: format!("struct.{}", self.tmp_counter),
-            align: None,
+            align: None, // We'll set this after calculating max alignment
             items: Vec::new(),
         };
         let mut meta: StructMeta = StructMeta::new();
         let mut offset = 0_u64;
+        let mut max_align = 1_u64;
 
         for field in &def.fields {
             let ty = self.get_type(
@@ -98,11 +123,24 @@ impl QbeGenerator {
                     .to_owned(),
             )?;
 
+            let field_align = self.type_alignment(&ty);
+            max_align = cmp::max(max_align, field_align);
+
+            // Align the current offset for this field
+            offset = self.align_offset(offset, field_align);
+
             meta.insert(field.name.clone(), (ty.clone(), offset));
             typedef.items.push((ty.clone(), 1));
 
             offset += self.type_size(&ty);
         }
+
+        // Final size needs to be aligned to the struct's alignment
+        offset = self.align_offset(offset, max_align);
+
+        // Set the typedef's alignment
+        typedef.align = Some(max_align as u64);
+
         self.struct_map.insert(
             def.name.clone(),
             (qbe::Type::Aggregate(typedef.name.clone()), meta, offset),
