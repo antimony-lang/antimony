@@ -74,6 +74,8 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
                 .arg("-o")
                 .arg(&asm_path)
                 .spawn()
+                .unwrap()
+                .wait()
                 .unwrap();
 
             // ASM to EXE
@@ -82,10 +84,12 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
                 .arg("-o")
                 .arg(&exe_path)
                 .spawn()
+                .unwrap()
+                .wait()
                 .unwrap();
 
             // Run the EXE
-            Command::new(exe_path).spawn().unwrap();
+            Command::new(exe_path).spawn().unwrap().wait().unwrap();
         }
         _ => todo!(),
     }

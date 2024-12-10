@@ -311,7 +311,7 @@ pub(super) fn generate_declare<V: AsRef<Variable>>(
 pub(super) fn generate_function_call(func: String, args: Vec<Expression>) -> String {
     let formatted_args = args
         .into_iter()
-        .map(|arg| generate_expression(arg))
+        .map(generate_expression)
         .collect::<Vec<String>>()
         .join(", ");
 
