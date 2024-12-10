@@ -16,84 +16,85 @@
 use crate::command::build;
 use crate::generator::Target;
 use std::fs::OpenOptions;
-use std::io::Read;
-use std::io::Write;
-use std::path::PathBuf;
-use std::process::Command;
-use std::process::Stdio;
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
+use std::process::{Command, Stdio};
 
-pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
+type Result<T> = std::result::Result<T, String>;
+
+fn run_command(cmd: &mut Command) -> Result<()> {
+    cmd.spawn()
+        .map_err(|e| format!("Failed to spawn process: {}", e))?
+        .wait()
+        .map_err(|e| format!("Failed to wait for process: {}", e))
+        .map(|_| ())
+}
+
+fn run_node(buf: &[u8]) -> Result<()> {
+    let process = Command::new("node")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Could not spawn Node.js process: {}", e))?;
+
+    // Write to stdin
+    process
+        .stdin
+        .ok_or("Failed to open stdin")?
+        .write_all(buf)
+        .map_err(|e| format!("Could not write to Node.js process: {}", e))?;
+
+    // Read from stdout
+    let mut output = Vec::new();
+    process
+        .stdout
+        .ok_or("Failed to open stdout")?
+        .read_to_end(&mut output)
+        .map_err(|e| format!("Could not read from child process: {}", e))?;
+
+    // Write to stdout
+    std::io::stdout()
+        .write_all(&output)
+        .map_err(|e| format!("Could not write to stdout: {}", e))
+}
+
+fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
+    let dir_path = "./"; // TODO: Use this for changing build directory
+    let filename = in_file
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .ok_or("Invalid filename")?;
+
+    // Create paths without array destructuring
+    let ssa_path = format!("{dir_path}{}.ssa", filename);
+    let asm_path = format!("{dir_path}{}.s", filename);
+    let exe_path = format!("{dir_path}{}.exe", filename);
+
+    // Write SSA file
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&ssa_path)
+        .map_err(|e| format!("Failed to open SSA file: {}", e))?
+        .write_all(&buf)
+        .map_err(|e| format!("Failed to write SSA file: {}", e))?;
+
+    // Compile and run
+    run_command(Command::new("qbe").arg(&ssa_path).arg("-o").arg(&asm_path))?;
+    run_command(Command::new("gcc").arg(&asm_path).arg("-o").arg(&exe_path))?;
+    run_command(&mut Command::new(&exe_path))
+}
+
+pub fn run(target: Target, in_file: PathBuf) -> Result<()> {
     let mut buf = Box::<Vec<u8>>::default();
     build::build_to_buffer(&target, &in_file, &mut buf)?;
 
     match target {
-        Target::JS => {
-            let process = Command::new("node")
-                .stdin(Stdio::piped())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-                .map_err(|e| format!("Could not spawn Node.js process: {}", e))?;
-
-            process
-                .stdin
-                .unwrap()
-                .write_all(&buf)
-                .map_err(|e| format!("Could not write to Node.js process: {}", e))?;
-
-            let mut s = Vec::new();
-            process
-                .stdout
-                .unwrap()
-                .read_to_end(&mut s)
-                .map_err(|e| format!("Could not read from child process: {}", e))?;
-            std::io::stdout()
-                .write_all(&s)
-                .map_err(|e| format!("Could not write to stdout: {}", e))?;
-        }
-        Target::Qbe => {
-            let dir_path = "./"; // TODO: Use this for changind build directory
-            let filename = in_file.file_stem().unwrap().to_str().unwrap();
-            let ssa_path = format!("{dir_path}{}.ssa", filename);
-            let asm_path = format!("{dir_path}{}.s", filename);
-            let exe_path = format!("{dir_path}{}.exe", filename);
-
-            let mut ssa_file = OpenOptions::new()
-                .read(true)
-                .write(true)
-                .create(true)
-                .truncate(true)
-                .open(&ssa_path)
-                .unwrap();
-            let buff = *buf;
-            ssa_file.write_all(&buff).unwrap();
-
-            // TODO: Simplify!
-
-            // SSA to ASM
-            Command::new("qbe")
-                .arg(&ssa_path)
-                .arg("-o")
-                .arg(&asm_path)
-                .spawn()
-                .unwrap()
-                .wait()
-                .unwrap();
-
-            // ASM to EXE
-            Command::new("gcc")
-                .arg(&asm_path)
-                .arg("-o")
-                .arg(&exe_path)
-                .spawn()
-                .unwrap()
-                .wait()
-                .unwrap();
-
-            // Run the EXE
-            Command::new(exe_path).spawn().unwrap().wait().unwrap();
-        }
-        _ => todo!(),
+        Target::JS => run_node(&buf),
+        Target::Qbe => run_qbe(*buf, &in_file),
+        _ => Err("Unsupported target".to_string()),
     }
-    Ok(())
 }

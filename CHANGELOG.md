@@ -6,6 +6,10 @@
 
 - Fixed parsing of binary operations in inline function expressions ([#109](https://github.com/antimony-lang/antimony/pull/109))
 
+**Maintenance**
+
+- Refactored command execution for better error handling and code organization
+
 ## v0.8.0 (2024-04-05)
 
 **Features**
