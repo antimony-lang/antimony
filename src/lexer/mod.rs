@@ -17,8 +17,6 @@ pub(crate) mod cursor;
 
 use self::TokenKind::*;
 use cursor::Cursor;
-use lazy_static::lazy_static;
-use regex::Regex;
 
 #[cfg(test)]
 mod tests;
@@ -208,20 +206,16 @@ pub fn is_whitespace(c: char) -> bool {
 /// See [Antimony specification](https://antimony-lang.github.io/antimony/developers/specification.html#identifiers) for
 /// a formal definition of valid identifier name.
 pub fn is_id_start(c: char) -> bool {
-    lazy_static! {
-        static ref ID_START: Regex = Regex::new(r"[\pL_]").unwrap();
-    }
-    ID_START.is_match(&c.to_string())
+    // Valid identifier start is either an underscore or any Unicode letter
+    c == '_' || c.is_alphabetic()
 }
 
 /// True if `c` is a valid continuation of an identifier
 /// See [Antimony specification](https://antimony-lang.github.io/antimony/developers/specification.html#identifiers) for
 /// a formal definition of valid identifier name.
 pub fn is_id_continue(c: char) -> bool {
-    lazy_static! {
-        static ref ID_CONTINUE: Regex = Regex::new(r"[\pL\p{Nd}_]").unwrap();
-    }
-    ID_CONTINUE.is_match(&c.to_string())
+    // Valid identifier continuation is underscore, letter, or number
+    c == '_' || c.is_alphabetic() || c.is_numeric()
 }
 
 impl Cursor<'_> {

@@ -1,6 +1,3 @@
-extern crate lazy_static;
-extern crate qbe;
-extern crate regex;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -16,6 +13,8 @@ extern crate regex;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+extern crate lazy_static;
+extern crate qbe;
 extern crate rust_embed;
 extern crate structopt;
 

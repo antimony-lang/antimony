@@ -9,6 +9,7 @@
 **Maintenance**
 
 - Refactored command execution for better error handling and code organization
+- Remove regex dependency
 
 ## v0.8.0 (2024-04-05)
 
