@@ -139,7 +139,7 @@ impl QbeGenerator {
         offset = self.align_offset(offset, max_align);
 
         // Set the typedef's alignment
-        typedef.align = Some(max_align as u64);
+        typedef.align = Some(max_align);
 
         self.struct_map.insert(
             def.name.clone(),
