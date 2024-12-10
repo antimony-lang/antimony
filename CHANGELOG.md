@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-xxx
+**Fixes**
+
+- Fixed parsing of binary operations in inline function expressions ([#109](https://github.com/antimony-lang/antimony/pull/109))
 
 ## v0.8.0 (2024-04-05)
 

@@ -68,12 +68,16 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
             let buff = *buf;
             ssa_file.write_all(&buff).unwrap();
 
+            // TODO: Simplify!
+
             // SSA to ASM
             Command::new("qbe")
                 .arg(&ssa_path)
                 .arg("-o")
                 .arg(&asm_path)
                 .spawn()
+                .unwrap()
+                .wait()
                 .unwrap();
 
             // ASM to EXE
@@ -82,10 +86,12 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
                 .arg("-o")
                 .arg(&exe_path)
                 .spawn()
+                .unwrap()
+                .wait()
                 .unwrap();
 
             // Run the EXE
-            Command::new(exe_path).spawn().unwrap();
+            Command::new(exe_path).spawn().unwrap().wait().unwrap();
         }
         _ => todo!(),
     }
