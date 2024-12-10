@@ -68,6 +68,8 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<(), String> {
             let buff = *buf;
             ssa_file.write_all(&buff).unwrap();
 
+            // TODO: Simplify!
+
             // SSA to ASM
             Command::new("qbe")
                 .arg(&ssa_path)
