@@ -1,11 +1,26 @@
-fn main() {
-    let number = 3
+struct Point {
+    x: int
+    y: int
+}
 
-    while number != 0 {
-        println(number)
+struct Rectangle {
+    origin: Point
+    width: int
+    height: int
+}
 
-        number = number - 1
+fn main(): int {
+    let rect = new Rectangle {
+        origin: new Point {
+            x: 10
+            y: 20
+        }
+        width: 100
+        height: 50
     }
+    rect.origin.x == 10
+    rect.origin.x += 5
+    rect.origin.x == 15
 
-    println("LIFTOFF!!!")
+    return 0
 }
