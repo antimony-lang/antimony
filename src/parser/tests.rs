@@ -51,7 +51,6 @@ fn test_parse_inline_function() {
 }
 
 #[test]
-#[ignore]
 // I don't know how this fails yet. It seems to have something to do with how
 // `parse_expression` peeks tokens. It tries to peek a token after the
 // expression body but it's empty, so it errors out.

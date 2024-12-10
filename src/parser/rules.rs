@@ -386,6 +386,9 @@ impl Parser {
             // self
             TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
             TokenKind::Identifier(val) => {
+                if !self.has_more() {
+                    return Ok(Expression::Variable(val));
+                }
                 let next = self.peek()?;
                 match &next.kind {
                     // foo()
@@ -403,18 +406,27 @@ impl Parser {
             other => return Err(format!("Expected Expression, found {:?}", other)),
         };
 
-        // Check if the parsed expression continues
-        if let Ok(next) = self.peek() {
-            if next.kind == TokenKind::Dot {
-                // foo.bar
-                return self.parse_field_access(expr);
-            } else if BinOp::try_from(next.kind).is_ok() {
-                // 1 + 2
-                return self.parse_bin_op(Some(expr));
-            }
+        // Only try to peek if we have more tokens
+        if !self.has_more() {
+            return Ok(expr);
         }
-        // Nope, the expression was fully parsed
-        Ok(expr)
+
+        // Now it's safe to peek since we know we have more tokens
+        let next = self.peek()?;
+        match next.kind {
+            TokenKind::Dot => self.parse_field_access(expr),
+            kind if BinOp::try_from(kind.clone()).is_ok() => {
+                self.next()?; // consume the operator
+                let op = BinOp::try_from(kind).unwrap();
+                let rhs = self.parse_expression()?;
+                Ok(Expression::BinOp {
+                    lhs: Box::from(expr),
+                    op,
+                    rhs: Box::from(rhs),
+                })
+            }
+            _ => Ok(expr),
+        }
     }
 
     fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
