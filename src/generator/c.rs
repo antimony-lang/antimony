@@ -1,23 +1,7 @@
-/**
- * Copyright 2020 Garrit Franke
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-use crate::ast::types::Type;
 use crate::ast::*;
 use crate::generator::{Generator, GeneratorResult};
-use crate::util::Either;
 use std::collections::HashMap;
+use types::Type;
 
 pub struct CGenerator;
 
@@ -25,19 +9,35 @@ impl Generator for CGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
         let mut code = String::new();
 
+        // Add standard C headers
+        code += "#include <stdio.h>\n";
+        code += "#include <stdlib.h>\n";
+        code += "#include <stdbool.h>\n";
+        code += "#include <string.h>\n\n";
+
+        // Add builtin functions
         let raw_builtins =
             crate::Builtins::get("builtin.c").expect("Could not locate builtin functions");
         code += std::str::from_utf8(raw_builtins.as_ref())
             .expect("Unable to interpret builtin functions");
 
-        let structs: String = prog.structs.into_iter().map(generate_struct).collect();
+        // Generate struct definitions first
+        let structs: String = prog
+            .structs
+            .clone()
+            .into_iter()
+            .map(generate_struct_definition)
+            .collect();
 
         code += &structs;
 
-        for func in &prog.func {
-            code += &format!("{};\n", &generate_function_signature(func.clone()));
-        }
+        // Generate function prototypes
+        let prototypes: String = prog.func.iter().map(generate_function_prototype).collect();
 
+        code += &prototypes;
+        code += "\n";
+
+        // Generate function implementations
         let funcs: String = prog.func.into_iter().map(generate_function).collect();
 
         code += &funcs;
@@ -46,244 +46,286 @@ impl Generator for CGenerator {
     }
 }
 
-pub fn generate_struct(def: StructDef) -> String {
-    // struct name {
-    let mut buf = format!("struct {} {{\n", def.name);
-
-    def.fields.iter().for_each(|f| {
-        // int counter;
-        buf += &format!("{} {};\n", generate_type(Either::Left(f.clone())), f.name,);
-    });
-
-    // };
-    buf += "};\n";
-
-    buf
-}
-
-pub(super) fn generate_type(t: Either<Variable, Option<Type>>) -> String {
-    let (ty, name) = match t {
-        Either::Left(var) => (var.ty, Some(var.name)),
-        Either::Right(ty) => (ty, None),
-    };
-    match ty {
-        Some(t) => match t {
-            Type::Int => "int".into(),
-            Type::Str => "char *".into(),
-            Type::Any => "void *".into(),
-            Type::Bool => "bool".into(),
-            Type::Struct(name) => format!("struct {}", name),
-            Type::Array(t, capacity) => match name {
-                Some(n) => format!(
-                    "{T} {N}[{C}]",
-                    T = generate_type(Either::Right(Some(*t))),
-                    N = n,
-                    C = capacity
-                        .map(|val| val.to_string())
-                        .unwrap_or_else(|| "".to_string()),
-                ),
-                None => format!("{}[]", generate_type(Either::Right(Some(*t)))),
-            },
-        },
-        None => "void".into(),
-    }
-}
-
-fn generate_function(func: Function) -> String {
-    let mut buf = String::new();
-    buf += &format!("{} ", &generate_function_signature(func.clone()));
-    if let Statement::Block { statements, scope } = func.body {
-        buf += &generate_block(statements, scope);
+pub(super) fn generate_arguments(args: Vec<Variable>) -> String {
+    if args.is_empty() {
+        return "void".to_string();
     }
 
-    buf
-}
-
-fn generate_function_signature(func: Function) -> String {
-    let arguments: String = func
-        .arguments
-        .into_iter()
-        .map(|var| format!("{} {}", generate_type(Either::Left(var.clone())), var.name))
+    args.into_iter()
+        .map(|var| format!("{} {}", type_to_c_type(&var.ty), var.name))
         .collect::<Vec<String>>()
-        .join(", ");
-    let t = generate_type(Either::Right(func.ret_type));
-    format!("{T} {N}({A})", T = t, N = func.name, A = arguments)
+        .join(", ")
 }
 
-fn generate_block(block: Vec<Statement>, _scope: Vec<Variable>) -> String {
+fn type_to_c_type(ty: &Option<Type>) -> String {
+    match ty {
+        Some(Type::Int) => "int".to_string(),
+        Some(Type::Bool) => "bool".to_string(),
+        Some(Type::Str) => "char*".to_string(),
+        Some(Type::Array(inner, _)) => format!("{}*", type_to_c_type(&Some(*inner.clone()))),
+        Some(Type::Struct(name)) => name.clone(),
+        Some(Type::Any) => "void*".to_string(),
+        None => "void".to_string(),
+    }
+}
+
+pub(super) fn generate_function_prototype(func: &Function) -> String {
+    let return_type = match &func.ret_type {
+        Some(ty) => type_to_c_type(&Some(ty.clone())),
+        None => "void".to_string(),
+    };
+
+    format!(
+        "{} {}({});\n",
+        return_type,
+        func.name,
+        generate_arguments(func.arguments.clone())
+    )
+}
+
+pub(super) fn generate_function(func: Function) -> String {
+    let return_type = match &func.ret_type {
+        Some(ty) => type_to_c_type(&Some(ty.clone())),
+        None => "void".to_string(),
+    };
+
+    let arguments = generate_arguments(func.arguments);
+    let mut raw = format!("{} {}({}) ", return_type, func.name, arguments);
+
+    raw += &generate_block(func.body, None);
+    raw += "\n";
+    raw
+}
+
+pub(super) fn generate_struct_definition(struct_def: StructDef) -> String {
+    let mut buf = format!("typedef struct {} {{\n", &struct_def.name);
+
+    // Generate struct fields
+    for field in &struct_def.fields {
+        buf += &format!("    {} {};\n", type_to_c_type(&field.ty), field.name);
+    }
+    buf += &format!("}} {};\n\n", &struct_def.name);
+
+    // Generate method prototypes
+    for method in &struct_def.methods {
+        let mut method_copy = method.clone();
+        // Add self parameter as first argument
+        let self_var = Variable {
+            name: "self".to_string(),
+            ty: Some(Type::Struct(struct_def.name.clone())),
+        };
+        method_copy.arguments.insert(0, self_var);
+        buf += &generate_function_prototype(&method_copy);
+    }
+
+    // Generate method implementations
+    for method in &struct_def.methods {
+        let mut method_copy = method.clone();
+        // Add self parameter as first argument
+        let self_var = Variable {
+            name: "self".to_string(),
+            ty: Some(Type::Struct(struct_def.name.clone())),
+        };
+        method_copy.arguments.insert(0, self_var);
+        buf += &generate_function(method_copy);
+    }
+
+    buf
+}
+
+pub(super) fn generate_block(block: Statement, prepend: Option<String>) -> String {
     let mut generated = String::from("{\n");
 
-    for statement in block {
+    if let Some(pre) = prepend {
+        generated += &pre;
+    }
+
+    let statements = match block {
+        Statement::Block {
+            statements,
+            scope: _,
+        } => statements,
+        _ => panic!("Block body should be of type Statement::Block"),
+    };
+
+    for statement in statements {
         generated += &generate_statement(statement);
     }
 
     generated += "}\n";
-
     generated
 }
 
-fn generate_statement(statement: Statement) -> String {
+pub(super) fn generate_statement(statement: Statement) -> String {
     let state = match statement {
         Statement::Return(ret) => generate_return(ret),
         Statement::Declare { variable, value } => generate_declare(variable, value),
-        Statement::Exp(val) => generate_expression(val) + ";\n",
+        Statement::Exp(val) => generate_expression(val),
         Statement::If {
             condition,
             body,
             else_branch,
         } => generate_conditional(condition, *body, else_branch.map(|x| *x)),
         Statement::Assign { lhs, rhs } => generate_assign(*lhs, *rhs),
-        Statement::Block { statements, scope } => generate_block(statements, scope),
+        Statement::Block {
+            statements: _,
+            scope: _,
+        } => return generate_block(statement, None),
         Statement::While { condition, body } => generate_while_loop(condition, *body),
-        Statement::For {
-            ident: _,
-            expr: _,
-            body: _,
-        } => todo!(),
-        Statement::Continue => todo!(),
-        Statement::Break => todo!(),
-        Statement::Match {
-            subject: _,
-            arms: _,
-        } => todo!(),
+        Statement::For { ident, expr, body } => generate_for_loop(ident, expr, *body),
+        Statement::Continue => "continue".to_string(),
+        Statement::Break => "break".to_string(),
+        Statement::Match { subject, arms } => generate_match(subject, arms),
     };
 
-    format!("{}\n", state)
+    format!("    {};\n", state)
 }
 
-fn generate_expression(expr: Expression) -> String {
+pub(super) fn generate_expression(expr: Expression) -> String {
     match expr {
         Expression::Int(val) => val.to_string(),
+        Expression::Selff => "self".to_string(),
+        Expression::Str(val) => format!("\"{}\"", val.replace("\"", "\\\"")),
         Expression::Variable(val) => val,
-        Expression::Str(val) => super::string_syntax(val),
-        Expression::Bool(b) => b.to_string(),
+        Expression::Bool(b) => if b { "true" } else { "false" }.to_string(),
         Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
-        Expression::Array { capacity, elements } => generate_array(capacity, elements),
+        Expression::Array {
+            capacity: _,
+            elements,
+        } => generate_array(elements),
         Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
         Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-        Expression::StructInitialization { name: _, fields } => {
-            generate_struct_initialization(fields)
+        Expression::StructInitialization { name, fields } => {
+            generate_struct_initialization(name, fields)
         }
         Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
-        Expression::Selff => todo!(),
     }
 }
 
-fn generate_while_loop(expr: Expression, body: Statement) -> String {
-    let mut out_str = String::from("while (");
+pub(super) fn generate_while_loop(expr: Expression, body: Statement) -> String {
+    format!(
+        "while ({}) {}",
+        generate_expression(expr),
+        generate_block(body, None)
+    )
+}
 
-    out_str += &generate_expression(expr);
-    out_str += ") ";
+pub(super) fn generate_for_loop(ident: Variable, expr: Expression, body: Statement) -> String {
+    // C-style for loop with array indexing
+    let mut out_str = format!(
+        "for(int i = 0; i < sizeof({}) / sizeof({}[0]); i++)",
+        generate_expression(expr.clone()),
+        generate_expression(expr.clone())
+    );
 
-    if let Statement::Block { statements, scope } = body {
-        out_str += &generate_block(statements, scope);
-    }
+    // Add the loop variable declaration to the prepended block
+    out_str += &generate_block(
+        body,
+        Some(format!(
+            "    {} {} = {}[i];\n",
+            type_to_c_type(&ident.ty),
+            ident.name,
+            generate_expression(expr)
+        )),
+    );
     out_str
 }
 
-fn generate_array(_size: usize, elements: Vec<Expression>) -> String {
-    let mut out_str = String::from("[");
+pub(super) fn generate_match(subject: Expression, arms: Vec<MatchArm>) -> String {
+    let mut out_str = format!("switch ({}) {{\n", generate_expression(subject));
+
+    for arm in arms {
+        match arm {
+            MatchArm::Case(expr, statement) => {
+                out_str += &format!("    case {}:\n", generate_expression(expr));
+                out_str += &generate_statement(statement);
+                out_str += "        break;\n";
+            }
+            MatchArm::Else(statement) => {
+                out_str += "    default:\n";
+                out_str += &generate_statement(statement);
+            }
+        }
+    }
+
+    out_str += "    }\n";
+    out_str
+}
+
+pub(super) fn generate_array(elements: Vec<Expression>) -> String {
+    let mut out_str = String::from("{");
 
     out_str += &elements
         .iter()
-        .map(|el| match el {
-            Expression::Int(i) => i.to_string(),
-            Expression::Str(s) => super::string_syntax(s.to_owned()),
-            _ => todo!("Not yet implemented"),
-        })
+        .map(|el| generate_expression(el.clone()))
         .collect::<Vec<String>>()
         .join(", ");
 
-    out_str += "]";
+    out_str += "}";
     out_str
 }
 
-fn generate_array_access(name: String, expr: Expression) -> String {
-    format!("{n}[{e}]", n = name, e = generate_expression(expr))
+pub(super) fn generate_array_access(name: String, expr: Expression) -> String {
+    format!("{}[{}]", name, generate_expression(expr))
 }
 
-fn generate_conditional(
+pub(super) fn generate_conditional(
     expr: Expression,
     if_state: Statement,
     else_state: Option<Statement>,
 ) -> String {
-    let expr_str = generate_expression(expr);
-
-    let body = match if_state {
-        Statement::Block {
-            statements,
-            scope: _,
-        } => statements,
-        _ => panic!("Conditional body should be of type block"),
-    };
-
-    let mut outcome = format!("if ({})", expr_str);
-
-    outcome += "{\n";
-    for statement in body {
-        outcome += &generate_statement(statement);
-    }
-    outcome += "}";
+    let mut outcome = format!("if ({}) ", generate_expression(expr));
+    outcome += &generate_block(if_state, None);
 
     if let Some(else_state) = else_state {
         outcome += "else ";
-        outcome += &generate_statement(else_state);
+        outcome += &generate_block(else_state, None);
     }
+
     outcome
 }
 
-fn generate_declare(var: Variable, val: Option<Expression>) -> String {
-    // var is used here to not collide with scopes.
-    // TODO: Can let be used instead?
+pub(super) fn generate_declare<V: AsRef<Variable>>(
+    identifier: V,
+    val: Option<Expression>,
+) -> String {
+    let ident = identifier.as_ref();
+    let type_str = type_to_c_type(&ident.ty);
+
     match val {
         Some(expr) => format!(
-            "{} {} = {};",
-            generate_type(Either::Left(var.to_owned())),
-            var.name,
+            "{} {} = {}",
+            type_str,
+            ident.name,
             generate_expression(expr)
         ),
-        None => format!(
-            "{} {};",
-            generate_type(Either::Left(var.to_owned())),
-            var.name
-        ),
+        None => match &ident.ty {
+            Some(Type::Array(_, _)) => {
+                format!("{} {}[]", type_str, ident.name)
+            }
+            _ => format!("{} {}", type_str, ident.name),
+        },
     }
 }
 
-fn generate_function_call(func: String, args: Vec<Expression>) -> String {
+pub(super) fn generate_function_call(func: String, args: Vec<Expression>) -> String {
     let formatted_args = args
         .into_iter()
-        .map(|arg| match arg {
-            Expression::Int(i) => i.to_string(),
-            Expression::Bool(v) => v.to_string(),
-            Expression::ArrayAccess { name, index } => generate_array_access(name, *index),
-            Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
-            Expression::Str(s) => super::string_syntax(s),
-            Expression::Variable(s) => s,
-            Expression::Array {
-                capacity: _,
-                elements: _,
-            } => todo!(),
-            Expression::BinOp { lhs, op, rhs } => generate_bin_op(*lhs, op, *rhs),
-            Expression::StructInitialization { name: _, fields } => {
-                generate_struct_initialization(fields)
-            }
-            Expression::FieldAccess { expr, field } => generate_field_access(*expr, *field),
-            Expression::Selff => todo!(),
-        })
+        .map(|arg| generate_expression(arg))
         .collect::<Vec<String>>()
-        .join(",");
-    format!("{N}({A})", N = func, A = formatted_args)
+        .join(", ");
+
+    format!("{}({})", func, formatted_args)
 }
 
-fn generate_return(ret: Option<Expression>) -> String {
+pub(super) fn generate_return(ret: Option<Expression>) -> String {
     match ret {
-        Some(expr) => format!("return {};", generate_expression(expr)),
-        None => "return;".to_string(),
+        Some(expr) => format!("return {}", generate_expression(expr)),
+        None => "return".to_string(),
     }
 }
 
-fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
+pub(super) fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
     let op_str = match op {
         BinOp::Addition => "+",
         BinOp::And => "&&",
@@ -293,37 +335,46 @@ fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
         BinOp::GreaterThanOrEqual => ">=",
         BinOp::LessThan => "<",
         BinOp::LessThanOrEqual => "<=",
-        BinOp::AddAssign => "+=",
-        BinOp::SubtractAssign => "-=",
-        BinOp::MultiplyAssign => "*=",
-        BinOp::DivideAssign => "/=",
         BinOp::Modulus => "%",
         BinOp::Multiplication => "*",
         BinOp::NotEqual => "!=",
         BinOp::Or => "||",
         BinOp::Subtraction => "-",
+        BinOp::AddAssign => "+=",
+        BinOp::SubtractAssign => "-=",
+        BinOp::MultiplyAssign => "*=",
+        BinOp::DivideAssign => "/=",
     };
+
     format!(
-        "{l} {op} {r}",
-        l = generate_expression(left),
-        op = op_str,
-        r = generate_expression(right)
+        "{} {} {}",
+        generate_expression(left),
+        op_str,
+        generate_expression(right)
     )
 }
 
-fn generate_struct_initialization(fields: HashMap<String, Box<Expression>>) -> String {
-    let mut buf: String = String::from("{");
+pub(super) fn generate_struct_initialization(
+    name: String,
+    fields: HashMap<String, Box<Expression>>,
+) -> String {
+    let mut out_str = format!("({}) {{", name);
 
-    fields.iter().for_each(|(k, v)| {
-        buf += &format!(".{} = {},", k, generate_expression(*v.clone()));
-    });
+    let field_inits: Vec<String> = fields
+        .into_iter()
+        .map(|(key, value)| format!(".{} = {}", key, generate_expression(*value)))
+        .collect();
 
-    buf += "}";
+    out_str += &field_inits.join(", ");
+    out_str += "}";
 
-    buf
+    out_str
 }
 
-fn generate_field_access(expr: Expression, field: Expression) -> String {
+pub(super) fn generate_field_access(expr: Expression, field: Expression) -> String {
+    // In C, we use -> for pointer access and . for direct access
+    // For simplicity, we'll use . here, but in a real implementation
+    // you'd need to check if expr is a pointer
     format!(
         "{}.{}",
         generate_expression(expr),
@@ -331,9 +382,9 @@ fn generate_field_access(expr: Expression, field: Expression) -> String {
     )
 }
 
-fn generate_assign(name: Expression, expr: Expression) -> String {
+pub(super) fn generate_assign(name: Expression, expr: Expression) -> String {
     format!(
-        "{} = {};",
+        "{} = {}",
         generate_expression(name),
         generate_expression(expr)
     )
