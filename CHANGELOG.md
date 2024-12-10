@@ -2,9 +2,14 @@
 
 ## Unreleased
 
+**Features**
+
+- QBE: Added proper memory alignment for struct fields based on field types ([#61](https://github.com/antimony-lang/antimony/pull/61))
+
 **Fixes**
 
 - Fixed parsing of binary operations in inline function expressions ([#109](https://github.com/antimony-lang/antimony/pull/109))
+- QBE: Fixed struct field access and memory layout for nested structs ([#61](https://github.com/antimony-lang/antimony/pull/61))
 
 **Maintenance**
 
