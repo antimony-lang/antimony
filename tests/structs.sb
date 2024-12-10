@@ -8,6 +8,7 @@ fn structs_main() {
     test_method_call()
     test_function_call_with_constructor()
     test_method_with_self_statement()
+    test_nested_field_access()
 }
 
 struct User {
@@ -108,4 +109,29 @@ struct Self_test_struct {
 fn test_method_with_self_statement() {
     let foo = new Self_test_struct { a: 5 }
     foo.bar()
+}
+
+struct Point {
+    x: int
+    y: int
+}
+
+struct Rectangle {
+    origin: Point
+    width: int
+    height: int
+}
+
+fn test_nested_field_access() {
+    let rect = new Rectangle {
+        origin: new Point {
+            x: 10
+            y: 20
+        }
+        width: 100
+        height: 50
+    }
+    assert(rect.origin.x == 10)
+    rect.origin.x += 5
+    assert(rect.origin.x == 15)
 }
