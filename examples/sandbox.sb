@@ -9,7 +9,7 @@ struct Rectangle {
     height: int
 }
 
-fn test_nested_field_access() {
+fn main(): int {
     let rect = new Rectangle {
         origin: new Point {
             x: 10
@@ -18,7 +18,9 @@ fn test_nested_field_access() {
         width: 100
         height: 50
     }
-    assert(rect.origin.x == 10)
+    rect.origin.x == 10
     rect.origin.x += 5
-    assert(rect.origin.x == 15)
+    rect.origin.x == 15
+
+    return 0
 }
