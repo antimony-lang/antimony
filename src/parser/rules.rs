@@ -233,62 +233,57 @@ impl Parser {
 
     fn parse_statement(&mut self) -> Result<Statement, String> {
         let token = self.peek()?;
+
         match &token.kind {
             TokenKind::CurlyBracesOpen => self.parse_block(),
-            TokenKind::BraceOpen | TokenKind::Keyword(Keyword::Selff) => {
-                Ok(Statement::Exp(self.parse_expression()?))
-            }
-            TokenKind::Keyword(Keyword::Let) => self.parse_declare(),
-            TokenKind::Keyword(Keyword::Return) => self.parse_return(),
-            TokenKind::Keyword(Keyword::If) => self.parse_conditional_statement(),
-            TokenKind::Keyword(Keyword::While) => self.parse_while_loop(),
-            TokenKind::Keyword(Keyword::Break) => self.parse_break(),
-            TokenKind::Keyword(Keyword::Continue) => self.parse_continue(),
-            TokenKind::Keyword(Keyword::For) => self.parse_for_loop(),
-            TokenKind::Keyword(Keyword::Match) => self.parse_match_statement(),
+            TokenKind::Keyword(keyword) => match keyword {
+                Keyword::Let => self.parse_declare(),
+                Keyword::Return => self.parse_return(),
+                Keyword::If => self.parse_conditional_statement(),
+                Keyword::While => self.parse_while_loop(),
+                Keyword::Break => self.parse_break(),
+                Keyword::Continue => self.parse_continue(),
+                Keyword::For => self.parse_for_loop(),
+                Keyword::Match => self.parse_match_statement(),
+                Keyword::Struct => {
+                    Err("Struct definitions inside functions are not allowed".to_string())
+                }
+                Keyword::Selff => Ok(Statement::Exp(self.parse_expression()?)),
+                _ => Ok(Statement::Exp(self.parse_expression()?)),
+            },
+            TokenKind::BraceOpen => Ok(Statement::Exp(self.parse_expression()?)),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
+
+                // Handle initial expression which could be field access or just a variable
                 let expr = if self.peek_token(TokenKind::Dot).is_ok() {
                     self.parse_field_access(Expression::Variable(ident.clone()))?
                 } else {
                     Expression::Variable(ident.clone())
                 };
 
-                if self.peek_token(TokenKind::BraceOpen).is_ok() {
-                    let fn_call = self.parse_function_call(Some(ident))?;
-                    let next = self.peek()?;
-                    if BinOp::try_from(next.kind.clone()).is_ok() {
-                        let bin_op = self.parse_bin_op(Some(fn_call))?;
-                        Ok(Statement::Exp(bin_op))
-                    } else {
-                        Ok(Statement::Exp(fn_call))
+                // Look ahead to determine statement type
+                match self.peek()?.kind {
+                    TokenKind::BraceOpen => {
+                        let state = self.parse_function_call(Some(ident))?;
+                        Ok(Statement::Exp(state))
                     }
-                } else if self.peek_token(TokenKind::Assign).is_ok() {
-                    let state = self.parse_assignent(Some(expr))?;
-                    Ok(state)
-                } else if self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
-                    let expr = self.parse_array_access(Some(ident))?;
-
-                    let next = self.peek()?;
-                    match next.kind {
-                        TokenKind::Assign => self.parse_assignent(Some(expr)),
-                        _ => Ok(Statement::Exp(expr)),
+                    TokenKind::Assign => self.parse_assignent(Some(expr)),
+                    TokenKind::SquareBraceOpen => {
+                        let array_expr = self.parse_array_access(Some(ident))?;
+                        match self.peek()?.kind {
+                            TokenKind::Assign => self.parse_assignent(Some(array_expr)),
+                            _ => Ok(Statement::Exp(array_expr)),
+                        }
                     }
-                } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-                    let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
-                    Ok(state)
-                } else if self.peek_token(TokenKind::Dot).is_ok() {
-                    Ok(Statement::Exp(
-                        self.parse_field_access(Expression::Variable(ident))?,
-                    ))
-                } else {
-                    Ok(Statement::Exp(expr))
+                    kind if BinOp::try_from(kind.clone()).is_ok() => {
+                        Ok(Statement::Exp(self.parse_bin_op(Some(expr))?))
+                    }
+                    TokenKind::Dot => Ok(Statement::Exp(self.parse_field_access(expr)?)),
+                    _ => Ok(Statement::Exp(expr)),
                 }
             }
             TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
-            TokenKind::Keyword(Keyword::Struct) => {
-                Err("Struct definitions inside functions are not allowed".to_string())
-            }
             _ => Err(self.make_error_msg(token.pos, "Failed to parse statement".to_string())),
         }
     }
