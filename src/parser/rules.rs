@@ -1,9 +1,3 @@
-use super::parser::Parser;
-use crate::ast::types::Type;
-use crate::ast::*;
-use crate::lexer::Keyword;
-use crate::lexer::{TokenKind, Value};
-use std::collections::HashMap;
 /**
  * Copyright 2020 Garrit Franke
  *
@@ -19,6 +13,12 @@ use std::collections::HashMap;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use super::parser::Parser;
+use crate::ast::types::Type;
+use crate::ast::*;
+use crate::lexer::Keyword;
+use crate::lexer::{TokenKind, Value};
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::convert::TryFrom;
 
