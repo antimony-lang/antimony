@@ -254,10 +254,15 @@ impl Parser {
                     Expression::Variable(ident.clone())
                 };
 
-                // TODO: Use match statement
                 if self.peek_token(TokenKind::BraceOpen).is_ok() {
-                    let state = self.parse_function_call(Some(ident))?;
-                    Ok(Statement::Exp(state))
+                    let fn_call = self.parse_function_call(Some(ident))?;
+                    let next = self.peek()?;
+                    if BinOp::try_from(next.kind.clone()).is_ok() {
+                        let bin_op = self.parse_bin_op(Some(fn_call))?;
+                        Ok(Statement::Exp(bin_op))
+                    } else {
+                        Ok(Statement::Exp(fn_call))
+                    }
                 } else if self.peek_token(TokenKind::Assign).is_ok() {
                     let state = self.parse_assignent(Some(expr))?;
                     Ok(state)
@@ -270,8 +275,6 @@ impl Parser {
                         _ => Ok(Statement::Exp(expr)),
                     }
                 } else if BinOp::try_from(self.peek()?.kind).is_ok() {
-                    // Parse Binary operation
-                    let expr = Expression::Variable(ident);
                     let state = Statement::Exp(self.parse_bin_op(Some(expr))?);
                     Ok(state)
                 } else if self.peek_token(TokenKind::Dot).is_ok() {
@@ -333,6 +336,7 @@ impl Parser {
         let expr = Expression::FunctionCall { fn_name, args };
         match self.peek()?.kind {
             TokenKind::Dot => self.parse_field_access(expr),
+            _ if BinOp::try_from(self.peek()?.kind).is_ok() => self.parse_bin_op(Some(expr)),
             _ => Ok(expr),
         }
     }
@@ -406,7 +410,6 @@ impl Parser {
             other => return Err(format!("Expected Expression, found {:?}", other)),
         };
 
-        // Only try to peek if we have more tokens
         if !self.has_more() {
             return Ok(expr);
         }
@@ -454,7 +457,6 @@ impl Parser {
         }
     }
 
-    /// TODO: Cleanup
     fn parse_struct_initialization(&mut self) -> Result<Expression, String> {
         let name = self.match_identifier()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
@@ -670,25 +672,10 @@ impl Parser {
         }
     }
 
-    /// In some occurences a complex expression has been evaluated before a binary operation is encountered.
-    /// The following expression is one such example:
-    /// ```
-    /// foo(1) * 2
-    /// ```
-    /// In this case, the function call has already been evaluated, and needs to be passed to this function.
     fn parse_bin_op(&mut self, lhs: Option<Expression>) -> Result<Expression, String> {
         let left = match lhs {
             Some(lhs) => lhs,
-            None => {
-                let prev = self.prev().ok_or("Expected token")?;
-                match &prev.kind {
-                    TokenKind::Identifier(_) | TokenKind::Literal(_) | TokenKind::Keyword(_) => {
-                        Ok(Expression::try_from(prev)?)
-                    }
-                    _ => Err(self
-                        .make_error_msg(prev.pos, "Failed to parse binary operation".to_string())),
-                }?
-            }
+            None => self.parse_expression()?,
         };
 
         let op = self.match_operator()?;

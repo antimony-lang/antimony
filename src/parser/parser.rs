@@ -141,8 +141,4 @@ impl Parser {
         let new_lines = "\n".repeat(3);
         format!("{new_lines}Hint: {}\n", msg)
     }
-
-    pub(super) fn prev(&mut self) -> Option<Token> {
-        self.prev.clone()
-    }
 }

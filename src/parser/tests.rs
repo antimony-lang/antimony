@@ -260,6 +260,170 @@ fn test_parse_compound_ops_with_function_call() {
 }
 
 #[test]
+fn test_parse_function_call_binary_op() {
+    let raw = "
+    fn main() {
+        foo(1) * 2
+    }
+
+    fn foo(x: int) {
+        return x
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(
+        tree.is_ok(),
+        "Failed to parse 'foo(1) * 2': {:?}",
+        tree.err()
+    );
+}
+
+#[test]
+fn test_parse_complex_function_call_binary_op() {
+    let raw = "
+    fn main() {
+        let x = foo(bar(1, 2)) * 3 + 4
+    }
+
+    fn foo(x: int) {
+        return x
+    }
+
+    fn bar(x: int, y: int) {
+        return x + y
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(
+        tree.is_ok(),
+        "Failed to parse nested function calls with binary ops: {:?}",
+        tree.err()
+    );
+}
+
+#[test]
+fn test_parse_function_call_binary_op_in_return() {
+    let raw = "
+    fn main() {
+        return foo(1) * bar(2)
+    }
+
+    fn foo(x: int) {
+        return x
+    }
+
+    fn bar(x: int) {
+        return x
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(
+        tree.is_ok(),
+        "Failed to parse binary op in return statement: {:?}",
+        tree.err()
+    );
+}
+
+#[test]
+fn test_parse_function_call_binary_op_nested() {
+    let raw = "
+    fn main() {
+        let x = (foo(1) * 2) + (bar(3) * 4)
+    }
+
+    fn foo(x: int) {
+        return x
+    }
+
+    fn bar(x: int) {
+        return x
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(
+        tree.is_ok(),
+        "Failed to parse nested binary operations: {:?}",
+        tree.err()
+    );
+}
+
+#[test]
+fn test_parse_function_call_binary_op_with_variables() {
+    let raw = "
+    fn main() {
+        let a = 5
+        let result = foo(a) * 2
+    }
+
+    fn foo(x: int) {
+        return x
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(
+        tree.is_ok(),
+        "Failed to parse binary op with variables: {:?}",
+        tree.err()
+    );
+}
+
+#[test]
+fn test_parse_function_call_comparison_op() {
+    let raw = "
+    fn main() {
+        if foo(1) > bar(2) {
+            return true
+        }
+        return false
+    }
+
+    fn foo(x: int) {
+        return x
+    }
+
+    fn bar(x: int) {
+        return x
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(
+        tree.is_ok(),
+        "Failed to parse comparison with function calls: {:?}",
+        tree.err()
+    );
+}
+
+#[test]
+fn test_parse_function_call_binary_op_precedence() {
+    let raw = "
+    fn main() {
+        let result = foo(1) * 2 + bar(3) * 4
+    }
+
+    fn foo(x: int) {
+        return x
+    }
+
+    fn bar(x: int) {
+        return x
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(
+        tree.is_ok(),
+        "Failed to parse operator precedence with function calls: {:?}",
+        tree.err()
+    );
+}
+
+#[test]
 fn test_parse_compound_ops_with_strings() {
     let raw = "
     fn main() {

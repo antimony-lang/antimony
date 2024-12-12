@@ -9,6 +9,7 @@
 **Fixes**
 
 - Fixed parsing of binary operations in inline function expressions ([#109](https://github.com/antimony-lang/antimony/pull/109))
+- Fixed parsing of binary operations after function calls ([#111](https://github.com/antimony-lang/antimony/pull/111))
 - QBE: Fixed struct field access and memory layout for nested structs ([#61](https://github.com/antimony-lang/antimony/pull/61))
 
 **Maintenance**
