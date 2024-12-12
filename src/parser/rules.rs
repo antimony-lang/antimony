@@ -289,12 +289,10 @@ impl Parser {
     }
 
     /// Parses a function call from tokens.
-    /// The name of the function needs to be passed here, because we have already passed it with our cursor.
-    /// If no function name is provided, the next token will be fetched
     fn parse_function_call(&mut self, func_name: Option<String>) -> Result<Expression, String> {
         let fn_name = match func_name {
             Some(name) => name,
-            None => self.next()?.raw,
+            None => self.match_identifier()?,
         };
 
         self.match_token(TokenKind::BraceOpen)?;
@@ -315,12 +313,7 @@ impl Parser {
                 TokenKind::Keyword(Keyword::Boolean) | TokenKind::Keyword(Keyword::New) => {
                     args.push(self.parse_expression()?)
                 }
-                TokenKind::SquareBraceOpen => {
-                    // TODO: Expression parsing currently uses `next` instead of `peek`.
-                    // We have to eat that token here until that is resolved
-                    self.match_token(TokenKind::SquareBraceOpen)?;
-                    args.push(self.parse_array()?);
-                }
+                TokenKind::SquareBraceOpen => args.push(self.parse_expression()?),
                 _ => {
                     return Err(self.make_error(TokenKind::BraceClose, next));
                 }
@@ -346,21 +339,24 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Result<Expression, String> {
-        let token = self.next()?;
+        let token = self.peek()?;
 
         let expr = match token.kind {
             // (1 + 2)
             TokenKind::BraceOpen => {
+                self.match_token(TokenKind::BraceOpen)?;
                 let expr = self.parse_expression()?;
                 self.match_token(TokenKind::BraceClose)?;
                 expr
             }
             // true | false
             TokenKind::Keyword(Keyword::Boolean) => {
+                let token = self.next()?;
                 Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
             }
             // 5
             TokenKind::Literal(Value::Int) => {
+                let token = self.next()?;
                 // Ignore spacing character (E.g. 1_000_000)
                 let clean_str = token.raw.replace('_', "");
                 let val = match clean_str {
@@ -381,10 +377,17 @@ impl Parser {
                 Expression::Int(val)
             }
             // "A string"
-            TokenKind::Literal(Value::Str(string)) => Expression::Str(string),
+            TokenKind::Literal(Value::Str(string)) => {
+                self.next()?;
+                Expression::Str(string)
+            }
             // self
-            TokenKind::Keyword(Keyword::Selff) => Expression::Selff,
-            TokenKind::Identifier(val) => {
+            TokenKind::Keyword(Keyword::Selff) => {
+                self.next()?;
+                Expression::Selff
+            }
+            TokenKind::Identifier(_) => {
+                let val = self.match_identifier()?;
                 if !self.has_more() {
                     return Ok(Expression::Variable(val));
                 }
@@ -453,6 +456,7 @@ impl Parser {
     }
 
     fn parse_struct_initialization(&mut self) -> Result<Expression, String> {
+        self.match_token(TokenKind::Keyword(Keyword::New))?;
         let name = self.match_identifier()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let fields = self.parse_struct_fields()?;
@@ -491,6 +495,7 @@ impl Parser {
     }
 
     fn parse_array(&mut self) -> Result<Expression, String> {
+        self.match_token(TokenKind::SquareBraceOpen)?;
         let mut elements = Vec::new();
         loop {
             let next = self.peek()?;
