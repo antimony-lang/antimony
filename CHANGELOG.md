@@ -16,6 +16,7 @@
 
 - Refactored command execution for better error handling and code organization
 - Remove regex dependency
+- Bump dependency [qbe](https://crates.io/crates/qbe) from `1.0.0` to `2.4.0`
 
 ## v0.8.0 (2024-04-05)
 
