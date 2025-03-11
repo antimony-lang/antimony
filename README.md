@@ -35,6 +35,8 @@ fn fib(n: int): int {
 
 ## State of this project
 
+**Antimony is a hobby project** created to learn about compiler internals. It is not (yet) intended for production use.
+
 Most algorithms should run fine, but some features may be unstable. Standard library and documentation are still incomplete. See the [open issues](https://github.com/antimony-lang/antimony/issues) for upcoming todos.
 
 The Antimony compiler emits JavaScript for the Node.js runtime, and a C backend is currently under development. Backends for WASM and LLVM are planned.
