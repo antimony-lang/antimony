@@ -1,5 +1,6 @@
 # Release Workflow
 
+1. Run prerelease checks: `sh contrib/prerelease_check.sh`
 1. Update version in `Cargo.toml`
 1. Add entry in `CHANGELOG.md`
 1. Commit change with semantic version number (`v0.1.1`)
