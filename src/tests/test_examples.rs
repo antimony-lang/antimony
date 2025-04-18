@@ -88,7 +88,6 @@ fn test_testcases() -> Result<(), Error> {
     Ok(())
 }
 
-
 #[test]
 fn test_struct_decl_error() -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
@@ -123,7 +122,6 @@ fn test_struct_instance_error() -> Result<(), Error> {
     Ok(())
 }
 
-
 #[test]
 fn test_inline_function_error() -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
@@ -140,4 +138,3 @@ fn test_inline_function_error() -> Result<(), Error> {
     assert!(!success);
     Ok(())
 }
-
