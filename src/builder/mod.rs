@@ -151,8 +151,9 @@ impl Builder {
         let assets = Lib::iter();
 
         for file in assets {
-            let stdlib_raw =
-                Lib::get(&file).expect("Standard library not found. This should not occur.");
+            let stdlib_raw = Lib::get(&file)
+                .expect("Standard library not found. This should not occur.")
+                .data;
             let stblib_str =
                 std::str::from_utf8(&stdlib_raw).expect("Could not interpret standard library.");
             let stdlib_tokens = lexer::tokenize(stblib_str)?;

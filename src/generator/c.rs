@@ -16,10 +16,10 @@ impl Generator for CGenerator {
         code += "#include <string.h>\n\n";
 
         // Add builtin functions
-        let raw_builtins =
-            crate::Builtins::get("builtin.c").expect("Could not locate builtin functions");
-        code += std::str::from_utf8(raw_builtins.as_ref())
-            .expect("Unable to interpret builtin functions");
+        let raw_builtins = crate::Builtins::get("builtin.c")
+            .expect("Could not locate builtin functions")
+            .data;
+        code += std::str::from_utf8(&raw_builtins).expect("Unable to interpret builtin functions");
 
         // Generate struct definitions first
         let structs: String = prog

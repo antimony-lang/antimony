@@ -24,10 +24,10 @@ impl Generator for JsGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
         let mut code = String::new();
 
-        let raw_builtins =
-            crate::Builtins::get("builtin.js").expect("Could not locate builtin functions");
-        code += std::str::from_utf8(raw_builtins.as_ref())
-            .expect("Unable to interpret builtin functions");
+        let raw_builtins = crate::Builtins::get("builtin.js")
+            .expect("Could not locate builtin functions")
+            .data;
+        code += std::str::from_utf8(&raw_builtins).expect("Unable to interpret builtin functions");
 
         let structs: String = prog
             .structs
