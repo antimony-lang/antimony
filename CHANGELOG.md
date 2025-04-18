@@ -5,6 +5,8 @@
 **Features**
 
 - QBE: Added proper memory alignment for struct fields based on field types ([#61](https://github.com/antimony-lang/antimony/pull/61))
+- Improved error reporting with more descriptive messages and helpful hints for common parsing errors ([#118](https://github.com/antimony-lang/antimony/pull/118))
+- Added proper Display trait implementation for lexer tokens to improve error message formatting ([#118](https://github.com/antimony-lang/antimony/pull/118))
 
 **Fixes**
 
