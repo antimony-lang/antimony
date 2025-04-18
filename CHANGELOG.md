@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+xxx
+
+## v0.9.0 (2025-04-18)
+
 **Features**
 
 - QBE: Added proper memory alignment for struct fields based on field types ([#61](https://github.com/antimony-lang/antimony/pull/61))
