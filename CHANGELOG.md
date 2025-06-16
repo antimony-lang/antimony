@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-xxx
+**Maintenance**
+
+- Add multi-level AST structure with High-level AST (HAST) and Low-level AST (LAST) ([#124](https://github.com/antimony-lang/antimony/pull/124))
 
 ## v0.9.0 (2025-04-18)
 
