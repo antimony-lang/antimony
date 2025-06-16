@@ -74,3 +74,20 @@ fn test_match_with_block_statement() {
         else => println("Default case")
     }
 }
+
+fn test_nested_match_statement() {
+    let x = 42
+    let y = 1
+
+    match x {
+        1 => assert(false)
+        2 => {
+            assert(false)
+        }
+        42 => match y {
+            1 => assert(true)
+            _ => assert(false)
+        }
+        _ => assert(false)
+    }
+}
