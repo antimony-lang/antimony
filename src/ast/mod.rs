@@ -19,6 +19,10 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 pub mod types;
+pub mod hast;
+pub mod llast;
+pub mod transform;
+
 use types::Type;
 
 /// Table that contains all symbol and its types
