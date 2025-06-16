@@ -228,9 +228,9 @@
 </span><span class="boring">fn main() {
 </span>// HAST: High-level match
 match value {
-    1 =&gt; action_one(),
-    2 =&gt; action_two(),
-    _ =&gt; default_action(),
+    1 =&gt; action_one()
+    2 =&gt; action_two()
+    _ =&gt; default_action()
 }
 
 // LAST: Lowered if-else chain
