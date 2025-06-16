@@ -131,8 +131,7 @@ impl Builder {
         }
 
         // Transform HAST to LLAST and then to Module for generators
-        let lmodule = AstTransformer::transform_module(condensed)?;
-        let module = lmodule.into();
+        let module = AstTransformer::transform_module(condensed)?;
 
         let output = match target {
             Target::JS => generator::js::JsGenerator::generate(module)?,

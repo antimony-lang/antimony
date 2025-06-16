@@ -24,7 +24,7 @@ use std::collections::HashMap;
 pub struct AstTransformer;
 
 impl AstTransformer {
-    pub fn transform_module(hmodule: HModule) -> Result<LModule, String> {
+    pub fn transform_module(hmodule: HModule) -> Result<Module, String> {
         let mut func = Vec::new();
         let mut structs = Vec::new();
 
@@ -36,21 +36,20 @@ impl AstTransformer {
             structs.push(Self::transform_struct_def(hstruct)?);
         }
 
-        Ok(LModule {
-            imports: hmodule.imports,
+        Ok(Module {
             func,
             structs,
             globals: hmodule.globals,
         })
     }
 
-    fn transform_function(hfunc: HFunction) -> Result<LFunction, String> {
+    fn transform_function(hfunc: HFunction) -> Result<Function, String> {
         let mut arguments = Vec::new();
         for harg in hfunc.arguments {
             arguments.push(Self::transform_variable(harg));
         }
 
-        Ok(LFunction {
+        Ok(Function {
             name: hfunc.name,
             arguments,
             body: Self::transform_statement(hfunc.body)?,
@@ -58,7 +57,7 @@ impl AstTransformer {
         })
     }
 
-    fn transform_struct_def(hstruct: HStructDef) -> Result<LStructDef, String> {
+    fn transform_struct_def(hstruct: HStructDef) -> Result<StructDef, String> {
         let mut fields = Vec::new();
         let mut methods = Vec::new();
 
@@ -70,21 +69,21 @@ impl AstTransformer {
             methods.push(Self::transform_function(hmethod)?);
         }
 
-        Ok(LStructDef {
+        Ok(StructDef {
             name: hstruct.name,
             fields,
             methods,
         })
     }
 
-    fn transform_variable(hvar: HVariable) -> LVariable {
-        LVariable {
+    fn transform_variable(hvar: HVariable) -> Variable {
+        Variable {
             name: hvar.name,
             ty: hvar.ty,
         }
     }
 
-    fn transform_statement(hstmt: HStatement) -> Result<LStatement, String> {
+    fn transform_statement(hstmt: HStatement) -> Result<Statement, String> {
         match hstmt {
             HStatement::Block { statements, scope } => {
                 let mut lstmts = Vec::new();
@@ -98,7 +97,7 @@ impl AstTransformer {
                     lscope.push(Self::transform_variable(hvar));
                 }
 
-                Ok(LStatement::Block {
+                Ok(Statement::Block {
                     statements: lstmts,
                     scope: lscope,
                 })
@@ -110,12 +109,12 @@ impl AstTransformer {
                     None => None,
                 };
 
-                Ok(LStatement::Declare {
+                Ok(Statement::Declare {
                     variable: lvar,
                     value: lvalue,
                 })
             }
-            HStatement::Assign { lhs, rhs } => Ok(LStatement::Assign {
+            HStatement::Assign { lhs, rhs } => Ok(Statement::Assign {
                 lhs: Box::new(Self::transform_expression(*lhs)?),
                 rhs: Box::new(Self::transform_expression(*rhs)?),
             }),
@@ -124,7 +123,7 @@ impl AstTransformer {
                     Some(expr) => Some(Self::transform_expression(expr)?),
                     None => None,
                 };
-                Ok(LStatement::Return(lexpr))
+                Ok(Statement::Return(lexpr))
             }
             HStatement::If {
                 condition,
@@ -138,17 +137,17 @@ impl AstTransformer {
                     None => None,
                 };
 
-                Ok(LStatement::If {
+                Ok(Statement::If {
                     condition: lcond,
                     body: lbody,
                     else_branch: lelse,
                 })
             }
-            HStatement::While { condition, body } => Ok(LStatement::While {
+            HStatement::While { condition, body } => Ok(Statement::While {
                 condition: Self::transform_expression(condition)?,
                 body: Box::new(Self::transform_statement(*body)?),
             }),
-            HStatement::For { ident, expr, body } => Ok(LStatement::For {
+            HStatement::For { ident, expr, body } => Ok(Statement::For {
                 ident: Self::transform_variable(ident),
                 expr: Self::transform_expression(expr)?,
                 body: Box::new(Self::transform_statement(*body)?),
@@ -157,9 +156,9 @@ impl AstTransformer {
             HStatement::Match { subject, arms } => {
                 Self::transform_match_to_if_else(subject, arms)
             }
-            HStatement::Break => Ok(LStatement::Break),
-            HStatement::Continue => Ok(LStatement::Continue),
-            HStatement::Exp(hexpr) => Ok(LStatement::Exp(Self::transform_expression(hexpr)?)),
+            HStatement::Break => Ok(Statement::Break),
+            HStatement::Continue => Ok(Statement::Continue),
+            HStatement::Exp(hexpr) => Ok(Statement::Exp(Self::transform_expression(hexpr)?)),
         }
     }
 
@@ -169,7 +168,7 @@ impl AstTransformer {
     fn transform_match_to_if_else(
         subject: HExpression,
         arms: Vec<HMatchArm>,
-    ) -> Result<LStatement, String> {
+    ) -> Result<Statement, String> {
         if arms.is_empty() {
             return Err("Match statement must have at least one arm".to_string());
         }
@@ -177,7 +176,7 @@ impl AstTransformer {
         let lsubject = Self::transform_expression(subject)?;
 
         // Build if-else chain from match arms
-        let mut current_stmt: Option<LStatement> = None;
+        let mut current_stmt: Option<Statement> = None;
 
         // Process arms in reverse order to build nested if-else structure
         for arm in arms.into_iter().rev() {
@@ -187,22 +186,22 @@ impl AstTransformer {
                     let lbody = Self::transform_statement(body)?;
 
                     // Create equality check: subject == pattern
-                    let condition = LExpression::BinOp {
+                    let condition = Expression::BinOp {
                         lhs: Box::new(lsubject.clone()),
-                        op: LBinOp::Equal,
+                        op: BinOp::Equal,
                         rhs: Box::new(lpattern),
                     };
 
                     // Wrap single statements in blocks for generator compatibility
                     let body_block = match lbody {
-                        LStatement::Block { .. } => lbody,
-                        other => LStatement::Block {
+                        Statement::Block { .. } => lbody,
+                        other => Statement::Block {
                             statements: vec![other],
                             scope: vec![],
                         },
                     };
 
-                    current_stmt = Some(LStatement::If {
+                    current_stmt = Some(Statement::If {
                         condition,
                         body: Box::new(body_block),
                         else_branch: current_stmt.map(Box::new),
@@ -212,8 +211,8 @@ impl AstTransformer {
                     let lbody = Self::transform_statement(body)?;
                     // Wrap single statements in blocks for generator compatibility
                     let body_block = match lbody {
-                        LStatement::Block { .. } => lbody,
-                        other => LStatement::Block {
+                        Statement::Block { .. } => lbody,
+                        other => Statement::Block {
                             statements: vec![other],
                             scope: vec![],
                         },
@@ -226,18 +225,18 @@ impl AstTransformer {
         current_stmt.ok_or_else(|| "Failed to transform match statement".to_string())
     }
 
-    fn transform_expression(hexpr: HExpression) -> Result<LExpression, String> {
+    fn transform_expression(hexpr: HExpression) -> Result<Expression, String> {
         match hexpr {
-            HExpression::Int(val) => Ok(LExpression::Int(val)),
-            HExpression::Str(val) => Ok(LExpression::Str(val)),
-            HExpression::Bool(val) => Ok(LExpression::Bool(val)),
-            HExpression::Selff => Ok(LExpression::Selff),
+            HExpression::Int(val) => Ok(Expression::Int(val)),
+            HExpression::Str(val) => Ok(Expression::Str(val)),
+            HExpression::Bool(val) => Ok(Expression::Bool(val)),
+            HExpression::Selff => Ok(Expression::Selff),
             HExpression::Array { capacity, elements } => {
                 let mut lelements = Vec::new();
                 for helement in elements {
                     lelements.push(Self::transform_expression(helement)?);
                 }
-                Ok(LExpression::Array {
+                Ok(Expression::Array {
                     capacity,
                     elements: lelements,
                 })
@@ -247,17 +246,17 @@ impl AstTransformer {
                 for harg in args {
                     largs.push(Self::transform_expression(harg)?);
                 }
-                Ok(LExpression::FunctionCall {
+                Ok(Expression::FunctionCall {
                     fn_name,
                     args: largs,
                 })
             }
-            HExpression::Variable(name) => Ok(LExpression::Variable(name)),
-            HExpression::ArrayAccess { name, index } => Ok(LExpression::ArrayAccess {
+            HExpression::Variable(name) => Ok(Expression::Variable(name)),
+            HExpression::ArrayAccess { name, index } => Ok(Expression::ArrayAccess {
                 name,
                 index: Box::new(Self::transform_expression(*index)?),
             }),
-            HExpression::BinOp { lhs, op, rhs } => Ok(LExpression::BinOp {
+            HExpression::BinOp { lhs, op, rhs } => Ok(Expression::BinOp {
                 lhs: Box::new(Self::transform_expression(*lhs)?),
                 op: Self::transform_bin_op(op),
                 rhs: Box::new(Self::transform_expression(*rhs)?),
@@ -270,37 +269,37 @@ impl AstTransformer {
                         Box::new(Self::transform_expression(*field_expr)?),
                     );
                 }
-                Ok(LExpression::StructInitialization {
+                Ok(Expression::StructInitialization {
                     name,
                     fields: lfields,
                 })
             }
-            HExpression::FieldAccess { expr, field } => Ok(LExpression::FieldAccess {
+            HExpression::FieldAccess { expr, field } => Ok(Expression::FieldAccess {
                 expr: Box::new(Self::transform_expression(*expr)?),
                 field: Box::new(Self::transform_expression(*field)?),
             }),
         }
     }
 
-    fn transform_bin_op(hop: HBinOp) -> LBinOp {
+    fn transform_bin_op(hop: HBinOp) -> BinOp {
         match hop {
-            HBinOp::Addition => LBinOp::Addition,
-            HBinOp::Subtraction => LBinOp::Subtraction,
-            HBinOp::Multiplication => LBinOp::Multiplication,
-            HBinOp::Division => LBinOp::Division,
-            HBinOp::Modulus => LBinOp::Modulus,
-            HBinOp::LessThan => LBinOp::LessThan,
-            HBinOp::LessThanOrEqual => LBinOp::LessThanOrEqual,
-            HBinOp::GreaterThan => LBinOp::GreaterThan,
-            HBinOp::GreaterThanOrEqual => LBinOp::GreaterThanOrEqual,
-            HBinOp::Equal => LBinOp::Equal,
-            HBinOp::NotEqual => LBinOp::NotEqual,
-            HBinOp::And => LBinOp::And,
-            HBinOp::Or => LBinOp::Or,
-            HBinOp::AddAssign => LBinOp::AddAssign,
-            HBinOp::SubtractAssign => LBinOp::SubtractAssign,
-            HBinOp::MultiplyAssign => LBinOp::MultiplyAssign,
-            HBinOp::DivideAssign => LBinOp::DivideAssign,
+            HBinOp::Addition => BinOp::Addition,
+            HBinOp::Subtraction => BinOp::Subtraction,
+            HBinOp::Multiplication => BinOp::Multiplication,
+            HBinOp::Division => BinOp::Division,
+            HBinOp::Modulus => BinOp::Modulus,
+            HBinOp::LessThan => BinOp::LessThan,
+            HBinOp::LessThanOrEqual => BinOp::LessThanOrEqual,
+            HBinOp::GreaterThan => BinOp::GreaterThan,
+            HBinOp::GreaterThanOrEqual => BinOp::GreaterThanOrEqual,
+            HBinOp::Equal => BinOp::Equal,
+            HBinOp::NotEqual => BinOp::NotEqual,
+            HBinOp::And => BinOp::And,
+            HBinOp::Or => BinOp::Or,
+            HBinOp::AddAssign => BinOp::AddAssign,
+            HBinOp::SubtractAssign => BinOp::SubtractAssign,
+            HBinOp::MultiplyAssign => BinOp::MultiplyAssign,
+            HBinOp::DivideAssign => BinOp::DivideAssign,
         }
     }
 }

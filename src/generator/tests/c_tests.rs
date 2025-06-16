@@ -2,7 +2,7 @@ use crate::ast::types::Type;
 use crate::ast::BinOp::*;
 use crate::ast::Expression::*;
 use crate::ast::Statement::*;
-use crate::ast::{Function, MatchArm, StructDef, Variable};
+use crate::ast::{Function, StructDef, Variable};
 use crate::generator::c::*;
 use std::collections::HashMap;
 
@@ -160,21 +160,6 @@ fn test_generate_while_loop() {
     };
     let result = generate_statement(while_stmt);
     assert_eq!(result, "    while (true) {\n    break;\n}\n;\n")
-}
-
-#[test]
-fn test_generate_match() {
-    let match_stmt = Match {
-        subject: Int(1),
-        arms: vec![
-            MatchArm::Case(Int(1), Return(Some(Int(1)))),
-            MatchArm::Else(Return(Some(Int(0)))),
-        ],
-    };
-    let result = generate_statement(match_stmt);
-    assert!(result.contains("switch (1)"));
-    assert!(result.contains("case 1:"));
-    assert!(result.contains("default:"));
 }
 
 #[test]
