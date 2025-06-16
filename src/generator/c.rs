@@ -230,7 +230,6 @@ pub(super) fn generate_for_loop(ident: Variable, expr: Expression, body: Stateme
     out_str
 }
 
-
 pub(super) fn generate_array(elements: Vec<Expression>) -> String {
     let mut out_str = String::from("{");
 

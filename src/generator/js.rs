@@ -214,7 +214,6 @@ fn generate_continue() -> String {
     "continue;\n".into()
 }
 
-
 fn generate_array(elements: Vec<Expression>) -> String {
     let mut out_str = String::from("[");
 

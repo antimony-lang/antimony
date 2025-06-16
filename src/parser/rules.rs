@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 use super::parser::Parser;
-use crate::ast::types::Type;
 use crate::ast::hast::*;
+use crate::ast::types::Type;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
 use std::collections::HashMap;

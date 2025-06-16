@@ -1,3 +1,4 @@
+use crate::ast::hast::{HExpression, HModule, HStatement};
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -14,7 +15,6 @@
  * limitations under the License.
  */
 use crate::ast::types::Type;
-use crate::ast::hast::{HExpression, HModule, HStatement};
 use crate::ast::SymbolTable;
 
 /// Try to infer types of variables

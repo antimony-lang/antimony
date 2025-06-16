@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 use super::hast::*;
 use super::last::*;
 use std::collections::HashMap;
@@ -153,9 +152,7 @@ impl AstTransformer {
                 body: Box::new(Self::transform_statement(*body)?),
             }),
             // This is the key transformation: match -> if-else chain
-            HStatement::Match { subject, arms } => {
-                Self::transform_match_to_if_else(subject, arms)
-            }
+            HStatement::Match { subject, arms } => Self::transform_match_to_if_else(subject, arms),
             HStatement::Break => Ok(Statement::Break),
             HStatement::Continue => Ok(Statement::Continue),
             HStatement::Exp(hexpr) => Ok(Statement::Exp(Self::transform_expression(hexpr)?)),
