@@ -18,12 +18,12 @@ mod infer;
 #[allow(clippy::module_inception)]
 mod parser;
 mod rules;
-use crate::ast::Module;
+use crate::ast::hast::HModule;
 use crate::lexer::Token;
 #[cfg(test)]
 mod tests;
 
-pub fn parse(tokens: Vec<Token>, raw: Option<String>) -> Result<Module, String> {
+pub fn parse(tokens: Vec<Token>, raw: Option<String>) -> Result<HModule, String> {
     let mut parser = parser::Parser::new(tokens, raw);
     parser.parse()
 }

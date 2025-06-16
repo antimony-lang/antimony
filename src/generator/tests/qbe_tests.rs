@@ -7,7 +7,6 @@ mod tests {
     use crate::ast::*;
     use crate::generator::qbe::QbeGenerator;
     use crate::generator::Generator;
-    use std::collections::HashSet;
 
     /// Helper function to parse the QBE output and get a normalized representation for comparison
     fn normalize_qbe(qbe_output: &str) -> String {
@@ -155,7 +154,6 @@ mod tests {
             func: funcs,
             structs,
             globals: Vec::new(),
-            imports: HashSet::new(),
         }
     }
 

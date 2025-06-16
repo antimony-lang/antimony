@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::ast::*;
+use crate::ast::hast::*;
 use crate::lexer::Keyword;
 use crate::lexer::Position;
 use crate::lexer::{Token, TokenKind};
@@ -47,7 +47,7 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Module, String> {
+    pub fn parse(&mut self) -> Result<HModule, String> {
         let mut program = self.parse_module()?;
         // infer types
         infer(&mut program);
@@ -112,8 +112,8 @@ impl Parser {
         }
     }
 
-    pub(super) fn match_operator(&mut self) -> Result<BinOp, String> {
-        BinOp::try_from(self.next()?.kind)
+    pub(super) fn match_operator(&mut self) -> Result<HBinOp, String> {
+        HBinOp::try_from(self.next()?.kind)
     }
 
     pub(super) fn match_identifier(&mut self) -> Result<String, String> {

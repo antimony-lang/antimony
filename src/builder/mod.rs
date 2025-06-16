@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-use crate::ast::Module;
+use crate::ast::hast::HModule;
+use crate::ast::transform::AstTransformer;
 use crate::generator::{self, Generator, Target};
 use crate::lexer;
 use crate::parser;
@@ -26,7 +27,7 @@ use std::io::Write;
 
 pub struct Builder {
     in_file: PathBuf,
-    modules: Vec<Module>,
+    modules: Vec<HModule>,
 }
 
 impl Builder {
@@ -74,7 +75,7 @@ impl Builder {
         &mut self,
         file_path: PathBuf,
         seen: &mut Vec<String>,
-    ) -> Result<Module, String> {
+    ) -> Result<HModule, String> {
         // TODO: This method can probably cleaned up quite a bit
 
         // In case the module is a directory, we have to append the filename of the entrypoint
@@ -129,18 +130,21 @@ impl Builder {
             condensed.merge_with(module.clone());
         }
 
+        // Transform HAST to LLAST and then to Module for generators
+        let module = AstTransformer::transform_module(condensed)?;
+
         let output = match target {
-            Target::JS => generator::js::JsGenerator::generate(condensed)?,
-            Target::C => generator::c::CGenerator::generate(condensed)?,
+            Target::JS => generator::js::JsGenerator::generate(module)?,
+            Target::C => generator::c::CGenerator::generate(module)?,
             Target::Llvm => {
                 #[cfg(not(feature = "llvm"))]
                 panic!("'llvm' feature should be enabled to use LLVM target");
 
                 #[cfg(feature = "llvm")]
-                generator::llvm::LLVMGenerator::generate(condensed)?
+                generator::llvm::LLVMGenerator::generate(module)?
             }
-            Target::Qbe => generator::qbe::QbeGenerator::generate(condensed)?,
-            Target::X86 => generator::x86::X86Generator::generate(condensed)?,
+            Target::Qbe => generator::qbe::QbeGenerator::generate(module)?,
+            Target::X86 => generator::x86::X86Generator::generate(module)?,
         };
 
         buffer.write_all(output.as_bytes()).expect("write failed");

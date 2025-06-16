@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 use super::parser::Parser;
+use crate::ast::hast::*;
 use crate::ast::types::Type;
-use crate::ast::*;
 use crate::lexer::Keyword;
 use crate::lexer::{TokenKind, Value};
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 
 impl Parser {
-    pub fn parse_module(&mut self) -> Result<Module, String> {
+    pub fn parse_module(&mut self) -> Result<HModule, String> {
         let mut functions = Vec::new();
         let mut structs = Vec::new();
         let mut imports = HashSet::new();
@@ -45,7 +45,7 @@ impl Parser {
 
         // TODO: Populate imports
 
-        Ok(Module {
+        Ok(HModule {
             func: functions,
             structs,
             globals,
@@ -53,7 +53,7 @@ impl Parser {
         })
     }
 
-    fn parse_struct_definition(&mut self) -> Result<StructDef, String> {
+    fn parse_struct_definition(&mut self) -> Result<HStructDef, String> {
         self.match_keyword(Keyword::Struct)?;
         let name = self.match_identifier()?;
 
@@ -78,14 +78,14 @@ impl Parser {
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
-        Ok(StructDef {
+        Ok(HStructDef {
             name,
             fields,
             methods,
         })
     }
 
-    fn parse_typed_variable_list(&mut self) -> Result<Vec<Variable>, String> {
+    fn parse_typed_variable_list(&mut self) -> Result<Vec<HVariable>, String> {
         let mut args = Vec::new();
 
         // If there is an argument
@@ -103,10 +103,10 @@ impl Parser {
         Ok(args)
     }
 
-    fn parse_typed_variable(&mut self) -> Result<Variable, String> {
+    fn parse_typed_variable(&mut self) -> Result<HVariable, String> {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
-            return Ok(Variable {
+            return Ok(HVariable {
                 name,
                 ty: Some(self.parse_type()?),
             });
@@ -115,7 +115,7 @@ impl Parser {
         Err(format!("Argument could not be parsed: {}", next.raw))
     }
 
-    fn parse_block(&mut self) -> Result<Statement, String> {
+    fn parse_block(&mut self) -> Result<HStatement, String> {
         self.match_token(TokenKind::CurlyBracesOpen)?;
 
         let mut statements = vec![];
@@ -127,7 +127,7 @@ impl Parser {
 
             // If the current statement is a variable declaration,
             // let the scope know
-            if let Statement::Declare { variable, value: _ } = &statement {
+            if let HStatement::Declare { variable, value: _ } = &statement {
                 // TODO: Not sure if we should clone here
                 scope.push(variable.to_owned());
             }
@@ -137,19 +137,19 @@ impl Parser {
 
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Statement::Block { statements, scope })
+        Ok(HStatement::Block { statements, scope })
     }
 
     /// To reduce code duplication, this method can be either be used to parse a function or a method.
     /// If a function is parsed, the `fn` keyword is matched.
     /// If a method is parsed, `fn` will be omitted
-    fn parse_function(&mut self) -> Result<Function, String> {
+    fn parse_function(&mut self) -> Result<HFunction, String> {
         self.match_keyword(Keyword::Function)?;
         let name = self.match_identifier()?;
 
         self.match_token(TokenKind::BraceOpen)?;
 
-        let arguments: Vec<Variable> = match self.peek()? {
+        let arguments: Vec<HVariable> = match self.peek()? {
             t if t.kind == TokenKind::BraceClose => Vec::new(),
             _ => self.parse_typed_variable_list()?,
         };
@@ -181,7 +181,7 @@ impl Parser {
             }
         };
 
-        Ok(Function {
+        Ok(HFunction {
             name,
             arguments,
             body,
@@ -189,13 +189,13 @@ impl Parser {
         })
     }
 
-    fn parse_inline_function(&mut self) -> Result<Statement, String> {
+    fn parse_inline_function(&mut self) -> Result<HStatement, String> {
         self.next()?;
         let expr = self.parse_expression()?;
-        let return_statment = Statement::Return(Some(expr));
+        let return_statment = HStatement::Return(Some(expr));
         let statements = vec![return_statment];
         let scope = vec![];
-        Ok(Statement::Block { statements, scope })
+        Ok(HStatement::Block { statements, scope })
     }
 
     fn parse_import(&mut self) -> Result<String, String> {
@@ -236,7 +236,7 @@ impl Parser {
         }
     }
 
-    fn parse_statement(&mut self) -> Result<Statement, String> {
+    fn parse_statement(&mut self) -> Result<HStatement, String> {
         let token = self.peek()?;
 
         match &token.kind {
@@ -253,48 +253,48 @@ impl Parser {
                 Keyword::Struct => {
                     Err("Struct definitions inside functions are not allowed".to_string())
                 }
-                Keyword::Selff => Ok(Statement::Exp(self.parse_expression()?)),
-                _ => Ok(Statement::Exp(self.parse_expression()?)),
+                Keyword::Selff => Ok(HStatement::Exp(self.parse_expression()?)),
+                _ => Ok(HStatement::Exp(self.parse_expression()?)),
             },
-            TokenKind::BraceOpen => Ok(Statement::Exp(self.parse_expression()?)),
+            TokenKind::BraceOpen => Ok(HStatement::Exp(self.parse_expression()?)),
             TokenKind::Identifier(_) => {
                 let ident = self.match_identifier()?;
 
                 // Handle initial expression which could be field access or just a variable
                 let expr = if self.peek_token(TokenKind::Dot).is_ok() {
-                    self.parse_field_access(Expression::Variable(ident.clone()))?
+                    self.parse_field_access(HExpression::Variable(ident.clone()))?
                 } else {
-                    Expression::Variable(ident.clone())
+                    HExpression::Variable(ident.clone())
                 };
 
                 // Look ahead to determine statement type
                 match self.peek()?.kind {
                     TokenKind::BraceOpen => {
                         let state = self.parse_function_call(Some(ident))?;
-                        Ok(Statement::Exp(state))
+                        Ok(HStatement::Exp(state))
                     }
                     TokenKind::Assign => self.parse_assignent(Some(expr)),
                     TokenKind::SquareBraceOpen => {
                         let array_expr = self.parse_array_access(Some(ident))?;
                         match self.peek()?.kind {
                             TokenKind::Assign => self.parse_assignent(Some(array_expr)),
-                            _ => Ok(Statement::Exp(array_expr)),
+                            _ => Ok(HStatement::Exp(array_expr)),
                         }
                     }
-                    kind if BinOp::try_from(kind.clone()).is_ok() => {
-                        Ok(Statement::Exp(self.parse_bin_op(Some(expr))?))
+                    kind if HBinOp::try_from(kind.clone()).is_ok() => {
+                        Ok(HStatement::Exp(self.parse_bin_op(Some(expr))?))
                     }
-                    TokenKind::Dot => Ok(Statement::Exp(self.parse_field_access(expr)?)),
-                    _ => Ok(Statement::Exp(expr)),
+                    TokenKind::Dot => Ok(HStatement::Exp(self.parse_field_access(expr)?)),
+                    _ => Ok(HStatement::Exp(expr)),
                 }
             }
-            TokenKind::Literal(_) => Ok(Statement::Exp(self.parse_expression()?)),
+            TokenKind::Literal(_) => Ok(HStatement::Exp(self.parse_expression()?)),
             _ => Err(self.make_error_msg(token.pos, "Failed to parse statement".to_string())),
         }
     }
 
     /// Parses a function call from tokens.
-    fn parse_function_call(&mut self, func_name: Option<String>) -> Result<Expression, String> {
+    fn parse_function_call(&mut self, func_name: Option<String>) -> Result<HExpression, String> {
         let fn_name = match func_name {
             Some(name) => name,
             None => self.match_identifier()?,
@@ -326,24 +326,24 @@ impl Parser {
         }
 
         self.match_token(TokenKind::BraceClose)?;
-        let expr = Expression::FunctionCall { fn_name, args };
+        let expr = HExpression::FunctionCall { fn_name, args };
         match self.peek()?.kind {
             TokenKind::Dot => self.parse_field_access(expr),
-            _ if BinOp::try_from(self.peek()?.kind).is_ok() => self.parse_bin_op(Some(expr)),
+            _ if HBinOp::try_from(self.peek()?.kind).is_ok() => self.parse_bin_op(Some(expr)),
             _ => Ok(expr),
         }
     }
 
-    fn parse_return(&mut self) -> Result<Statement, String> {
+    fn parse_return(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::Return)?;
         let peeked = self.peek()?;
         match peeked.kind {
-            TokenKind::SemiColon => Ok(Statement::Return(None)),
-            _ => Ok(Statement::Return(Some(self.parse_expression()?))),
+            TokenKind::SemiColon => Ok(HStatement::Return(None)),
+            _ => Ok(HStatement::Return(Some(self.parse_expression()?))),
         }
     }
 
-    fn parse_expression(&mut self) -> Result<Expression, String> {
+    fn parse_expression(&mut self) -> Result<HExpression, String> {
         let token = self.peek()?;
 
         let expr = match token.kind {
@@ -357,7 +357,7 @@ impl Parser {
             // true | false
             TokenKind::Keyword(Keyword::Boolean) => {
                 let token = self.next()?;
-                Expression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
+                HExpression::Bool(token.raw.parse::<bool>().map_err(|e| e.to_string())?)
             }
             // 5
             TokenKind::Literal(Value::Int) => {
@@ -379,22 +379,22 @@ impl Parser {
                     }
                     c => c.parse::<usize>().map_err(|e| e.to_string())?,
                 };
-                Expression::Int(val)
+                HExpression::Int(val)
             }
             // "A string"
             TokenKind::Literal(Value::Str(string)) => {
                 self.next()?;
-                Expression::Str(string)
+                HExpression::Str(string)
             }
             // self
             TokenKind::Keyword(Keyword::Selff) => {
                 self.next()?;
-                Expression::Selff
+                HExpression::Selff
             }
             TokenKind::Identifier(_) => {
                 let val = self.match_identifier()?;
                 if !self.has_more() {
-                    return Ok(Expression::Variable(val));
+                    return Ok(HExpression::Variable(val));
                 }
                 let next = self.peek()?;
                 match &next.kind {
@@ -403,7 +403,7 @@ impl Parser {
                     // arr[0]
                     TokenKind::SquareBraceOpen => self.parse_array_access(Some(val))?,
                     // some_var
-                    _ => Expression::Variable(val),
+                    _ => HExpression::Variable(val),
                 }
             }
             // [1, 2, 3]
@@ -421,11 +421,11 @@ impl Parser {
         let next = self.peek()?;
         match next.kind {
             TokenKind::Dot => self.parse_field_access(expr),
-            kind if BinOp::try_from(kind.clone()).is_ok() => {
+            kind if HBinOp::try_from(kind.clone()).is_ok() => {
                 self.next()?; // consume the operator
-                let op = BinOp::try_from(kind).unwrap();
+                let op = HBinOp::try_from(kind).unwrap();
                 let rhs = self.parse_expression()?;
-                Ok(Expression::BinOp {
+                Ok(HExpression::BinOp {
                     lhs: Box::from(expr),
                     op,
                     rhs: Box::from(rhs),
@@ -435,7 +435,7 @@ impl Parser {
         }
     }
 
-    fn parse_field_access(&mut self, lhs: Expression) -> Result<Expression, String> {
+    fn parse_field_access(&mut self, lhs: HExpression) -> Result<HExpression, String> {
         self.match_token(TokenKind::Dot)?;
 
         // Only possible options are identifier or function call,
@@ -445,32 +445,32 @@ impl Parser {
 
         let field = match next.kind {
             TokenKind::BraceOpen => self.parse_function_call(Some(id))?,
-            _ => Expression::Variable(id),
+            _ => HExpression::Variable(id),
         };
-        let expr = Expression::FieldAccess {
+        let expr = HExpression::FieldAccess {
             expr: Box::new(lhs),
             field: Box::new(field),
         };
         if self.peek_token(TokenKind::Dot).is_ok() {
             self.parse_field_access(expr)
-        } else if BinOp::try_from(self.peek()?.kind).is_ok() {
+        } else if HBinOp::try_from(self.peek()?.kind).is_ok() {
             self.parse_bin_op(Some(expr))
         } else {
             Ok(expr)
         }
     }
 
-    fn parse_struct_initialization(&mut self) -> Result<Expression, String> {
+    fn parse_struct_initialization(&mut self) -> Result<HExpression, String> {
         self.match_token(TokenKind::Keyword(Keyword::New))?;
         let name = self.match_identifier()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
         let fields = self.parse_struct_fields()?;
         self.match_token(TokenKind::CurlyBracesClose)?;
 
-        Ok(Expression::StructInitialization { name, fields })
+        Ok(HExpression::StructInitialization { name, fields })
     }
 
-    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<Expression>>, String> {
+    fn parse_struct_fields(&mut self) -> Result<HashMap<String, Box<HExpression>>, String> {
         let mut map = HashMap::new();
 
         // If there is a field
@@ -501,7 +501,7 @@ impl Parser {
         Ok(map)
     }
 
-    fn parse_struct_field(&mut self) -> Result<(String, Box<Expression>), String> {
+    fn parse_struct_field(&mut self) -> Result<(String, Box<HExpression>), String> {
         let next = self.next()?;
         if let TokenKind::Identifier(name) = next.kind {
             self.match_token(TokenKind::Colon)?;
@@ -511,7 +511,7 @@ impl Parser {
         Err(format!("Struct field could not be parsed: {}", next.raw))
     }
 
-    fn parse_array(&mut self) -> Result<Expression, String> {
+    fn parse_array(&mut self) -> Result<HExpression, String> {
         self.match_token(TokenKind::SquareBraceOpen)?;
         let mut elements = Vec::new();
         loop {
@@ -524,7 +524,7 @@ impl Parser {
                         .raw
                         .parse::<usize>()
                         .map_err(|e| e.to_string())?;
-                    elements.push(Expression::Int(value));
+                    elements.push(HExpression::Int(value));
                 }
                 _ => {
                     let expr = self.parse_expression()?;
@@ -540,10 +540,10 @@ impl Parser {
         self.match_token(TokenKind::SquareBraceClose)?;
         let capacity = elements.len();
 
-        Ok(Expression::Array { capacity, elements })
+        Ok(HExpression::Array { capacity, elements })
     }
 
-    fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<Expression, String> {
+    fn parse_array_access(&mut self, arr_name: Option<String>) -> Result<HExpression, String> {
         let name = match arr_name {
             Some(name) => name,
             None => self.next()?.raw,
@@ -553,34 +553,34 @@ impl Parser {
         let expr = self.parse_expression()?;
         self.match_token(TokenKind::SquareBraceClose)?;
 
-        Ok(Expression::ArrayAccess {
+        Ok(HExpression::ArrayAccess {
             name,
             index: Box::new(expr),
         })
     }
 
-    fn parse_while_loop(&mut self) -> Result<Statement, String> {
+    fn parse_while_loop(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::While)?;
         let condition = self.parse_expression()?;
         let body = self.parse_block()?;
 
-        Ok(Statement::While {
+        Ok(HStatement::While {
             condition,
             body: Box::new(body),
         })
     }
 
-    fn parse_break(&mut self) -> Result<Statement, String> {
+    fn parse_break(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::Break)?;
-        Ok(Statement::Break)
+        Ok(HStatement::Break)
     }
 
-    fn parse_continue(&mut self) -> Result<Statement, String> {
+    fn parse_continue(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::Continue)?;
-        Ok(Statement::Continue)
+        Ok(HStatement::Continue)
     }
 
-    fn parse_for_loop(&mut self) -> Result<Statement, String> {
+    fn parse_for_loop(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::For)?;
 
         let ident = self.match_identifier()?;
@@ -593,8 +593,8 @@ impl Parser {
 
         let body = self.parse_block()?;
 
-        Ok(Statement::For {
-            ident: Variable {
+        Ok(HStatement::For {
+            ident: HVariable {
                 name: ident,
                 ty: ident_ty,
             },
@@ -603,11 +603,11 @@ impl Parser {
         })
     }
 
-    fn parse_match_statement(&mut self) -> Result<Statement, String> {
+    fn parse_match_statement(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::Match)?;
         let subject = self.parse_expression()?;
         self.match_token(TokenKind::CurlyBracesOpen)?;
-        let mut arms: Vec<MatchArm> = Vec::new();
+        let mut arms: Vec<HMatchArm> = Vec::new();
 
         // Used to mitigate multiple else cases were defined
         let mut has_else = false;
@@ -632,29 +632,29 @@ impl Parser {
             }
         }
         self.match_token(TokenKind::CurlyBracesClose)?;
-        Ok(Statement::Match { subject, arms })
+        Ok(HStatement::Match { subject, arms })
     }
 
-    fn parse_match_arm(&mut self) -> Result<MatchArm, String> {
+    fn parse_match_arm(&mut self) -> Result<HMatchArm, String> {
         let next = self.peek()?;
 
         match next.kind {
             TokenKind::Keyword(Keyword::Else) => {
                 self.match_keyword(Keyword::Else)?;
                 self.match_token(TokenKind::ArrowRight)?;
-                Ok(MatchArm::Else(self.parse_statement()?))
+                Ok(HMatchArm::Else(self.parse_statement()?))
             }
             _ => {
                 let expr = self.parse_expression()?;
                 self.match_token(TokenKind::ArrowRight)?;
                 let statement = self.parse_statement()?;
 
-                Ok(MatchArm::Case(expr, statement))
+                Ok(HMatchArm::Case(expr, statement))
             }
         }
     }
 
-    fn parse_conditional_statement(&mut self) -> Result<Statement, String> {
+    fn parse_conditional_statement(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::If)?;
         let condition = self.parse_expression()?;
 
@@ -675,13 +675,13 @@ impl Parser {
                     Some(branch) => branch,
                     None => self.parse_conditional_statement()?,
                 };
-                Ok(Statement::If {
+                Ok(HStatement::If {
                     condition,
                     body: Box::new(body),
                     else_branch: Some(Box::new(else_branch)),
                 })
             }
-            _ => Ok(Statement::If {
+            _ => Ok(HStatement::If {
                 condition,
                 body: Box::new(body),
                 else_branch: None,
@@ -689,7 +689,7 @@ impl Parser {
         }
     }
 
-    fn parse_bin_op(&mut self, lhs: Option<Expression>) -> Result<Expression, String> {
+    fn parse_bin_op(&mut self, lhs: Option<HExpression>) -> Result<HExpression, String> {
         let left = match lhs {
             Some(lhs) => lhs,
             None => self.parse_expression()?,
@@ -697,14 +697,14 @@ impl Parser {
 
         let op = self.match_operator()?;
 
-        Ok(Expression::BinOp {
+        Ok(HExpression::BinOp {
             lhs: Box::from(left),
             op,
             rhs: Box::from(self.parse_expression()?),
         })
     }
 
-    fn parse_declare(&mut self) -> Result<Statement, String> {
+    fn parse_declare(&mut self) -> Result<HStatement, String> {
         self.match_keyword(Keyword::Let)?;
         let name = self.match_identifier()?;
         let ty = match self.peek()?.kind {
@@ -716,29 +716,29 @@ impl Parser {
             TokenKind::Assign => {
                 self.match_token(TokenKind::Assign)?;
                 let expr = self.parse_expression()?;
-                Ok(Statement::Declare {
-                    variable: Variable { name, ty },
+                Ok(HStatement::Declare {
+                    variable: HVariable { name, ty },
                     value: Some(expr),
                 })
             }
-            _ => Ok(Statement::Declare {
-                variable: Variable { name, ty },
+            _ => Ok(HStatement::Declare {
+                variable: HVariable { name, ty },
                 value: None,
             }),
         }
     }
 
-    fn parse_assignent(&mut self, name: Option<Expression>) -> Result<Statement, String> {
+    fn parse_assignent(&mut self, name: Option<HExpression>) -> Result<HStatement, String> {
         let name = match name {
             Some(name) => name,
-            None => Expression::Variable(self.match_identifier()?),
+            None => HExpression::Variable(self.match_identifier()?),
         };
 
         self.match_token(TokenKind::Assign)?;
 
         let expr = self.parse_expression()?;
 
-        Ok(Statement::Assign {
+        Ok(HStatement::Assign {
             lhs: Box::new(name),
             rhs: Box::new(expr),
         })

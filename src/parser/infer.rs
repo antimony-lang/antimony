@@ -1,3 +1,4 @@
+use crate::ast::hast::{HExpression, HModule, HStatement};
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -14,23 +15,23 @@
  * limitations under the License.
  */
 use crate::ast::types::Type;
-use crate::ast::{Expression, Module, Statement, SymbolTable};
+use crate::ast::SymbolTable;
 
 /// Try to infer types of variables
 ///
 /// TODO: Global symbol table is passed around randomly.
 /// This could probably be cleaned up.
-pub(super) fn infer(program: &mut Module) {
+pub(super) fn infer(program: &mut HModule) {
     let table = &program.get_symbol_table();
     // TODO: Fix aweful nesting
     for func in &mut program.func {
-        if let Statement::Block {
+        if let HStatement::Block {
             statements,
             scope: _,
         } = &mut func.body
         {
             for statement in statements {
-                if let Statement::Declare { variable, value } = statement {
+                if let HStatement::Declare { variable, value } = statement {
                     if variable.ty.is_none() {
                         if let Some(e) = value {
                             variable.ty = infer_expression(e, table);
@@ -50,16 +51,16 @@ pub(super) fn infer(program: &mut Module) {
 }
 
 /// Function table is needed to infer possible function calls
-fn infer_expression(expr: &Expression, table: &SymbolTable) -> Option<Type> {
+fn infer_expression(expr: &HExpression, table: &SymbolTable) -> Option<Type> {
     match expr {
-        Expression::Int(_) => Some(Type::Int),
-        Expression::Bool(_) => Some(Type::Bool),
-        Expression::Str(_) => Some(Type::Str),
-        Expression::StructInitialization { name, fields: _ } => {
+        HExpression::Int(_) => Some(Type::Int),
+        HExpression::Bool(_) => Some(Type::Bool),
+        HExpression::Str(_) => Some(Type::Str),
+        HExpression::StructInitialization { name, fields: _ } => {
             Some(Type::Struct(name.to_string()))
         }
-        Expression::FunctionCall { fn_name, args: _ } => infer_function_call(fn_name, table),
-        Expression::Array {
+        HExpression::FunctionCall { fn_name, args: _ } => infer_function_call(fn_name, table),
+        HExpression::Array {
             capacity: _,
             elements,
         } => infer_array(elements, table),
@@ -67,7 +68,7 @@ fn infer_expression(expr: &Expression, table: &SymbolTable) -> Option<Type> {
     }
 }
 
-fn infer_array(elements: &[Expression], table: &SymbolTable) -> Option<Type> {
+fn infer_array(elements: &[HExpression], table: &SymbolTable) -> Option<Type> {
     let types: Vec<Option<Type>> = elements
         .iter()
         .map(|el| infer_expression(el, table))
