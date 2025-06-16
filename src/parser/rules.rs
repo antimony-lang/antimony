@@ -451,12 +451,54 @@ impl Parser {
             expr: Box::new(lhs),
             field: Box::new(field),
         };
-        if self.peek_token(TokenKind::Dot).is_ok() {
-            self.parse_field_access(expr)
-        } else if HBinOp::try_from(self.peek()?.kind).is_ok() {
-            self.parse_bin_op(Some(expr))
-        } else {
-            Ok(expr)
+
+        // Look ahead to determine next steps
+        match self.peek()?.kind {
+            TokenKind::Dot => self.parse_field_access(expr),
+            TokenKind::SquareBraceOpen => {
+                self.match_token(TokenKind::SquareBraceOpen)?;
+                let index_expr = self.parse_expression()?;
+                self.match_token(TokenKind::SquareBraceClose)?;
+
+                let array_expr = HExpression::ArrayAccess {
+                    name: format!("{:?}", expr),
+                    index: Box::new(index_expr),
+                };
+
+                // Handle any further chaining (like .foo[0] or [0][0])
+                match self.peek()?.kind {
+                    TokenKind::Dot => self.parse_field_access(array_expr),
+                    TokenKind::SquareBraceOpen => {
+                        // Handle nested array access
+                        let mut current_expr = array_expr;
+                        while self.peek_token(TokenKind::SquareBraceOpen).is_ok() {
+                            self.match_token(TokenKind::SquareBraceOpen)?;
+                            let index = self.parse_expression()?;
+                            self.match_token(TokenKind::SquareBraceClose)?;
+
+                            current_expr = HExpression::ArrayAccess {
+                                name: format!("{:?}", current_expr),
+                                index: Box::new(index),
+                            };
+                        }
+
+                        // If there's a dot after the nested array access
+                        if self.peek_token(TokenKind::Dot).is_ok() {
+                            self.parse_field_access(current_expr)
+                        } else if HBinOp::try_from(self.peek()?.kind).is_ok() {
+                            self.parse_bin_op(Some(current_expr))
+                        } else {
+                            Ok(current_expr)
+                        }
+                    }
+                    kind if HBinOp::try_from(kind.clone()).is_ok() => {
+                        self.parse_bin_op(Some(array_expr))
+                    }
+                    _ => Ok(array_expr),
+                }
+            }
+            kind if HBinOp::try_from(kind.clone()).is_ok() => self.parse_bin_op(Some(expr)),
+            _ => Ok(expr),
         }
     }
 

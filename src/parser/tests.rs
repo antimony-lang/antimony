@@ -1056,3 +1056,27 @@ fn test_errors_for_struct_literal() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_err());
 }
+
+#[test]
+fn test_array_access() {
+    let raw = "
+    fn main() {
+        let c = self.chars[0]
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok(), "{:?}", tree.err());
+}
+
+#[test]
+fn test_nested_array_access() {
+    let raw = "
+    fn main() {
+        let c = self.chars[0].foo[0][0]
+    }
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok(), "{:?}", tree.err());
+}
