@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Fixes**
+
+- Fixed array access in member variable expressions ([#123](https://github.com/antimony-lang/antimony/pull/123))
+
 **Maintenance**
 
 - Add multi-level AST structure with High-level AST (HAST) and Low-level AST (LAST) ([#124](https://github.com/antimony-lang/antimony/pull/124))
