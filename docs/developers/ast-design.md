@@ -71,9 +71,9 @@ The most significant transformation is converting match statements into if-else 
 ```rust
 // HAST: High-level match
 match value {
-    1 => action_one(),
-    2 => action_two(),
-    _ => default_action(),
+    1 => action_one()
+    2 => action_two()
+    _ => default_action()
 }
 
 // LAST: Lowered if-else chain
