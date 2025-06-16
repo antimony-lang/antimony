@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Structured Data - The Antimony Programming Language</title>
+        <title>AST Design - The Antimony Programming Language</title>
 
 
         <!-- Custom HTML head -->
@@ -166,91 +166,139 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="structured-data"><a class="header" href="#structured-data">Structured data</a></h1>
-<p>When working with data, you often find yourself needing to group information together. This is where a <code>struct</code> could come into play. A <em>struct</em>, or <em>structure</em>, is a custom data type that lets you name and package together multiple related values that make up a meaningful group. If you’re familiar with an object-oriented language, a struct is like an object’s data attributes.</p>
-<h2 id="defining-structs"><a class="header" href="#defining-structs">Defining structs</a></h2>
-<p>To define a struct, we enter the keyword <code>struct</code> and name the entire struct. A struct’s name should describe the significance of the pieces of data being grouped together. Then, inside curly brackets, we define the names and types of the pieces of data, which we call fields. The following example shows a struct that stores information about a user account.</p>
-<pre><code>struct User {
-    username: string
-    email: string
-    sign_in_count: int
-    active: bool
-}
-</code></pre>
-<p>Structs can be nested as a type inside other structs. For example, we could assign each user an address, which itself is a struct.</p>
-<pre><code>struct Address {
-    street: string
-    number: int
-    postal_code: string
-    city: string
+                        <h1 id="ast-design"><a class="header" href="#ast-design">AST Design</a></h1>
+<p>The Antimony compiler uses a sophisticated two-level Abstract Syntax Tree (AST) design to balance language expressiveness with code generation simplicity.</p>
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>The compiler transforms source code through two distinct AST representations:</p>
+<ol>
+<li><strong>HAST (High-level AST)</strong> - Preserves source-level semantics and complex language constructs</li>
+<li><strong>LAST (Low-level AST)</strong> - Provides simplified constructs optimized for code generation</li>
+</ol>
+<p>This separation allows the compiler to support rich language features while keeping backend implementations straightforward.</p>
+<h2 id="high-level-ast-hast"><a class="header" href="#high-level-ast-hast">High-level AST (HAST)</a></h2>
+<p>The High-level AST (<code>src/ast/hast.rs</code>) represents code as directly parsed from source files. It maintains the original structure and semantic richness of the source language.</p>
+<h3 id="key-characteristics"><a class="header" href="#key-characteristics">Key Characteristics</a></h3>
+<ul>
+<li><strong>Source fidelity</strong> - Preserves the original intent and structure of the code</li>
+<li><strong>Rich constructs</strong> - Includes complex language features like pattern matching</li>
+<li><strong>Analysis-friendly</strong> - Designed for type checking, semantic analysis, and high-level optimizations</li>
+</ul>
+<h3 id="notable-features"><a class="header" href="#notable-features">Notable Features</a></h3>
+<ul>
+<li><strong>Match statements</strong> with pattern matching and multiple arms</li>
+<li><strong>Complex expressions</strong> that may require multi-step lowering</li>
+<li><strong>High-level control flow</strong> constructs</li>
+<li><strong>Structured data</strong> with full semantic information</li>
+</ul>
+<h3 id="usage"><a class="header" href="#usage">Usage</a></h3>
+<p>HAST is used during the early phases of compilation:</p>
+<ul>
+<li><strong>Parsing</strong> - Direct output from the parser</li>
+<li><strong>Semantic analysis</strong> - Type checking and validation</li>
+<li><strong>High-level optimizations</strong> - Source-level transformations</li>
+<li><strong>Error reporting</strong> - Maintains source location information</li>
+</ul>
+<h2 id="low-level-ast-last"><a class="header" href="#low-level-ast-last">Low-level AST (LAST)</a></h2>
+<p>The Low-level AST (<code>src/ast/last.rs</code>) represents code ready for backend code generation. It contains only simple constructs that map directly to target languages.</p>
+<h3 id="key-characteristics-1"><a class="header" href="#key-characteristics-1">Key Characteristics</a></h3>
+<ul>
+<li><strong>Backend-friendly</strong> - Every construct has a direct mapping to target languages</li>
+<li><strong>Simplified structure</strong> - Complex features are broken down into basic operations</li>
+<li><strong>Code generation ready</strong> - Optimized for easy translation to C, JavaScript, etc.</li>
+</ul>
+<h3 id="notable-features-1"><a class="header" href="#notable-features-1">Notable Features</a></h3>
+<ul>
+<li><strong>If-else chains</strong> instead of match statements</li>
+<li><strong>Simple expressions</strong> with explicit operation sequences</li>
+<li><strong>Flat control flow</strong> structures</li>
+<li><strong>Basic data operations</strong> without high-level abstractions</li>
+</ul>
+<h3 id="usage-1"><a class="header" href="#usage-1">Usage</a></h3>
+<p>LAST is used during the final phases of compilation:</p>
+<ul>
+<li><strong>Code generation</strong> - Direct input to backend generators</li>
+<li><strong>Low-level optimizations</strong> - Target-specific improvements</li>
+<li><strong>Final transformations</strong> - Backend-specific adjustments</li>
+</ul>
+<h2 id="transformation-process"><a class="header" href="#transformation-process">Transformation Process</a></h2>
+<p>The transformation from HAST to LAST is handled by the <code>AstTransformer</code> in <code>src/ast/transform.rs</code>. This process performs several key lowering operations:</p>
+<h3 id="match-statement-lowering"><a class="header" href="#match-statement-lowering">Match Statement Lowering</a></h3>
+<p>The most significant transformation is converting match statements into if-else chains:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// HAST: High-level match
+match value {
+    1 =&gt; action_one(),
+    2 =&gt; action_two(),
+    _ =&gt; default_action(),
 }
 
-struct User {
-    username: string
-    email: string
-    address: Address
+// LAST: Lowered if-else chain
+if value == 1 {
+    action_one()
+} else if value == 2 {
+    action_two()
+} else {
+    default_action()
 }
+<span class="boring">}</span></code></pre></pre>
+<h3 id="expression-simplification"><a class="header" href="#expression-simplification">Expression Simplification</a></h3>
+<p>Complex expressions are broken down into simpler operations that backends can easily handle.</p>
+<h3 id="structure-flattening"><a class="header" href="#structure-flattening">Structure Flattening</a></h3>
+<p>Nested and complex structures are flattened to ensure consistent code generation across all backends.</p>
+<h2 id="benefits-of-two-level-design"><a class="header" href="#benefits-of-two-level-design">Benefits of Two-Level Design</a></h2>
+<h3 id="language-expressiveness"><a class="header" href="#language-expressiveness">Language Expressiveness</a></h3>
+<p>The high-level AST allows Antimony to support rich language features without constraining the implementation:</p>
+<ul>
+<li><strong>Pattern matching</strong> - Full-featured match expressions</li>
+<li><strong>Complex control flow</strong> - Sophisticated branching and looping constructs</li>
+<li><strong>Rich data types</strong> - Advanced type system features</li>
+</ul>
+<h3 id="backend-simplicity"><a class="header" href="#backend-simplicity">Backend Simplicity</a></h3>
+<p>The low-level AST ensures that code generators remain simple and maintainable:</p>
+<ul>
+<li><strong>Consistent interface</strong> - All backends work with the same simplified constructs</li>
+<li><strong>Easier implementation</strong> - New backends don't need to handle complex language features</li>
+<li><strong>Better optimization</strong> - Target-specific optimizations can focus on simple patterns</li>
+</ul>
+<h3 id="maintainability"><a class="header" href="#maintainability">Maintainability</a></h3>
+<p>The separation of concerns improves compiler maintainability:</p>
+<ul>
+<li><strong>Clear boundaries</strong> - High-level and low-level concerns are separated</li>
+<li><strong>Independent evolution</strong> - Language features and code generation can evolve independently</li>
+<li><strong>Easier debugging</strong> - Issues can be isolated to specific compilation phases</li>
+</ul>
+<h2 id="implementation-details"><a class="header" href="#implementation-details">Implementation Details</a></h2>
+<h3 id="module-structure"><a class="header" href="#module-structure">Module Structure</a></h3>
+<pre><code>src/ast/
+├── mod.rs          # Public API and re-exports
+├── hast.rs         # High-level AST definitions
+├── last.rs         # Low-level AST definitions
+├── transform.rs    # HAST → LAST transformation
+└── types.rs        # Shared type definitions
 </code></pre>
-<h2 id="instantiating-structs"><a class="header" href="#instantiating-structs">Instantiating structs</a></h2>
-<p>To use a struct after we’ve defined it, we create an <em>instance</em> of that struct by specifying concrete values for each of the fields. We create an instance by stating the name of the struct and then add curly brackets containing <code>key: value</code> pairs, where the keys are the names of the fields and the values are the data we want to store in those fields. We don’t have to specify the fields in the same order in which we declared them in the struct. In other words, the struct definition is like a general template for the type, and instances fill in that template with particular data to create values of the type. Let's use our <code>User</code> struct from a previous example and create an user called <code>alice</code>.</p>
-<pre><code>struct User {
-    username: string
-    email: string
-    sign_in_count: int
-    active: bool
-}
-
-let alice = new User {
-    email: "alice@example.com"
-    username: "alice"
-    sign_in_count: 1
-    active: true
-}
-</code></pre>
-<p>To get a specific value from a struct, we can use dot notation. If we wanted just alice's email address, we could use <code>alice.email</code> wherever we wanted to use this value. Fields of structs can also be reassigned using the dot notation:</p>
-<pre><code>let alice = new User {
-    email: "alice@example.com"
-    username: "alice"
-    sign_in_count: 1
-    active: true
-}
-
-alice.sign_in_count = 2
-</code></pre>
-<h2 id="struct-methods"><a class="header" href="#struct-methods">Struct methods</a></h2>
-<p>Antimony supports the concept of methods. A method can be described as a function on a struct. Let's take a look at a struct implementing a method.</p>
-<pre><code>struct User {
-    first_name: string
-    last_name: string
-
-    fn full_name(): string {
-        return self.first_name + " " + self.last_name
-    }
-}
-</code></pre>
-<p>Every instance of the <code>User</code> struct can now call <code>full_name()</code>. Note the usage of the word <code>self</code>. <code>self</code> is a special keyword referencing the struct instance the method was called on. Say we had the following instance of <code>User</code>, and called the <code>full_name()</code> method on it.</p>
-<pre><code>let alice = new User {
-    first_name: "Jon"
-    last_name: "Doe"
-}
-
-println(alice.full_name())
-</code></pre>
-<p>The <code>full_name</code> method described above will return the first name, a space and the last name of the user. If we run this code, we should see the expected output:</p>
-<pre><code>$ sb run main.sb
-Jon Doe
-</code></pre>
-<p>Methods behave just like functions. They can return a value and take parameters. The only difference is the <code>self</code> keyword, which allows you to execute it on a specific instance of a struct.</p>
+<h3 id="type-relationships"><a class="header" href="#type-relationships">Type Relationships</a></h3>
+<p>Both AST levels share common type definitions where appropriate, but use different structural representations for statements and expressions that require transformation.</p>
+<h3 id="error-handling"><a class="header" href="#error-handling">Error Handling</a></h3>
+<p>The transformation process includes comprehensive error handling to catch issues during the lowering phase, ensuring that invalid high-level constructs are detected before code generation.</p>
+<h2 id="future-considerations"><a class="header" href="#future-considerations">Future Considerations</a></h2>
+<p>The two-level design provides flexibility for future enhancements:</p>
+<ul>
+<li><strong>New language features</strong> can be added to HAST without affecting backends</li>
+<li><strong>Additional optimization passes</strong> can be inserted between the AST levels</li>
+<li><strong>Multiple lowering strategies</strong> can be implemented for different optimization profiles</li>
+<li><strong>Incremental compilation</strong> can cache transformations at different levels</li>
+</ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../concepts/control-flow.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../developers/specification.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../modules/SUMMARY.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../developers/backends.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -260,11 +308,11 @@ Jon Doe
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../concepts/control-flow.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../developers/specification.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../modules/SUMMARY.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../developers/backends.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
