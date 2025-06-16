@@ -13,6 +13,7 @@
 - [Modules and Imports](./modules/SUMMARY.md)
 - [Developer Resources](./developers/SUMMARY.md)
   - [Specification](./developers/specification.md)
+  - [AST Design](./developers/ast-design.md)
   - [Compiler Backends](./developers/backends.md)
   - [Debugging the compiler](./developers/debugging.md)
   - [Release Workflow](./developers/releasing.md)

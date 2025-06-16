@@ -15,7 +15,7 @@
  */
 
 use super::hast::*;
-use super::llast::*;
+use super::last::*;
 use std::collections::HashMap;
 
 /// Transforms high-level AST to low-level AST

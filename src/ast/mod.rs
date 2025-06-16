@@ -1,5 +1,5 @@
 pub mod hast;
-pub mod llast;
+pub mod last;
 pub mod transform;
 /**
  * Copyright 2021 Garrit Franke
@@ -19,4 +19,4 @@ pub mod transform;
 pub mod types;
 
 // Re-export the unified AST types from llast
-pub use llast::{BinOp, Expression, Function, Module, Statement, StructDef, SymbolTable, Variable};
+pub use last::{BinOp, Expression, Function, Module, Statement, StructDef, SymbolTable, Variable};
