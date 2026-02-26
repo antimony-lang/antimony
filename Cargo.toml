@@ -18,7 +18,7 @@ path = "src/main.rs"
 llvm = ["inkwell"]
 
 [dependencies]
-structopt = "0.3.26"
+clap = { version = "4.5.60", features = ["derive"] }
 rust-embed = "8.11.0"
 inkwell = { version = "0.7.1", features = ["llvm10-0"], optional = true }
 qbe = "3.0.0"
