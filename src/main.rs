@@ -16,12 +16,11 @@
 extern crate lazy_static;
 extern crate qbe;
 extern crate rust_embed;
-extern crate structopt;
 
+use clap::{Parser, Subcommand};
 use generator::Target;
 use std::path::PathBuf;
 use std::process;
-use structopt::StructOpt;
 
 mod ast;
 mod builder;
@@ -42,26 +41,26 @@ pub struct Lib;
 #[folder = "builtin/"]
 pub struct Builtins;
 
-#[derive(StructOpt, Debug)]
+#[derive(Subcommand, Debug)]
 enum Command {
-    #[structopt()]
     Build {
         in_file: PathBuf,
         /// Write output to a file. Use '-' to print to stdout
-        #[structopt(short, long)]
+        #[arg(short, long)]
         out_file: PathBuf,
     },
-    #[structopt()]
-    Run { in_file: PathBuf },
+    Run {
+        in_file: PathBuf,
+    },
 }
 
-#[derive(StructOpt, Debug)]
+#[derive(Parser, Debug)]
 struct Opt {
-    #[structopt(subcommand)]
+    #[command(subcommand)]
     command: Command,
 
     /// Target language. Options: c, js, llvm, x86
-    #[structopt(long, short, parse(try_from_str))]
+    #[arg(long, short)]
     target: Option<Target>,
 }
 
@@ -73,7 +72,7 @@ fn main() {
 }
 
 fn run() -> Result<(), String> {
-    let opts = Opt::from_args();
+    let opts = Opt::parse();
 
     match opts.command {
         Command::Build { in_file, out_file } => {
