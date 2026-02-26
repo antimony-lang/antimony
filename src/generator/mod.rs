@@ -26,7 +26,7 @@ pub mod qbe;
 mod tests;
 pub mod x86;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Target {
     C,
     JS,
