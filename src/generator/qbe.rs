@@ -98,14 +98,14 @@ impl QbeGenerator {
                 qbe::Type::Halfword | qbe::Type::SignedHalfword | qbe::Type::UnsignedHalfword => 2,
                 qbe::Type::Word | qbe::Type::Single => 4,
                 qbe::Type::Long | qbe::Type::Double => 8,
-                qbe::Type::Aggregate(td) => {
-                    // Aggregate type's alignment is the maximum alignment of its fields
-                    td.items
+                qbe::Type::Aggregate(td) => match td {
+                    qbe::TypeDef::Regular { items, .. } => items
                         .iter()
                         .map(|(item_ty, _)| alignment_of(item_ty))
                         .max()
-                        .unwrap_or(1)
-                }
+                        .unwrap_or(1),
+                    _ => 1,
+                },
                 qbe::Type::Zero => 1,
             }
         }
@@ -121,11 +121,8 @@ impl QbeGenerator {
     /// Returns an aggregate type for a structure (note: has side effects)
     fn generate_struct(&mut self, def: &StructDef) -> GeneratorResult<qbe::TypeDef<'static>> {
         self.tmp_counter += 1;
-        let mut typedef = qbe::TypeDef {
-            name: format!("struct.{}", self.tmp_counter),
-            align: None, // We'll set this after calculating max alignment
-            items: Vec::new(),
-        };
+        let ident = format!("struct.{}", self.tmp_counter);
+        let mut items: Vec<(qbe::Type<'static>, usize)> = Vec::new();
         let mut meta = StructMeta::new();
         let mut offset = 0_u64;
         let mut max_align = 1_u64;
@@ -146,7 +143,7 @@ impl QbeGenerator {
             offset = self.align_offset(offset, field_align);
 
             meta.insert(field.name.clone(), (ty.clone(), offset));
-            typedef.items.push((ty.clone(), 1));
+            items.push((ty.clone(), 1));
 
             offset += self.type_size(&ty);
         }
@@ -154,10 +151,6 @@ impl QbeGenerator {
         // Final size needs to be aligned to the struct's alignment
         offset = self.align_offset(offset, max_align);
 
-        // Set the typedef's alignment
-        typedef.align = Some(max_align);
-
-        // Create a placeholder entry in struct_map that we'll update later
         self.struct_map.insert(
             def.name.clone(),
             (
@@ -167,8 +160,11 @@ impl QbeGenerator {
             ),
         );
 
-        // Return the typedef to be registered
-        Ok(typedef)
+        Ok(qbe::TypeDef::Regular {
+            ident,
+            align: Some(max_align),
+            items,
+        })
     }
 
     fn generate_function(&mut self, func: &Function) -> GeneratorResult<qbe::Function<'static>> {
@@ -825,8 +821,8 @@ impl QbeGenerator {
         self.tmp_counter += 1;
         let name = format!("array.{}", self.tmp_counter);
 
-        let typedef = qbe::TypeDef {
-            name: name.clone(),
+        let typedef = qbe::TypeDef::Regular {
+            ident: name.clone(),
             align: None,
             items: if let Some(ty) = first_type {
                 vec![(qbe::Type::Long, 1), (ty, len)]
