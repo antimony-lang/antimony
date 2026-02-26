@@ -10,6 +10,7 @@
 
 - Add multi-level AST structure with High-level AST (HAST) and Low-level AST (LAST) ([#124](https://github.com/antimony-lang/antimony/pull/124))
 - Bump dependency [qbe](https://crates.io/crates/qbe) from `2.5.1` to `3.0.0` ([#131](https://github.com/antimony-lang/antimony/pull/131))
+- Pin Rust toolchain to `1.93` in `rust-toolchain.toml` ([#133](https://github.com/antimony-lang/antimony/pull/133))
 
 ## v0.9.0 (2025-04-18)
 
