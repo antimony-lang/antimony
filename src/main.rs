@@ -49,7 +49,9 @@ enum Command {
         #[arg(short, long)]
         out_file: PathBuf,
     },
-    Run { in_file: PathBuf },
+    Run {
+        in_file: PathBuf,
+    },
 }
 
 #[derive(Parser, Debug)]
