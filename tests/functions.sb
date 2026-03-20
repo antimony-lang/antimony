@@ -1,6 +1,7 @@
 fn functions_main() {
     log_test_stage("Testing functions")
     test_functions_basics()
+    test_variadic_functions()
 }
 
 fn test_functions_basics() {
@@ -11,4 +12,52 @@ fn test_functions_basics() {
 
 fn add_one(x: int): int {
     return x + 1
+}
+
+fn test_variadic_functions() {
+    log_test_stage("Testing variadic functions")
+    test_variadic_sum()
+    test_variadic_with_fixed_arg()
+    test_variadic_print_all()
+}
+
+// Returns the sum of all variadic arguments.
+fn sum_all(values: ...int): int {
+    let total = 0
+    for v in values {
+        total += v
+    }
+    return total
+}
+
+fn test_variadic_sum() {
+    let result = sum_all(1, 2, 3, 4, 5)
+    assert(result == 15)
+    println(result)
+}
+
+// Multiplies each variadic argument by a fixed factor and sums the results.
+fn scaled_sum(factor: int, values: ...int): int {
+    let total = 0
+    for v in values {
+        total += v * factor
+    }
+    return total
+}
+
+fn test_variadic_with_fixed_arg() {
+    let result = scaled_sum(2, 1, 2, 3)
+    assert(result == 12)
+    println(result)
+}
+
+// Prints each string argument on its own line.
+fn print_all(messages: ...string) {
+    for msg in messages {
+        println(msg)
+    }
+}
+
+fn test_variadic_print_all() {
+    print_all("Apple", "Strawberry", "Orange")
 }
