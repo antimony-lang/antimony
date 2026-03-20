@@ -563,6 +563,84 @@ mod tests {
         assert!(result_norm.contains("mul %"));
     }
 
+    /// Helper to create an array access expression
+    fn create_array_access_expr(name: &str, index: Expression) -> Expression {
+        Expression::ArrayAccess {
+            name: name.to_string(),
+            index: Box::new(index),
+        }
+    }
+
+    /// Helper to create an array literal expression
+    fn create_array_expr(elements: Vec<Expression>) -> Expression {
+        Expression::Array {
+            capacity: elements.len(),
+            elements,
+        }
+    }
+
+    #[test]
+    fn test_array_access() {
+        // let arr: int[] = [10, 20, 30]
+        // return arr[1]  -- should return 20
+        let arr_expr = create_array_expr(vec![
+            create_int_expr(10),
+            create_int_expr(20),
+            create_int_expr(30),
+        ]);
+        let decl_stmt =
+            create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), Some(arr_expr));
+        let ret_stmt = create_return_stmt(Some(create_array_access_expr(
+            "arr",
+            create_int_expr(1),
+        )));
+        let block = create_block_stmt(vec![decl_stmt, ret_stmt]);
+        let func = create_function("test_array_access", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+
+        let result = QbeGenerator::generate(module).unwrap();
+        let result_norm = normalize_qbe(&result);
+
+        // Should contain array allocation and load
+        assert!(result_norm.contains("storel"));
+        assert!(result_norm.contains("loadw"));
+        assert!(result_norm.contains("extsw"));
+        assert!(result_norm.contains("ret %"));
+    }
+
+    #[test]
+    fn test_array_assignment() {
+        // let arr: int[] = [1, 2, 3]
+        // arr[0] = 99
+        // return arr[0]
+        let arr_expr = create_array_expr(vec![
+            create_int_expr(1),
+            create_int_expr(2),
+            create_int_expr(3),
+        ]);
+        let decl_stmt =
+            create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), Some(arr_expr));
+        let assign_stmt = create_assign_stmt(
+            create_array_access_expr("arr", create_int_expr(0)),
+            create_int_expr(99),
+        );
+        let ret_stmt = create_return_stmt(Some(create_array_access_expr(
+            "arr",
+            create_int_expr(0),
+        )));
+        let block = create_block_stmt(vec![decl_stmt, assign_stmt, ret_stmt]);
+        let func = create_function("test_array_assignment", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+
+        let result = QbeGenerator::generate(module).unwrap();
+        let result_norm = normalize_qbe(&result);
+
+        // Should contain array allocation, store (for assignment) and load (for read)
+        assert!(result_norm.contains("storew"));
+        assert!(result_norm.contains("loadw"));
+        assert!(result_norm.contains("ret %"));
+    }
+
     #[test]
     fn test_boolean_operations() {
         // Test boolean operations (AND, OR)

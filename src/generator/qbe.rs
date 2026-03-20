@@ -31,6 +31,8 @@ pub struct QbeGenerator {
     scopes: Vec<HashMap<String, (qbe::Type<'static>, qbe::Value)>>,
     /// Structure -> (type, meta data, size) mappings
     struct_map: HashMap<String, (qbe::Type<'static>, StructMeta, u64)>,
+    /// Array variable -> element QBE type mappings (for offset calculation)
+    array_map: HashMap<String, qbe::Type<'static>>,
     /// Label prefix of loop scopes
     loop_labels: Vec<String>,
     /// Data defintions collected during generation
@@ -50,6 +52,7 @@ impl Generator for QbeGenerator {
             tmp_counter: 0,
             scopes: Vec::new(),
             struct_map: HashMap::new(),
+            array_map: HashMap::new(),
             loop_labels: Vec::new(),
             datadefs: Vec::new(),
             typedefs: Vec::new(),
@@ -173,12 +176,19 @@ impl QbeGenerator {
 
         let mut arguments: Vec<(qbe::Type<'static>, qbe::Value)> = Vec::new();
         for arg in &func.arguments {
-            let ty = self.get_type(
-                arg.ty
-                    .as_ref()
-                    .ok_or("Function arguments must have a type")?
-                    .to_owned(),
-            )?;
+            let arg_ty = arg
+                .ty
+                .as_ref()
+                .ok_or("Function arguments must have a type")?
+                .to_owned();
+
+            // Track element type for array arguments
+            if let Type::Array(ref inner_ty, _) = arg_ty {
+                let elem_type = self.get_type(*inner_ty.clone())?;
+                self.array_map.insert(arg.name.clone(), elem_type);
+            }
+
+            let ty = self.get_type(arg_ty)?;
             let tmp = self.new_var(&ty, &arg.name)?;
 
             arguments.push((ty.into_abi(), tmp));
@@ -246,13 +256,19 @@ impl QbeGenerator {
                 self.scopes.pop();
             }
             Statement::Declare { variable, value } => {
-                let ty = self.get_type(
-                    variable
-                        .ty
-                        .as_ref()
-                        .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
-                        .to_owned(),
-                )?;
+                let var_ty = variable
+                    .ty
+                    .as_ref()
+                    .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
+                    .to_owned();
+
+                // Track element type for array variables
+                if let Type::Array(ref inner_ty, _) = var_ty {
+                    let elem_type = self.get_type(*inner_ty.clone())?;
+                    self.array_map.insert(variable.name.clone(), elem_type);
+                }
+
+                let ty = self.get_type(var_ty)?;
                 let tmp = self.new_var(&ty, &variable.name)?;
 
                 if let Some(expr) = value {
@@ -362,6 +378,9 @@ impl QbeGenerator {
             }
             Expression::FieldAccess { expr, field } => {
                 self.generate_field_access(func, expr, field)
+            }
+            Expression::ArrayAccess { name, index } => {
+                self.generate_array_access(func, name, index)
             }
             _ => todo!("expression: {:?}", expr),
         }
@@ -585,7 +604,11 @@ impl QbeGenerator {
 
                 func.add_instr(qbe::Instr::Store(ty, field_ptr, rhs));
             }
-            Expression::ArrayAccess { name: _, index: _ } => todo!(),
+            Expression::ArrayAccess { name, index } => {
+                let (elem_type, elem_ptr) =
+                    self.generate_array_element_ptr(func, name, index)?;
+                func.add_instr(qbe::Instr::Store(elem_type, elem_ptr, rhs));
+            }
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
         }
 
@@ -739,6 +762,83 @@ impl QbeGenerator {
             .to_owned();
 
         Ok((src, ty, offset + off))
+    }
+
+    /// Calculates a pointer to `arr[index]` and returns `(elem_type, elem_ptr)`
+    fn generate_array_element_ptr(
+        &mut self,
+        func: &mut qbe::Function<'static>,
+        name: &str,
+        index: &Expression,
+    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+        let (_, arr_ptr) = self.get_var(name)?.to_owned();
+
+        let elem_type = self
+            .array_map
+            .get(name)
+            .ok_or_else(|| format!("Unknown element type for array '{}'", name))?
+            .clone();
+
+        let elem_size = self.type_size(&elem_type);
+
+        let (_, idx_val) = self.generate_expression(func, index)?;
+
+        // Sign-extend the word index to a long for pointer arithmetic
+        let idx_long = self.new_temporary();
+        func.assign_instr(
+            idx_long.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Extsw(idx_val),
+        );
+
+        // Multiply index by element size
+        let scaled = self.new_temporary();
+        func.assign_instr(
+            scaled.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Mul(idx_long, qbe::Value::Const(elem_size)),
+        );
+
+        // Add 8 bytes to skip the length field, then add to base pointer
+        let elem_ptr = self.new_temporary();
+        func.assign_instr(
+            elem_ptr.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Add(
+                arr_ptr,
+                // 8 (length field) + scaled offset
+                // We compute: base + 8 + scaled  using two adds
+                qbe::Value::Const(8),
+            ),
+        );
+
+        let elem_ptr2 = self.new_temporary();
+        func.assign_instr(
+            elem_ptr2.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Add(elem_ptr, scaled),
+        );
+
+        Ok((elem_type, elem_ptr2))
+    }
+
+    /// Generates a read from an array element
+    fn generate_array_access(
+        &mut self,
+        func: &mut qbe::Function<'static>,
+        name: &str,
+        index: &Expression,
+    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+        let (elem_type, elem_ptr) = self.generate_array_element_ptr(func, name, index)?;
+
+        let result = self.new_temporary();
+        func.assign_instr(
+            result.clone(),
+            elem_type.clone(),
+            qbe::Instr::Load(elem_type.clone(), elem_ptr),
+        );
+
+        Ok((elem_type, result))
     }
 
     /// Generates an array literal
