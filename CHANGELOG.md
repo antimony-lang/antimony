@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- QBE: Implement array element access and assignment ([#53](https://github.com/antimony-lang/antimony/issues/53))
+
 **Fixes**
 
 - Fixed array access in member variable expressions ([#123](https://github.com/antimony-lang/antimony/pull/123))
