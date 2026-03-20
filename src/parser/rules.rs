@@ -95,6 +95,11 @@ impl Parser {
             // Then continue to parse arguments
             // as long as a comma token is found
             while self.peek_token(TokenKind::Comma).is_ok() {
+                // Variadics must be the last parameter
+                if matches!(args.last().and_then(|v: &HVariable| v.ty.as_ref()), Some(Type::Varargs(_))) {
+                    let tok = self.peek()?;
+                    return Err(self.make_error_msg(tok.pos, "Variadic parameter must be the last parameter".into()));
+                }
                 self.match_token(TokenKind::Comma)?;
                 args.push(self.parse_typed_variable()?);
             }
@@ -215,6 +220,18 @@ impl Parser {
 
     fn parse_type(&mut self) -> Result<Type, String> {
         self.match_token(TokenKind::Colon)?;
+
+        // Handle variadic parameter: `name: ...T`
+        if self.peek_token(TokenKind::Ellipsis).is_ok() {
+            self.match_token(TokenKind::Ellipsis)?;
+            let next = self.peek()?;
+            let inner = match next.kind {
+                TokenKind::Identifier(_) => Type::try_from(self.next()?.raw),
+                _ => Err("Expected type after `...`".into()),
+            }?;
+            return Ok(Type::Varargs(Box::new(inner)));
+        }
+
         let next = self.peek()?;
         let typ = match next.kind {
             TokenKind::Identifier(_) => Type::try_from(self.next()?.raw),

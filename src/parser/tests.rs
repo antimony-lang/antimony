@@ -1080,3 +1080,51 @@ fn test_nested_array_access() {
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok(), "{:?}", tree.err());
 }
+
+#[test]
+fn test_parse_variadic_function() {
+    let raw = "
+    fn print(args: ...any) {}
+    fn main() {}
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok(), "{:?}", tree.err());
+}
+
+#[test]
+fn test_parse_variadic_with_preceding_args() {
+    let raw = "
+    fn greet(prefix: string, args: ...any) {}
+    fn main() {}
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok(), "{:?}", tree.err());
+}
+
+#[test]
+fn test_parse_variadic_must_be_last() {
+    let raw = "
+    fn bad(args: ...any, extra: int) {}
+    fn main() {}
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_err());
+}
+
+#[test]
+fn test_parse_variadic_for_loop() {
+    let raw = "
+    fn print(args: ...any) {
+        for argument in args {
+            println(argument)
+        }
+    }
+    fn main() {}
+    ";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string()));
+    assert!(tree.is_ok(), "{:?}", tree.err());
+}

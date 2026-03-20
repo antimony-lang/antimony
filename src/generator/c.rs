@@ -52,7 +52,10 @@ pub(super) fn generate_arguments(args: Vec<Variable>) -> String {
     }
 
     args.into_iter()
-        .map(|var| format!("{} {}", type_to_c_type(&var.ty), var.name))
+        .map(|var| match &var.ty {
+            Some(Type::Varargs(_)) => "...".to_string(),
+            _ => format!("{} {}", type_to_c_type(&var.ty), var.name),
+        })
         .collect::<Vec<String>>()
         .join(", ")
 }
@@ -65,6 +68,7 @@ fn type_to_c_type(ty: &Option<Type>) -> String {
         Some(Type::Array(inner, _)) => format!("{}*", type_to_c_type(&Some(*inner.clone()))),
         Some(Type::Struct(name)) => name.clone(),
         Some(Type::Any) => "void*".to_string(),
+        Some(Type::Varargs(_)) => "...".to_string(),
         None => "void".to_string(),
     }
 }

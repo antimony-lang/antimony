@@ -884,7 +884,8 @@ impl QbeGenerator {
     /// Returns a QBE type for the given AST type
     fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type<'static>> {
         match ty {
-            Type::Any => Err("'any' type is not supported".into()),
+            Type::Any => Err("'any' type is not supported by the QBE backend".into()),
+            Type::Varargs(_) => Err("variadic parameters are not supported by the QBE backend".into()),
             Type::Int => Ok(qbe::Type::Word),
             Type::Bool => Ok(qbe::Type::Byte),
             Type::Str => Ok(qbe::Type::Long),

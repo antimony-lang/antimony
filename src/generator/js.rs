@@ -50,7 +50,10 @@ impl Generator for JsGenerator {
 
 fn generate_arguments(args: Vec<Variable>) -> String {
     args.into_iter()
-        .map(|var| var.name)
+        .map(|var| match &var.ty {
+            Some(Type::Varargs(_)) => format!("...{}", var.name),
+            _ => var.name,
+        })
         .collect::<Vec<String>>()
         .join(", ")
 }

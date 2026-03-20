@@ -64,6 +64,7 @@ impl std::fmt::Display for TokenKind {
             TokenKind::CurlyBracesOpen => write!(f, "{{"),
             TokenKind::CurlyBracesClose => write!(f, "}}"),
             TokenKind::Tab => write!(f, "tab"),
+            TokenKind::Ellipsis => write!(f, "..."),
             TokenKind::Unknown => write!(f, "unknown"),
         }
     }

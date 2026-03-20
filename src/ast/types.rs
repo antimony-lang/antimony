@@ -23,6 +23,8 @@ pub enum Type {
     Bool,
     Array(Box<Type>, Option<usize>),
     Struct(String),
+    /// Variadic parameter: `args: ...T` — accessible as an array inside the function
+    Varargs(Box<Type>),
 }
 
 impl TryFrom<String> for Type {

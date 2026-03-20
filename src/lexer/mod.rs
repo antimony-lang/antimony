@@ -76,6 +76,8 @@ pub enum TokenKind {
     SemiColon,
     /// "."
     Dot,
+    /// "..."
+    Ellipsis,
     /// "!"
     Exclamation,
     /// ","
@@ -232,7 +234,15 @@ impl Cursor<'_> {
             c if is_whitespace(c) => self.whitespace(),
             '0'..='9' => self.number(),
             '"' | '\'' => self.string(first_char)?,
-            '.' => Dot,
+            '.' => {
+                if self.first() == '.' && self.second() == '.' {
+                    self.bump();
+                    self.bump();
+                    Ellipsis
+                } else {
+                    Dot
+                }
+            }
             '+' => match self.first() {
                 '=' => {
                     self.bump();
