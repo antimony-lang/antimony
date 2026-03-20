@@ -586,4 +586,206 @@ mod tests {
             assert!(result_norm.contains(&format!("{} %", op_name)));
         }
     }
+
+    // -----------------------------------------------------------------------
+    // Variadic parameter tests
+    // -----------------------------------------------------------------------
+
+    /// Helper: create a Variable with a Varargs type.
+    fn create_varargs_variable(name: &str) -> Variable {
+        Variable {
+            name: name.to_string(),
+            ty: Some(AstType::Varargs(Box::new(AstType::Any))),
+        }
+    }
+
+    /// A fully-variadic function (no fixed params) should have `...` as its
+    /// only argument in the QBE signature.
+    #[test]
+    fn test_variadic_function_definition_no_fixed_args() {
+        let args = vec![create_varargs_variable("items")];
+        let func =
+            create_function_with_args("print_all", args, None, create_block_stmt(vec![]));
+        let module = create_module(vec![func], Vec::new());
+
+        let result = QbeGenerator::generate(module).unwrap();
+        let norm = normalize_qbe(&result);
+
+        // Signature must contain `...` and must NOT have any typed argument
+        // before it (no fixed params).
+        assert!(
+            norm.contains("function $print_all(...) {"),
+            "expected `function $print_all(...) {{` in:\n{}", norm
+        );
+    }
+
+    /// A function with one fixed param followed by a variadic param should
+    /// produce `(l %prefix, ...) {` in the QBE signature.
+    #[test]
+    fn test_variadic_function_definition_with_fixed_args() {
+        let fixed = create_variable("prefix", AstType::Str);
+        let vararg = create_varargs_variable("rest");
+        let func = create_function_with_args(
+            "greet",
+            vec![fixed, vararg],
+            None,
+            create_block_stmt(vec![]),
+        );
+        let module = create_module(vec![func], Vec::new());
+
+        let result = QbeGenerator::generate(module).unwrap();
+        let norm = normalize_qbe(&result);
+
+        // Fixed param must appear before `...` in the signature.
+        assert!(
+            norm.contains(", ...) {"),
+            "expected `, ...) {{` in:\n{}", norm
+        );
+        // The fixed `str` param should be present as a `Long` (pointer).
+        assert!(
+            norm.contains("l %"),
+            "expected long (`l`) arg for str param in:\n{}", norm
+        );
+    }
+
+    /// The `vastart` preamble must be emitted at the start of a variadic
+    /// function body so that the va_list is properly initialised.
+    #[test]
+    fn test_variadic_function_body_has_vastart() {
+        let args = vec![create_varargs_variable("args")];
+        let func = create_function_with_args(
+            "variadic_fn",
+            args,
+            None,
+            create_block_stmt(vec![]),
+        );
+        let module = create_module(vec![func], Vec::new());
+
+        let result = QbeGenerator::generate(module).unwrap();
+        let norm = normalize_qbe(&result);
+
+        assert!(
+            norm.contains("alloc8 24"),
+            "expected va_list alloc8 24 in:\n{}", norm
+        );
+        assert!(
+            norm.contains("vastart %"),
+            "expected vastart in:\n{}", norm
+        );
+    }
+
+    /// Calling a variadic function must insert `...` at the correct position
+    /// in the call instruction — index 0 for a fully-variadic callee.
+    #[test]
+    fn test_variadic_call_fully_variadic() {
+        // Callee: fn sink(args: ...any)
+        let callee_args = vec![create_varargs_variable("args")];
+        let callee = create_function_with_args(
+            "sink",
+            callee_args,
+            None,
+            create_block_stmt(vec![]),
+        );
+
+        // Caller: fn caller() { sink(1, 2, 3) }
+        let call_expr = create_call_expr(
+            "sink",
+            vec![create_int_expr(1), create_int_expr(2), create_int_expr(3)],
+        );
+        let caller = create_function(
+            "caller",
+            None,
+            create_block_stmt(vec![Statement::Exp(call_expr)]),
+        );
+
+        let module = create_module(vec![callee, caller], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+        let norm = normalize_qbe(&result);
+
+        // The call instruction must have `...` before the variadic arguments.
+        assert!(
+            norm.contains("call $sink(...,"),
+            "expected `call $sink(...,` in:\n{}", norm
+        );
+    }
+
+    /// Calling a function that has one fixed param and then variadic params
+    /// must place `...` after the fixed argument in the call instruction.
+    #[test]
+    fn test_variadic_call_with_fixed_args() {
+        // Callee: fn log(level: int, args: ...any)
+        let callee_args = vec![
+            create_variable("level", AstType::Int),
+            create_varargs_variable("args"),
+        ];
+        let callee = create_function_with_args(
+            "log",
+            callee_args,
+            None,
+            create_block_stmt(vec![]),
+        );
+
+        // Caller: fn caller() { log(1, "msg", 42) }
+        let call_expr = create_call_expr(
+            "log",
+            vec![
+                create_int_expr(1),
+                create_str_expr("msg"),
+                create_int_expr(42),
+            ],
+        );
+        let caller = create_function(
+            "caller",
+            None,
+            create_block_stmt(vec![Statement::Exp(call_expr)]),
+        );
+
+        let module = create_module(vec![callee, caller], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+        let norm = normalize_qbe(&result);
+
+        // Fixed arg comes first; `...` separates it from the variadic tail.
+        assert!(
+            norm.contains("call $log("),
+            "expected `call $log(` in:\n{}", norm
+        );
+        assert!(
+            norm.contains("...,"),
+            "expected `...,` separator in call instruction in:\n{}", norm
+        );
+    }
+
+    /// Calling an unknown (external / built-in) variadic function that is
+    /// declared only through `func_varargs` — simulated here by placing the
+    /// callee in the same module — should still emit correct variadic IL.
+    #[test]
+    fn test_variadic_call_to_builtin_like_function() {
+        // Declare the external variadic function body as empty (as a built-in would be).
+        let callee = create_function_with_args(
+            "builtin_print",
+            vec![create_varargs_variable("items")],
+            None,
+            create_block_stmt(vec![]),
+        );
+
+        // Caller passes two string arguments to the variadic built-in.
+        let call_expr = create_call_expr(
+            "builtin_print",
+            vec![create_str_expr("hello"), create_str_expr("world")],
+        );
+        let caller = create_function(
+            "main",
+            None,
+            create_block_stmt(vec![Statement::Exp(call_expr)]),
+        );
+
+        let module = create_module(vec![callee, caller], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+        let norm = normalize_qbe(&result);
+
+        assert!(
+            norm.contains("call $builtin_print(...,"),
+            "expected variadic call instruction in:\n{}", norm
+        );
+    }
 }

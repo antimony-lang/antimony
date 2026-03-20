@@ -96,3 +96,59 @@ fn add(x: int, y: int): int = x + y
 ```
 fn concat(a: string, b: string): string = a + b
 ```
+
+# Variadic Functions
+
+Antimony supports *variadic functions* — functions that accept a variable
+number of arguments. The variadic parameter is declared with `...` before its
+type and must always be the **last** parameter in the signature.
+
+## Syntax
+
+```
+fn function_name(fixed_params, args: ...type) { ... }
+```
+
+Inside the function body the variadic parameter behaves like a regular array,
+so you can iterate over it with a `for` loop.
+
+## Examples
+
+**A function that accepts any number of integers and prints them:**
+
+```
+fn print_numbers(values: ...int) {
+    for value in values {
+        println(value)
+    }
+}
+
+fn main() {
+    print_numbers(1, 2, 3, 4, 5)
+}
+```
+
+**Mixing fixed and variadic parameters:**
+
+```
+fn log(level: int, messages: ...string) {
+    for msg in messages {
+        println(msg)
+    }
+}
+
+fn main() {
+    log(1, "Starting up", "Loading config")
+}
+```
+
+The variadic parameter must come last. Placing it before other parameters is a
+compile-time error.
+
+## Backend notes
+
+| Backend | Implementation |
+|---------|---------------|
+| JavaScript | Rest parameters (`...args`) — the engine collects arguments into a native array. |
+| C | `...` trailing parameter — standard C variadic convention; `va_list` is used internally. |
+| QBE | `...` in the QBE IL function signature; `vastart`/`vaarg` instructions manage the argument list at the machine level. |
