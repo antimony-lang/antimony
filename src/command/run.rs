@@ -88,6 +88,32 @@ fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
     run_command(&mut Command::new(&exe_path))
 }
 
+fn run_c(buf: Vec<u8>, in_file: &Path) -> Result<()> {
+    let dir_path = "./"; // TODO: Use this for changing build directory
+    let filename = in_file
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .ok_or("Invalid filename")?;
+
+    let c_path = format!("{dir_path}{}.c", filename);
+    let exe_path = format!("{dir_path}{}", filename);
+
+    // Write C file
+    OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&c_path)
+        .map_err(|e| format!("Failed to open C file: {}", e))?
+        .write_all(&buf)
+        .map_err(|e| format!("Failed to write C file: {}", e))?;
+
+    // Compile and run
+    run_command(Command::new("gcc").arg(&c_path).arg("-o").arg(&exe_path))?;
+    run_command(&mut Command::new(&exe_path))
+}
+
 pub fn run(target: Target, in_file: PathBuf) -> Result<()> {
     let mut buf = Box::<Vec<u8>>::default();
     build::build_to_buffer(&target, &in_file, &mut buf)?;
@@ -95,6 +121,7 @@ pub fn run(target: Target, in_file: PathBuf) -> Result<()> {
     match target {
         Target::JS => run_node(&buf),
         Target::Qbe => run_qbe(*buf, &in_file),
+        Target::C => run_c(*buf, &in_file),
         _ => Err("Unsupported target".to_string()),
     }
 }
