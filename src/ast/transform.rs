@@ -178,6 +178,18 @@ impl AstTransformer {
         // Process arms in reverse order to build nested if-else structure
         for arm in arms.into_iter().rev() {
             match arm {
+                // Treat `_` as a wildcard (same as `else` arm)
+                HMatchArm::Case(HExpression::Variable(ref name), body) if name == "_" => {
+                    let lbody = Self::transform_statement(body)?;
+                    let body_block = match lbody {
+                        Statement::Block { .. } => lbody,
+                        other => Statement::Block {
+                            statements: vec![other],
+                            scope: vec![],
+                        },
+                    };
+                    current_stmt = Some(body_block);
+                }
                 HMatchArm::Case(pattern, body) => {
                     let lpattern = Self::transform_expression(pattern)?;
                     let lbody = Self::transform_statement(body)?;

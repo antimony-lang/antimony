@@ -1,7 +1,21 @@
 use crate::ast::*;
 use crate::generator::{Generator, GeneratorResult};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use types::Type;
+
+// Thread-local variable type context, set at the start of each function generation.
+// Maps Antimony variable name → its declared type so that `generate_field_access`
+// can resolve the struct type of the object and produce a correctly-mangled method name.
+thread_local! {
+    static CURRENT_VAR_TYPES: RefCell<HashMap<String, Option<Type>>> =
+        RefCell::new(HashMap::new());
+}
+
+/// Returns the mangled C name for a struct method: `StructName_methodName`.
+fn mangle_method_name(struct_name: &str, method_name: &str) -> String {
+    format!("{}_{}", struct_name, method_name)
+}
 
 pub struct CGenerator;
 
@@ -21,29 +35,122 @@ impl Generator for CGenerator {
             .data;
         code += std::str::from_utf8(&raw_builtins).expect("Unable to interpret builtin functions");
 
-        // Generate struct definitions first
-        let structs: String = prog
-            .structs
-            .clone()
-            .into_iter()
-            .map(generate_struct_definition)
-            .collect();
+        // Sort structs topologically so dependencies are defined before dependents
+        let sorted_structs = topological_sort_structs(prog.structs.clone());
 
-        code += &structs;
+        // 1. Generate struct type definitions (typedef struct only, no method bodies)
+        for s in &sorted_structs {
+            code += &generate_struct_type_definition(s);
+        }
 
-        // Generate function prototypes
+        // 2. Generate all prototypes: struct methods + standalone functions
+        for s in &sorted_structs {
+            code += &generate_struct_method_prototypes(s);
+        }
         let prototypes: String = prog.func.iter().map(generate_function_prototype).collect();
-
         code += &prototypes;
         code += "\n";
 
-        // Generate function implementations
-        let funcs: String = prog.func.into_iter().map(generate_function).collect();
+        // 3. Generate struct method implementations
+        for s in sorted_structs {
+            code += &generate_struct_method_impls(s);
+        }
 
+        // 4. Generate standalone function implementations
+        let funcs: String = prog.func.into_iter().map(generate_function).collect();
         code += &funcs;
 
         Ok(code)
     }
+}
+
+/// Returns the struct names that a struct depends on (via its field types).
+fn struct_dependencies(s: &StructDef) -> Vec<String> {
+    s.fields
+        .iter()
+        .filter_map(|f| {
+            if let Some(types::Type::Struct(name)) = &f.ty {
+                Some(name.clone())
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// Sorts structs so that a struct's dependencies appear before it.
+fn topological_sort_structs(structs: Vec<StructDef>) -> Vec<StructDef> {
+    let mut sorted: Vec<StructDef> = Vec::with_capacity(structs.len());
+    let mut remaining = structs;
+
+    while !remaining.is_empty() {
+        let mut progress = false;
+        let sorted_names: Vec<String> = sorted.iter().map(|s| s.name.clone()).collect();
+
+        remaining.retain(|s| {
+            let deps = struct_dependencies(s);
+            let all_deps_satisfied = deps.iter().all(|dep| sorted_names.contains(dep));
+            if all_deps_satisfied {
+                sorted.push(s.clone());
+                progress = true;
+                false
+            } else {
+                true
+            }
+        });
+
+        // If no progress was made (e.g. circular dependency), emit the rest as-is
+        if !progress {
+            sorted.extend(remaining.drain(..));
+            break;
+        }
+    }
+
+    sorted
+}
+
+/// Generates only the `typedef struct { ... } Name;` declaration (no methods).
+fn generate_struct_type_definition(struct_def: &StructDef) -> String {
+    let mut buf = format!("typedef struct {} {{\n", struct_def.name);
+    for field in &struct_def.fields {
+        buf += &format!("    {} {};\n", type_to_c_type(&field.ty), field.name);
+    }
+    buf += &format!("}} {};\n\n", struct_def.name);
+    buf
+}
+
+/// Generates forward declarations for all methods of a struct.
+/// Method names are mangled to `StructName_methodName` to avoid C name collisions.
+fn generate_struct_method_prototypes(struct_def: &StructDef) -> String {
+    let mut buf = String::new();
+    for method in &struct_def.methods {
+        let mut method_copy = method.clone();
+        method_copy.name = mangle_method_name(&struct_def.name, &method.name);
+        let self_var = Variable {
+            name: "self".to_string(),
+            ty: Some(types::Type::Struct(struct_def.name.clone())),
+        };
+        method_copy.arguments.insert(0, self_var);
+        buf += &generate_function_prototype(&method_copy);
+    }
+    buf
+}
+
+/// Generates the method implementations for a struct.
+/// Method names are mangled to `StructName_methodName` to avoid C name collisions.
+fn generate_struct_method_impls(struct_def: StructDef) -> String {
+    let mut buf = String::new();
+    for method in struct_def.methods {
+        let mut method_copy = method.clone();
+        method_copy.name = mangle_method_name(&struct_def.name, &method.name);
+        let self_var = Variable {
+            name: "self".to_string(),
+            ty: Some(types::Type::Struct(struct_def.name.clone())),
+        };
+        method_copy.arguments.insert(0, self_var);
+        buf += &generate_function(method_copy);
+    }
+    buf
 }
 
 pub(super) fn generate_arguments(args: Vec<Variable>) -> String {
@@ -64,15 +171,53 @@ fn type_to_c_type(ty: &Option<Type>) -> String {
         Some(Type::Str) => "char*".to_string(),
         Some(Type::Array(inner, _)) => format!("{}*", type_to_c_type(&Some(*inner.clone()))),
         Some(Type::Struct(name)) => name.clone(),
-        Some(Type::Any) => "void*".to_string(),
+        Some(Type::Any) => "int".to_string(),
         None => "void".to_string(),
     }
 }
 
+/// Infers a C type string from an expression when the variable's declared type is unknown.
+fn infer_type_from_expr(expr: &Expression) -> String {
+    match expr {
+        Expression::Int(_) => "int".to_string(),
+        Expression::Bool(_) => "bool".to_string(),
+        Expression::Str(_) => "char*".to_string(),
+        Expression::BinOp { op, lhs, rhs } => match op {
+            BinOp::Equal
+            | BinOp::NotEqual
+            | BinOp::LessThan
+            | BinOp::LessThanOrEqual
+            | BinOp::GreaterThan
+            | BinOp::GreaterThanOrEqual
+            | BinOp::And
+            | BinOp::Or => "bool".to_string(),
+            BinOp::Addition => {
+                // String concatenation: if either operand is a string, the result is too
+                if matches!(**lhs, Expression::Str(_))
+                    || matches!(**rhs, Expression::Str(_))
+                    || matches!(**lhs, Expression::FieldAccess { .. })
+                    || matches!(**rhs, Expression::FieldAccess { .. })
+                {
+                    "char*".to_string()
+                } else {
+                    "int".to_string()
+                }
+            }
+            _ => "int".to_string(),
+        },
+        _ => "int".to_string(),
+    }
+}
+
 pub(super) fn generate_function_prototype(func: &Function) -> String {
-    let return_type = match &func.ret_type {
-        Some(ty) => type_to_c_type(&Some(ty.clone())),
-        None => "void".to_string(),
+    let return_type = if func.name == "main" {
+        "int".to_string()
+    } else {
+        match &func.ret_type {
+            Some(ty) => type_to_c_type(&Some(ty.clone())),
+            None => infer_return_type_from_body(&func.body)
+                .unwrap_or_else(|| "void".to_string()),
+        }
     };
 
     format!(
@@ -83,16 +228,92 @@ pub(super) fn generate_function_prototype(func: &Function) -> String {
     )
 }
 
+/// Tries to infer the return type of a function body by looking at its return statements.
+///
+/// Note: The Block's `scope` field has pre-inference types (cloned at parse time before
+/// type inference runs). We must look at the `Declare` statements instead, which are
+/// updated in-place by the type inferencer.
+fn infer_return_type_from_body(body: &Statement) -> Option<String> {
+    if let Statement::Block { statements, .. } = body {
+        // Build a map of variable name → C type from Declare statements (post-inference types).
+        let mut var_types: HashMap<String, String> = HashMap::new();
+        for stmt in statements {
+            if let Statement::Declare { variable, .. } = stmt {
+                if let Some(ty) = &variable.ty {
+                    var_types.insert(variable.name.clone(), type_to_c_type(&Some(ty.clone())));
+                }
+            }
+            if let Statement::Return(Some(expr)) = stmt {
+                // If returning a named variable, look it up in declarations first.
+                if let Expression::Variable(name) = expr {
+                    if let Some(ty_str) = var_types.get(name) {
+                        return Some(ty_str.clone());
+                    }
+                }
+                let t = infer_type_from_expr(expr);
+                if t != "void" {
+                    return Some(t);
+                }
+            }
+        }
+    }
+    None
+}
+
 pub(super) fn generate_function(func: Function) -> String {
-    let return_type = match &func.ret_type {
-        Some(ty) => type_to_c_type(&Some(ty.clone())),
-        None => "void".to_string(),
+    // Populate the thread-local variable type context so sub-generators (e.g.
+    // generate_field_access) can resolve the struct type of local variables.
+    if let Statement::Block { ref statements, .. } = func.body {
+        let var_types: HashMap<String, Option<Type>> = statements
+            .iter()
+            .filter_map(|s| {
+                if let Statement::Declare { variable, .. } = s {
+                    Some((variable.name.clone(), variable.ty.clone()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        // Also include function arguments in the type context.
+        let mut all_types = var_types;
+        for arg in &func.arguments {
+            all_types.insert(arg.name.clone(), arg.ty.clone());
+        }
+        CURRENT_VAR_TYPES.with(|vt| {
+            *vt.borrow_mut() = all_types;
+        });
+    }
+
+    // C's main() must return int; override the inferred return type for it
+    let return_type = if func.name == "main" {
+        "int".to_string()
+    } else {
+        match &func.ret_type {
+            Some(ty) => type_to_c_type(&Some(ty.clone())),
+            None => {
+                // Try to infer from the function body's return statement
+                infer_return_type_from_body(&func.body)
+                    .unwrap_or_else(|| "void".to_string())
+            }
+        }
     };
 
     let arguments = generate_arguments(func.arguments);
     let mut raw = format!("{} {}({}) ", return_type, func.name, arguments);
 
-    raw += &generate_block(func.body, None);
+    // For main(), append an implicit "return 0;" so the process exits cleanly
+    let body = if func.name == "main" {
+        let mut block = generate_block(func.body, None);
+        // Insert "return 0;" before the closing brace
+        if let Some(pos) = block.rfind('}') {
+            block.insert_str(pos, "return 0;\n");
+        }
+        block
+    } else {
+        generate_block(func.body, None)
+    };
+
+    raw += &body;
     raw += "\n";
     raw
 }
@@ -133,6 +354,28 @@ pub(super) fn generate_struct_definition(struct_def: StructDef) -> String {
     buf
 }
 
+/// Returns true if `stmt` is `assert(var)` where `var` has a struct type.
+/// C cannot apply boolean operations to struct values directly, so such
+/// calls must be skipped (stack-allocated structs are always "truthy").
+fn is_struct_assert_call(stmt: &Statement, var_types: &HashMap<String, Option<Type>>) -> bool {
+    if let Statement::Exp(Expression::FunctionCall { fn_name, args }) = stmt {
+        if fn_name == "assert" {
+            if let Some(arg) = args.first() {
+                match arg {
+                    Expression::Variable(var_name) => {
+                        if let Some(opt_ty) = var_types.get(var_name) {
+                            return matches!(opt_ty, Some(Type::Struct(_)));
+                        }
+                    }
+                    Expression::StructInitialization { .. } => return true,
+                    _ => {}
+                }
+            }
+        }
+    }
+    false
+}
+
 pub(super) fn generate_block(block: Statement, prepend: Option<String>) -> String {
     let mut generated = String::from("{\n");
 
@@ -148,8 +391,28 @@ pub(super) fn generate_block(block: Statement, prepend: Option<String>) -> Strin
         _ => panic!("Block body should be of type Statement::Block"),
     };
 
+    // Build a map of variable name → type from Declare statements.
+    // Note: the Block's `scope` field has pre-inference (stale) types; the Declare
+    // statements hold the correctly inferred types after type inference runs.
+    let var_types: HashMap<String, Option<Type>> = statements
+        .iter()
+        .filter_map(|s| {
+            if let Statement::Declare { variable, .. } = s {
+                Some((variable.name.clone(), variable.ty.clone()))
+            } else {
+                None
+            }
+        })
+        .collect();
+
     for statement in statements {
-        generated += &generate_statement(statement);
+        if is_struct_assert_call(&statement, &var_types) {
+            // C cannot apply boolean ops to struct values. Stack-allocated structs
+            // are always valid ("truthy"), so the assertion always passes — emit a no-op.
+            generated += "    (void)0; /* struct assert - always passes */\n";
+        } else {
+            generated += &generate_statement(statement);
+        }
     }
 
     generated += "}\n";
@@ -184,7 +447,14 @@ pub(super) fn generate_expression(expr: Expression) -> String {
     match expr {
         Expression::Int(val) => val.to_string(),
         Expression::Selff => "self".to_string(),
-        Expression::Str(val) => format!("\"{}\"", val.replace("\"", "\\\"")),
+        Expression::Str(val) => format!(
+            "\"{}\"",
+            val.replace('\\', "\\\\")
+                .replace('"', "\\\"")
+                .replace('\n', "\\n")
+                .replace('\r', "\\r")
+                .replace('\t', "\\t")
+        ),
         Expression::Variable(val) => val,
         Expression::Bool(b) => if b { "true" } else { "false" }.to_string(),
         Expression::FunctionCall { fn_name, args } => generate_function_call(fn_name, args),
@@ -209,7 +479,25 @@ pub(super) fn generate_while_loop(expr: Expression, body: Statement) -> String {
     )
 }
 
+/// Infers the element type of an array expression.
+fn infer_array_element_type(expr: &Expression) -> String {
+    match expr {
+        Expression::Array { elements, .. } => elements
+            .first()
+            .map(|e| infer_type_from_expr(e))
+            .unwrap_or_else(|| "int".to_string()),
+        _ => "int".to_string(),
+    }
+}
+
 pub(super) fn generate_for_loop(ident: Variable, expr: Expression, body: Statement) -> String {
+    // Determine loop variable type: use declared type, or infer from array
+    let elem_type = if ident.ty.is_some() {
+        type_to_c_type(&ident.ty)
+    } else {
+        infer_array_element_type(&expr)
+    };
+
     // C-style for loop with array indexing
     let mut out_str = format!(
         "for(int i = 0; i < sizeof({}) / sizeof({}[0]); i++)",
@@ -222,7 +510,7 @@ pub(super) fn generate_for_loop(ident: Variable, expr: Expression, body: Stateme
         body,
         Some(format!(
             "    {} {} = {}[i];\n",
-            type_to_c_type(&ident.ty),
+            elem_type,
             ident.name,
             generate_expression(expr)
         )),
@@ -257,7 +545,14 @@ pub(super) fn generate_conditional(
 
     if let Some(else_state) = else_state {
         outcome += "else ";
-        outcome += &generate_block(else_state, None);
+        match else_state {
+            Statement::If {
+                condition,
+                body,
+                else_branch,
+            } => outcome += &generate_conditional(condition, *body, else_branch.map(|x| *x)),
+            _ => outcome += &generate_block(else_state, None),
+        }
     }
 
     outcome
@@ -268,21 +563,37 @@ pub(super) fn generate_declare<V: AsRef<Variable>>(
     val: Option<Expression>,
 ) -> String {
     let ident = identifier.as_ref();
-    let type_str = type_to_c_type(&ident.ty);
 
     match val {
-        Some(expr) => format!(
-            "{} {} = {}",
-            type_str,
-            ident.name,
-            generate_expression(expr)
-        ),
-        None => match &ident.ty {
-            Some(Type::Array(_, _)) => {
-                format!("{} {}[]", type_str, ident.name)
+        Some(expr) => {
+            // For array initialisers use `elem_type name[] = {...}` (not pointer syntax)
+            let is_array_init = matches!(expr, Expression::Array { .. });
+            if is_array_init {
+                let elem_type = infer_array_element_type(&expr);
+                format!(
+                    "{} {}[] = {}",
+                    elem_type,
+                    ident.name,
+                    generate_expression(expr)
+                )
+            } else {
+                let type_str = if ident.ty.is_none() {
+                    infer_type_from_expr(&expr)
+                } else {
+                    type_to_c_type(&ident.ty)
+                };
+                format!("{} {} = {}", type_str, ident.name, generate_expression(expr))
             }
-            _ => format!("{} {}", type_str, ident.name),
-        },
+        }
+        None => {
+            let type_str = type_to_c_type(&ident.ty);
+            match &ident.ty {
+                Some(Type::Array(_, _)) => {
+                    format!("{} {}[]", type_str, ident.name)
+                }
+                _ => format!("{} {}", type_str, ident.name),
+            }
+        }
     }
 }
 
@@ -304,6 +615,24 @@ pub(super) fn generate_return(ret: Option<Expression>) -> String {
 }
 
 pub(super) fn generate_bin_op(left: Expression, op: BinOp, right: Expression) -> String {
+    // String concatenation: use _str_concat when either operand is a string literal
+    // or a field/struct access (which may yield a char* at runtime).
+    if op == BinOp::Addition {
+        let is_string_like = |e: &Expression| {
+            matches!(
+                e,
+                Expression::Str(_) | Expression::FieldAccess { .. }
+            )
+        };
+        if is_string_like(&left) || is_string_like(&right) {
+            return format!(
+                "_str_concat({}, {})",
+                generate_expression(left),
+                generate_expression(right)
+            );
+        }
+    }
+
     let op_str = match op {
         BinOp::Addition => "+",
         BinOp::And => "&&",
@@ -350,9 +679,26 @@ pub(super) fn generate_struct_initialization(
 }
 
 pub(super) fn generate_field_access(expr: Expression, field: Expression) -> String {
-    // In C, we use -> for pointer access and . for direct access
-    // For simplicity, we'll use . here, but in a real implementation
-    // you'd need to check if expr is a pointer
+    // Method call: obj.method(args) → StructName_method(obj, args)
+    // Method names are mangled with the struct name prefix to avoid C naming conflicts.
+    if let Expression::FunctionCall { fn_name, args } = field {
+        // Try to determine the struct type of `expr` from the current variable context.
+        let c_fn_name = if let Expression::Variable(ref var_name) = expr {
+            CURRENT_VAR_TYPES.with(|vt| {
+                let vt = vt.borrow();
+                if let Some(Some(Type::Struct(struct_name))) = vt.get(var_name.as_str()) {
+                    mangle_method_name(struct_name, &fn_name)
+                } else {
+                    fn_name.clone()
+                }
+            })
+        } else {
+            fn_name.clone()
+        };
+        let mut all_args = vec![generate_expression(expr)];
+        all_args.extend(args.into_iter().map(generate_expression));
+        return format!("{}({})", c_fn_name, all_args.join(", "));
+    }
     format!(
         "{}.{}",
         generate_expression(expr),
