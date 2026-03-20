@@ -39,6 +39,9 @@ pub struct QbeGenerator {
     typedefs: Vec<RcTypeDef>,
     /// Module being built
     module: qbe::Module<'static>,
+    /// Functions with variadic params: name -> index of first variadic parameter.
+    /// Used to emit the correct `opt_variadic_i` in call instructions.
+    func_varargs: HashMap<String, usize>,
 }
 
 /// Mapping of field -> (type, offset)
@@ -46,6 +49,18 @@ type StructMeta = HashMap<String, (qbe::Type<'static>, u64)>;
 
 impl Generator for QbeGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
+        // Pre-scan functions to build the variadic parameter map.
+        // This is needed by the call-site generator before any function bodies are processed.
+        let mut func_varargs: HashMap<String, usize> = HashMap::new();
+        for func in &prog.func {
+            for (i, arg) in func.arguments.iter().enumerate() {
+                if matches!(arg.ty, Some(Type::Varargs(_))) {
+                    func_varargs.insert(func.name.clone(), i);
+                    break;
+                }
+            }
+        }
+
         let mut generator = QbeGenerator {
             tmp_counter: 0,
             scopes: Vec::new(),
@@ -54,6 +69,7 @@ impl Generator for QbeGenerator {
             datadefs: Vec::new(),
             typedefs: Vec::new(),
             module: qbe::Module::new(),
+            func_varargs,
         };
 
         for def in &prog.structs {
@@ -84,8 +100,44 @@ impl Generator for QbeGenerator {
             generator.module.add_data(def.clone());
         }
 
-        Ok(generator.module.to_string())
+        // The `qbe` crate's Function struct has no is_variadic flag, so we
+        // post-process the emitted IL to insert `...` into the signatures of
+        // functions that have variadic parameters.
+        let raw = generator.module.to_string();
+        let output = patch_variadic_signatures(raw, &generator.func_varargs);
+
+        Ok(output)
     }
+}
+
+/// Inserts `...` into QBE function definition signatures for variadic functions.
+///
+/// The `qbe` crate does not expose a way to mark a function as variadic in its
+/// struct API, so we do a targeted line-level fixup after rendering the module.
+fn patch_variadic_signatures(source: String, variadics: &HashMap<String, usize>) -> String {
+    if variadics.is_empty() {
+        return source;
+    }
+    source
+        .lines()
+        .map(|line| {
+            for name in variadics.keys() {
+                // Match both `export function $name(` and `function $name(`
+                let marker = format!("function ${}(", name);
+                if line.contains(&marker) {
+                    // If the argument list is empty, replace `()` with `(...)`
+                    let empty_sig = format!("function ${}() {{", name);
+                    if line.contains(&empty_sig) {
+                        return line.replace(&empty_sig, &format!("function ${}(...) {{", name));
+                    }
+                    // Otherwise append `, ...` before the closing `) {`
+                    return line.replacen(") {", ", ...) {", 1);
+                }
+            }
+            line.to_string()
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 impl QbeGenerator {
@@ -172,16 +224,27 @@ impl QbeGenerator {
         self.scopes.push(HashMap::new());
 
         let mut arguments: Vec<(qbe::Type<'static>, qbe::Value)> = Vec::new();
-        for arg in &func.arguments {
-            let ty = self.get_type(
-                arg.ty
-                    .as_ref()
-                    .ok_or("Function arguments must have a type")?
-                    .to_owned(),
-            )?;
-            let tmp = self.new_var(&ty, &arg.name)?;
+        let mut varargs_param: Option<String> = None;
 
-            arguments.push((ty.into_abi(), tmp));
+        for arg in &func.arguments {
+            match &arg.ty {
+                Some(Type::Varargs(_)) => {
+                    // Variadic param is not added to the QBE argument list.
+                    // The function signature gets `...` via post-processing.
+                    // We remember the param name so we can set up the va_list below.
+                    varargs_param = Some(arg.name.clone());
+                }
+                _ => {
+                    let ty = self.get_type(
+                        arg.ty
+                            .as_ref()
+                            .ok_or("Function arguments must have a type")?
+                            .to_owned(),
+                    )?;
+                    let tmp = self.new_var(&ty, &arg.name)?;
+                    arguments.push((ty.into_abi(), tmp));
+                }
+            }
         }
 
         let return_ty = if let Some(ty) = &func.ret_type {
@@ -198,6 +261,18 @@ impl QbeGenerator {
         );
 
         qfunc.add_block("start".to_owned());
+
+        // If this function has a variadic parameter, allocate a va_list on the
+        // stack, initialise it with `vastart`, and register the param name so
+        // that the function body can reference it.
+        if let Some(param_name) = varargs_param {
+            let ap = self.new_temporary();
+            qfunc.assign_instr(ap.clone(), qbe::Type::Long, qbe::Instr::Alloc8(24));
+            qfunc.add_instr(qbe::Instr::Vastart(ap.clone()));
+            // Register under the Antimony param name so the body can use it.
+            let scope = self.scopes.last_mut().expect("scope must exist");
+            scope.insert(param_name, (qbe::Type::Long, ap));
+        }
 
         self.generate_statement(&mut qfunc, &func.body)?;
 
@@ -344,13 +419,14 @@ impl QbeGenerator {
 
                 let tmp = self.new_temporary();
 
-                // Now build the call args
-                let new_args: Vec<(qbe::Type<'static>, qbe::Value)> = arg_results;
+                // If the callee is variadic, tell QBE where the variadic args start
+                // so it emits `...` at the right position in the call instruction.
+                let variadic_i = self.func_varargs.get(fn_name.as_str()).map(|&i| i as u64);
 
                 func.assign_instr(
                     tmp.clone(),
                     qbe::Type::Word,
-                    qbe::Instr::Call(fn_name.clone(), new_args, None),
+                    qbe::Instr::Call(fn_name.clone(), arg_results, variadic_i),
                 );
 
                 Ok((qbe::Type::Word, tmp))
@@ -885,7 +961,9 @@ impl QbeGenerator {
     fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type<'static>> {
         match ty {
             Type::Any => Err("'any' type is not supported by the QBE backend".into()),
-            Type::Varargs(_) => Err("variadic parameters are not supported by the QBE backend".into()),
+            // Varargs params are handled specially in generate_function before get_type
+            // is ever called.  If we somehow reach here it is a compiler bug.
+            Type::Varargs(_) => Err("internal error: Type::Varargs reached get_type unexpectedly".into()),
             Type::Int => Ok(qbe::Type::Word),
             Type::Bool => Ok(qbe::Type::Byte),
             Type::Str => Ok(qbe::Type::Long),
