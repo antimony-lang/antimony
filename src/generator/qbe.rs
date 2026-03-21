@@ -1147,12 +1147,7 @@ impl QbeGenerator {
         func.assign_instr(
             cmp_tmp.clone(),
             qbe::Type::Word,
-            qbe::Instr::Cmp(
-                qbe::Type::Long,
-                qbe::Cmp::Slt,
-                counter_tmp.clone(),
-                len_tmp,
-            ),
+            qbe::Instr::Cmp(qbe::Type::Long, qbe::Cmp::Slt, counter_tmp.clone(), len_tmp),
         );
         func.add_instr(qbe::Instr::Jnz(
             cmp_tmp,
@@ -1202,11 +1197,7 @@ impl QbeGenerator {
                 qbe::Type::Long,
                 qbe::Instr::Add(counter_tmp.clone(), qbe::Value::Const(1)),
             );
-            func.assign_instr(
-                counter_tmp,
-                qbe::Type::Long,
-                qbe::Instr::Copy(inc),
-            );
+            func.assign_instr(counter_tmp, qbe::Type::Long, qbe::Instr::Copy(inc));
             func.add_instr(qbe::Instr::Jmp(cond_label));
         }
 

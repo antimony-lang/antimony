@@ -1181,7 +1181,11 @@ mod tests {
         // return arr[1]
         let arr_expr = Expression::Array {
             capacity: 3,
-            elements: vec![create_int_expr(10), create_int_expr(20), create_int_expr(30)],
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
         };
         let decl_arr = create_declare_stmt(
             "arr",
@@ -1201,9 +1205,15 @@ mod tests {
         // Verify array access generates: extsw (index to long), mul (by elem size),
         // add 8 (skip length header), add base, then loadw
         assert!(result.contains("extsw"), "should sign-extend index to long");
-        assert!(result.contains("mul"), "should multiply index by element size");
+        assert!(
+            result.contains("mul"),
+            "should multiply index by element size"
+        );
         assert!(result.contains("loadw"), "should load word element");
-        assert!(result.contains("alloc8 20"), "should allocate 8 + 3*4 = 20 bytes");
+        assert!(
+            result.contains("alloc8 20"),
+            "should allocate 8 + 3*4 = 20 bytes"
+        );
     }
 
     #[test]
@@ -1213,7 +1223,11 @@ mod tests {
         // return arr[0]
         let arr_expr = Expression::Array {
             capacity: 3,
-            elements: vec![create_int_expr(10), create_int_expr(20), create_int_expr(30)],
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
         };
         let decl_arr = create_declare_stmt(
             "arr",
@@ -1258,7 +1272,11 @@ mod tests {
         // return sum
         let arr_expr = Expression::Array {
             capacity: 3,
-            elements: vec![create_int_expr(10), create_int_expr(20), create_int_expr(30)],
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
         };
         let decl_arr = create_declare_stmt(
             "arr",
@@ -1290,7 +1308,10 @@ mod tests {
         assert!(result.contains(".cond"), "should contain condition block");
         assert!(result.contains(".body"), "should contain body block");
         assert!(result.contains(".end"), "should contain end block");
-        assert!(result.contains("csltl"), "should compare longs for counter < len");
+        assert!(
+            result.contains("csltl"),
+            "should compare longs for counter < len"
+        );
         assert!(result.contains("loadl"), "should load array length");
     }
 }
