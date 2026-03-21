@@ -138,7 +138,7 @@ fn compile_and_run_qbe(in_file: &std::path::Path, dir_out: &std::path::Path) -> 
 }
 
 #[test]
-fn test_examples() -> Result<(), Error> {
+fn test_examples_js() -> Result<(), Error> {
     test_directory("examples")?;
     Ok(())
 }
@@ -161,7 +161,7 @@ fn test_examples_qbe() -> Result<(), Error> {
 }
 
 #[test]
-fn test_testcases() -> Result<(), Error> {
+fn test_testcases_js() -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
 
     let in_file = dir.join("tests/main.sb");
