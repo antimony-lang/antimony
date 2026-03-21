@@ -48,8 +48,8 @@ pub struct QbeGenerator {
     module: qbe::Module<'static>,
 }
 
-/// Mapping of field -> (type, offset)
-type StructMeta = HashMap<String, (qbe::Type<'static>, u64)>;
+/// Mapping of field -> (type, offset, ast_type)
+type StructMeta = HashMap<String, (qbe::Type<'static>, u64, Option<Type>)>;
 
 impl Generator for QbeGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
@@ -114,9 +114,30 @@ impl Generator for QbeGenerator {
                 .insert(func.name.clone(), param_types);
         }
 
+        // Pre-pass: collect method return types
+        for def in &prog.structs {
+            for method in &def.methods {
+                let mangled = format!("{}_{}", def.name, method.name);
+                let ret_type = if let Some(ty) = &method.ret_type {
+                    Some(generator.get_type(ty.to_owned())?.into_abi())
+                } else {
+                    None
+                };
+                generator.fn_signatures.insert(mangled, ret_type);
+            }
+        }
+
         for func in &prog.func {
             let func = generator.generate_function(func)?;
             generator.module.add_function(func);
+        }
+
+        // Generate methods as standalone functions: StructName__methodName(self: Long, ...)
+        for def in &prog.structs {
+            for method in &def.methods {
+                let qfunc = generator.generate_method(def, method)?;
+                generator.module.add_function(qfunc);
+            }
         }
 
         for def in &generator.datadefs {
@@ -181,7 +202,7 @@ impl QbeGenerator {
             // Align the current offset for this field
             offset = self.align_offset(offset, field_align);
 
-            meta.insert(field.name.clone(), (ty.clone(), offset));
+            meta.insert(field.name.clone(), (ty.clone(), offset, field.ty.clone()));
             items.push((ty.clone(), 1));
 
             offset += self.type_size(&ty);
@@ -265,6 +286,111 @@ impl QbeGenerator {
         self.scopes.pop();
 
         Ok(qfunc)
+    }
+
+    /// Generates a struct method as a standalone function `StructName__methodName`
+    /// with an implicit `self: Long` first argument (pointer to struct)
+    fn generate_method(
+        &mut self,
+        struct_def: &StructDef,
+        method: &Function,
+    ) -> GeneratorResult<qbe::Function<'static>> {
+        self.scopes.push(HashMap::new());
+
+        // Prepend self as first argument (Long pointer to struct)
+        let self_tmp = self.new_var(
+            &qbe::Type::Long,
+            "self",
+            Some(Type::Struct(struct_def.name.clone())),
+        )?;
+        let mut arguments: Vec<(qbe::Type<'static>, qbe::Value)> =
+            vec![(qbe::Type::Long, self_tmp)];
+
+        for arg in &method.arguments {
+            let ast_type = arg
+                .ty
+                .as_ref()
+                .ok_or("Method arguments must have a type")?
+                .to_owned();
+            let ty = self.get_type(ast_type.clone())?;
+            let tmp = self.new_var(&ty, &arg.name, Some(ast_type))?;
+            arguments.push((ty.into_abi(), tmp));
+        }
+
+        let return_ty = if let Some(ty) = &method.ret_type {
+            Some(self.get_type(ty.to_owned())?.into_abi())
+        } else {
+            None
+        };
+
+        let mangled_name = format!("{}_{}", struct_def.name, method.name);
+        let mut qfunc = qbe::Function::new(
+            qbe::Linkage::public(),
+            mangled_name.clone(),
+            arguments,
+            return_ty,
+        );
+
+        qfunc.add_block("start".to_owned());
+        self.generate_statement(&mut qfunc, &method.body)?;
+
+        let returns = qfunc.blocks.last().is_some_and(|b| {
+            b.items.last().is_some_and(|item| {
+                matches!(
+                    item,
+                    qbe::BlockItem::Statement(qbe::Statement::Volatile(qbe::Instr::Ret(_)))
+                )
+            })
+        });
+
+        if !returns {
+            if method.ret_type.is_none() {
+                qfunc.add_instr(qbe::Instr::Ret(None));
+            } else {
+                return Err(format!(
+                    "Method '{}' does not return in all code paths",
+                    mangled_name
+                ));
+            }
+        }
+
+        self.scopes.pop();
+        Ok(qfunc)
+    }
+
+    /// Generates a method call: `obj.method(args)` → `call StructName__methodName(obj_ptr, args...)`
+    fn generate_method_call(
+        &mut self,
+        func: &mut qbe::Function<'static>,
+        obj: &Expression,
+        method_name: &str,
+        args: &[Expression],
+    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+        let struct_name = self.get_struct_name_of(obj)?;
+        let (_, obj_ptr) = self.generate_expression(func, obj)?;
+
+        let mut call_args: Vec<(qbe::Type<'static>, qbe::Value)> = vec![(qbe::Type::Long, obj_ptr)];
+        for arg in args {
+            let result = self.generate_expression(func, arg)?;
+            call_args.push(result);
+        }
+
+        let mangled_name = format!("{}_{}", struct_name, method_name);
+        let ret_type = self
+            .fn_signatures
+            .get(&mangled_name)
+            .cloned()
+            .flatten()
+            .unwrap_or(qbe::Type::Word);
+
+        let tmp = self.new_temporary();
+        func.assign_instr(
+            tmp.clone(),
+            ret_type.clone(),
+            qbe::Instr::Call(mangled_name, call_args, None),
+        );
+
+        Ok((ret_type, tmp))
     }
 
     /// Generates a statement
@@ -432,12 +558,20 @@ impl QbeGenerator {
                 let (ty, val, _) = self.get_var(name)?;
                 Ok((ty.to_owned(), val.to_owned()))
             }
+            Expression::Selff => {
+                let (ty, val, _) = self.get_var("self")?;
+                Ok((ty.to_owned(), val.to_owned()))
+            }
             Expression::BinOp { lhs, op, rhs } => self.generate_binop(func, lhs, op, rhs),
             Expression::StructInitialization { name, fields } => {
                 self.generate_struct_init(func, name, fields)
             }
             Expression::FieldAccess { expr, field } => {
-                self.generate_field_access(func, expr, field)
+                if let Expression::FunctionCall { fn_name, args } = field.as_ref() {
+                    self.generate_method_call(func, expr, fn_name, args)
+                } else {
+                    self.generate_field_access(func, expr, field)
+                }
             }
             Expression::ArrayAccess { name, index } => {
                 // Clone to avoid borrow conflicts with the later generate_expression call
@@ -491,7 +625,6 @@ impl QbeGenerator {
 
                 Ok((elem_qbe_type, result))
             }
-            _ => todo!("expression: {:?}", expr),
         }
     }
 
@@ -811,7 +944,7 @@ impl QbeGenerator {
         // Initialize each field
         for (name, expr) in fields {
             // Get field info
-            let (field_type, offset) = meta
+            let (field_type, offset, _) = meta
                 .get(name)
                 .ok_or_else(|| format!("Unknown field '{}'", name))?
                 .clone();
@@ -897,7 +1030,19 @@ impl QbeGenerator {
                 (src, ty, 0)
             }
             Expression::FieldAccess { expr, field } => self.resolve_field_access(expr, field)?,
-            Expression::Selff => unimplemented!("methods"),
+            Expression::Selff => {
+                let (_, src, ast_type) = self.get_var("self")?.to_owned();
+                let struct_name = match ast_type {
+                    Some(Type::Struct(name)) => name,
+                    _ => return Err("'self' must refer to a struct".to_owned()),
+                };
+                let (ty, ..) = self
+                    .struct_map
+                    .get(&struct_name)
+                    .ok_or_else(|| format!("Unknown struct '{}'", struct_name))?
+                    .to_owned();
+                (src, ty, 0)
+            }
             other => {
                 return Err(format!(
                     "Invalid field access type: expected variable, field access or 'self', got {:?}",
@@ -907,10 +1052,9 @@ impl QbeGenerator {
         };
         let field = match field {
             Expression::Variable(v) => v,
-            Expression::FunctionCall {
-                fn_name: _,
-                args: _,
-            } => unimplemented!("methods"),
+            Expression::FunctionCall { .. } => {
+                unreachable!("method calls should be intercepted in generate_expression")
+            }
             // Parser should ensure this won't happen
             _ => unreachable!(),
         };
@@ -931,7 +1075,7 @@ impl QbeGenerator {
             .next()
             .unwrap();
 
-        let (ty, offset) = meta
+        let (ty, offset, _) = meta
             .get(field)
             .ok_or_else(|| format!("No field '{}' on struct {}", field, name))?
             .to_owned();
@@ -1121,7 +1265,40 @@ impl QbeGenerator {
             Expression::BinOp { lhs, op, .. } => {
                 matches!(op, BinOp::Addition | BinOp::AddAssign) && self.is_string_expression(lhs)
             }
+            Expression::FieldAccess { expr, field } => {
+                if let Expression::Variable(field_name) = field.as_ref() {
+                    if let Ok(struct_name) = self.get_struct_name_of(expr) {
+                        if let Some((_, meta, _)) = self.struct_map.get(&struct_name) {
+                            if let Some((_, _, ast_type)) = meta.get(field_name) {
+                                return matches!(ast_type, Some(Type::Str));
+                            }
+                        }
+                    }
+                }
+                false
+            }
             _ => false,
+        }
+    }
+
+    /// Returns the Antimony struct name for an expression that evaluates to a struct pointer
+    fn get_struct_name_of(&self, expr: &Expression) -> GeneratorResult<String> {
+        match expr {
+            Expression::Variable(name) => {
+                let (_, _, ast_type) = self.get_var(name)?;
+                match ast_type {
+                    Some(Type::Struct(s)) => Ok(s.clone()),
+                    _ => Err(format!("'{}' is not a struct", name)),
+                }
+            }
+            Expression::Selff => {
+                let (_, _, ast_type) = self.get_var("self")?;
+                match ast_type {
+                    Some(Type::Struct(s)) => Ok(s.clone()),
+                    _ => Err("'self' does not refer to a struct".to_owned()),
+                }
+            }
+            _ => Err("Cannot determine struct type for complex expression".to_owned()),
         }
     }
 }

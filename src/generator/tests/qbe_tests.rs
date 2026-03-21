@@ -135,6 +135,18 @@ mod tests {
         }
     }
 
+    fn create_struct_def_with_methods(
+        name: &str,
+        fields: Vec<Variable>,
+        methods: Vec<Function>,
+    ) -> StructDef {
+        StructDef {
+            name: name.to_string(),
+            fields,
+            methods,
+        }
+    }
+
     fn create_module(funcs: Vec<Function>, structs: Vec<StructDef>) -> Module {
         Module {
             func: funcs,
@@ -915,6 +927,143 @@ mod tests {
                 %tmp.15 =l add %tmp.1, %tmp.14
                 storew %tmp.10, %tmp.15
                 ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_method_generation() {
+        // struct Counter { value: int; fn reset() { } }
+        let counter_struct = create_struct_def_with_methods(
+            "Counter",
+            vec![create_variable("value", AstType::Int)],
+            vec![create_function("reset", None, create_block_stmt(vec![]))],
+        );
+        let main_func = create_function("main", None, create_block_stmt(vec![]));
+        let module = create_module(vec![main_func], vec![counter_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function $main() {
+            @start
+                ret
+            }
+            export function $Counter_reset(l %tmp.2) {
+            @start
+                ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_method_call_codegen() {
+        // struct Counter { count: int; fn get(): int { return self.count } }
+        // fn test(): int { let c: Counter = new Counter { count: 5 }; return c.get() }
+        let get_body = create_return_stmt(Some(Expression::FieldAccess {
+            expr: Box::new(Expression::Selff),
+            field: Box::new(Expression::Variable("count".to_string())),
+        }));
+        let counter_struct = create_struct_def_with_methods(
+            "Counter",
+            vec![create_variable("count", AstType::Int)],
+            vec![create_function_with_args(
+                "get",
+                vec![],
+                Some(AstType::Int),
+                get_body,
+            )],
+        );
+
+        let call_expr = Expression::FieldAccess {
+            expr: Box::new(Expression::Variable("c".to_string())),
+            field: Box::new(Expression::FunctionCall {
+                fn_name: "get".to_string(),
+                args: vec![],
+            }),
+        };
+        let test_body = create_block_stmt(vec![
+            Statement::Declare {
+                variable: create_variable("c", AstType::Struct("Counter".to_string())),
+                value: Some(Expression::StructInitialization {
+                    name: "Counter".to_string(),
+                    fields: std::collections::HashMap::from([(
+                        "count".to_string(),
+                        Box::new(create_int_expr(5)),
+                    )]),
+                }),
+            },
+            create_return_stmt(Some(call_expr)),
+        ]);
+        let test_func = create_function("test", Some(AstType::Int), test_body);
+        let module = create_module(vec![test_func], vec![counter_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function w $test() {
+            @start
+                %tmp.3 =l alloc8 4
+                %tmp.4 =w copy 5
+                %tmp.5 =l add %tmp.3, 0
+                storew %tmp.4, %tmp.5
+                %tmp.2 =l copy %tmp.3
+                %tmp.6 =w call $Counter_get(l %tmp.2)
+                ret %tmp.6
+            }
+            export function w $Counter_get(l %tmp.7) {
+            @start
+                %tmp.8 =l add %tmp.7, 0
+                %tmp.9 =w loadw %tmp.8
+                ret %tmp.9
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_self_field_access_in_method() {
+        // struct Point { x: int; fn get_x(): int { return self.x } }
+        let get_x_body = create_return_stmt(Some(Expression::FieldAccess {
+            expr: Box::new(Expression::Selff),
+            field: Box::new(Expression::Variable("x".to_string())),
+        }));
+        let point_struct = create_struct_def_with_methods(
+            "Point",
+            vec![create_variable("x", AstType::Int)],
+            vec![create_function_with_args(
+                "get_x",
+                vec![],
+                Some(AstType::Int),
+                get_x_body,
+            )],
+        );
+        let dummy = create_function("main", None, create_block_stmt(vec![]));
+        let module = create_module(vec![dummy], vec![point_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function $main() {
+            @start
+                ret
+            }
+            export function w $Point_get_x(l %tmp.2) {
+            @start
+                %tmp.3 =l add %tmp.2, 0
+                %tmp.4 =w loadw %tmp.3
+                ret %tmp.4
             }
         "#,
         );
