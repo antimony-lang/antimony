@@ -834,13 +834,35 @@ mod tests {
         let module = create_module(vec![func], Vec::new());
         let result = QbeGenerator::generate(module).unwrap();
 
-        // The generated code should contain array pointer arithmetic instructions
-        assert!(
-            result.contains("extsw"),
-            "expected extsw for index sign-extension"
+        let expected = normalize_qbe(
+            r#"
+            type :array.9 = { l, w 3 }
+            export function w $test_arr_read() {
+            @start
+                %tmp.2 =w copy 10
+                %tmp.3 =w copy 20
+                %tmp.4 =w copy 30
+                %tmp.5 =l alloc8 20
+                storel 3, %tmp.5
+                %tmp.6 =l add %tmp.5, 8
+                storew %tmp.2, %tmp.6
+                %tmp.7 =l add %tmp.5, 12
+                storew %tmp.3, %tmp.7
+                %tmp.8 =l add %tmp.5, 16
+                storew %tmp.4, %tmp.8
+                %tmp.1 =l copy %tmp.5
+                %tmp.10 =w copy 1
+                %tmp.11 =l extsw %tmp.10
+                %tmp.12 =l mul %tmp.11, 4
+                %tmp.13 =l add %tmp.12, 8
+                %tmp.14 =l add %tmp.1, %tmp.13
+                %tmp.15 =w loadw %tmp.14
+                ret %tmp.15
+            }
+        "#,
         );
-        assert!(result.contains("mul"), "expected mul for index scaling");
-        assert!(result.contains("loadw"), "expected loadw for element load");
+
+        assert_eq!(normalize_qbe(&result), expected);
     }
 
     #[test]
@@ -868,16 +890,36 @@ mod tests {
         let module = create_module(vec![func], Vec::new());
         let result = QbeGenerator::generate(module).unwrap();
 
-        // The generated code should contain array pointer arithmetic and a store
-        assert!(
-            result.contains("extsw"),
-            "expected extsw for index sign-extension"
+        let expected = normalize_qbe(
+            r#"
+            type :array.9 = { l, w 3 }
+            export function $test_arr_write() {
+            @start
+                %tmp.2 =w copy 0
+                %tmp.3 =w copy 0
+                %tmp.4 =w copy 0
+                %tmp.5 =l alloc8 20
+                storel 3, %tmp.5
+                %tmp.6 =l add %tmp.5, 8
+                storew %tmp.2, %tmp.6
+                %tmp.7 =l add %tmp.5, 12
+                storew %tmp.3, %tmp.7
+                %tmp.8 =l add %tmp.5, 16
+                storew %tmp.4, %tmp.8
+                %tmp.1 =l copy %tmp.5
+                %tmp.10 =w copy 42
+                %tmp.11 =w copy 0
+                %tmp.12 =l extsw %tmp.11
+                %tmp.13 =l mul %tmp.12, 4
+                %tmp.14 =l add %tmp.13, 8
+                %tmp.15 =l add %tmp.1, %tmp.14
+                storew %tmp.10, %tmp.15
+                ret
+            }
+        "#,
         );
-        assert!(result.contains("mul"), "expected mul for index scaling");
-        assert!(
-            result.contains("storew"),
-            "expected storew for element store"
-        );
+
+        assert_eq!(normalize_qbe(&result), expected);
     }
 
     #[test]
