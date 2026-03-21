@@ -5,6 +5,7 @@
 **Features**
 
 - QBE: Add builtins (`_printf`, `_exit`), stdlib support, and string concatenation for native executables ([#147](https://github.com/antimony-lang/antimony/pull/147))
+- QBE: Support `Type::Any` with argument widening for native executables ([#150](https://github.com/antimony-lang/antimony/pull/150))
 
 **Fixes**
 
