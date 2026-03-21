@@ -8,3 +8,8 @@ fn print(arg: string) {
 fn println(msg: string) {
     print(msg + "\n")
 }
+
+// Reads a single line from stdin (newline stripped)
+fn read_line(): string {
+    return _read_line()
+}

@@ -1,0 +1,65 @@
+fn stdlib_array_main() {
+    log_test_stage("Testing stdlib/array")
+    test_array_len()
+    test_array_rev()
+    test_array_sum()
+    test_array_contains()
+    test_array_min_max()
+    test_array_first_last()
+}
+
+fn test_array_len() {
+    let arr: int[3]
+    arr[0] = 10
+    arr[1] = 20
+    arr[2] = 30
+    assert(len(arr) == 3)
+}
+
+fn test_array_rev() {
+    let arr: int[3]
+    arr[0] = 1
+    arr[1] = 2
+    arr[2] = 3
+    let r: int[] = rev(arr)
+    assert(r[0] == 3)
+    assert(r[1] == 2)
+    assert(r[2] == 1)
+}
+
+fn test_array_sum() {
+    let arr: int[4]
+    arr[0] = 1
+    arr[1] = 2
+    arr[2] = 3
+    arr[3] = 4
+    assert(sum(arr) == 10)
+}
+
+fn test_array_contains() {
+    let arr: int[3]
+    arr[0] = 5
+    arr[1] = 10
+    arr[2] = 15
+    assert(contains(arr, 10) == true)
+    assert(contains(arr, 99) == false)
+}
+
+fn test_array_min_max() {
+    let arr: int[4]
+    arr[0] = 3
+    arr[1] = 1
+    arr[2] = 4
+    arr[3] = 2
+    assert(min_array(arr) == 1)
+    assert(max_array(arr) == 4)
+}
+
+fn test_array_first_last() {
+    let arr: int[3]
+    arr[0] = 7
+    arr[1] = 8
+    arr[2] = 9
+    assert(first(arr) == 7)
+    assert(last(arr) == 9)
+}

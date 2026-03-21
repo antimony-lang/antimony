@@ -1,0 +1,45 @@
+// Returns the smaller of two integers
+fn min(a: int, b: int): int {
+    if a < b {
+        return a
+    }
+    return b
+}
+
+// Returns the larger of two integers
+fn max(a: int, b: int): int {
+    if a > b {
+        return a
+    }
+    return b
+}
+
+// Returns the absolute value of an integer
+fn abs(n: int): int {
+    if n < 0 {
+        return 0 - n
+    }
+    return n
+}
+
+// Returns base raised to the power of exp (non-negative exp only)
+fn pow(base: int, exp: int): int {
+    let result: int = 1
+    let i: int = 0
+    while i < exp {
+        result = result * base
+        i += 1
+    }
+    return result
+}
+
+// Clamps val to the inclusive range [lo, hi]
+fn clamp(val: int, lo: int, hi: int): int {
+    if val < lo {
+        return lo
+    }
+    if val > hi {
+        return hi
+    }
+    return val
+}

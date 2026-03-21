@@ -28,3 +28,27 @@ char *_str_concat(char *a, char *b)
     memcpy(result + len_a, b, len_b + 1);
     return result;
 }
+
+int _strlen(char *s)
+{
+    return (int)strlen(s);
+}
+
+int _parse_int(char *s)
+{
+    return atoi(s);
+}
+
+char *_read_line()
+{
+    size_t capacity = 256;
+    char *buf = malloc(capacity);
+    if (!buf) return "";
+    if (!fgets(buf, (int)capacity, stdin)) {
+        buf[0] = '\0';
+    } else {
+        size_t n = strlen(buf);
+        if (n > 0 && buf[n - 1] == '\n') buf[n - 1] = '\0';
+    }
+    return buf;
+}
