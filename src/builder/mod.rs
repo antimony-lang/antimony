@@ -62,8 +62,8 @@ impl Builder {
         self.build_module(self.in_file.clone(), &mut Vec::new())?;
 
         // Append standard library
-        if matches!(target, Target::JS) {
-            self.build_stdlib()?;
+        if matches!(target, Target::JS | Target::Qbe) {
+            self.build_stdlib(target)?;
         }
 
         // Change back to the initial directory
@@ -151,10 +151,15 @@ impl Builder {
         buffer.flush().map_err(|_| "Could not flush file".into())
     }
 
-    fn build_stdlib(&mut self) -> Result<(), String> {
+    fn build_stdlib(&mut self, target: &Target) -> Result<(), String> {
         let assets = Lib::iter();
 
         for file in assets {
+            // Skip array.sb for QBE until array access is implemented
+            if matches!(target, Target::Qbe) && file.as_ref() == "array.sb" {
+                continue;
+            }
+
             let stdlib_raw = Lib::get(&file)
                 .expect("Standard library not found. This should not occur.")
                 .data;

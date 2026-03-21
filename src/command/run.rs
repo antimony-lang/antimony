@@ -15,6 +15,7 @@
  */
 use crate::command::build;
 use crate::generator::Target;
+use crate::Builtins;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -60,20 +61,22 @@ fn run_node(buf: &[u8]) -> Result<()> {
 }
 
 fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
-    let dir_path = "./"; // TODO: Use this for changing build directory
+    let dir = std::env::temp_dir().join("antimony_qbe");
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| format!("Failed to create temp directory: {}", e))?;
+
     let filename = in_file
         .file_stem()
         .and_then(|s| s.to_str())
         .ok_or("Invalid filename")?;
 
-    // Create paths without array destructuring
-    let ssa_path = format!("{dir_path}{}.ssa", filename);
-    let asm_path = format!("{dir_path}{}.s", filename);
-    let exe_path = format!("{dir_path}{}.exe", filename);
+    let ssa_path = dir.join(format!("{}.ssa", filename));
+    let asm_path = dir.join(format!("{}.s", filename));
+    let exe_path = dir.join(format!("{}.exe", filename));
+    let builtins_path = dir.join("builtin_qbe.c");
 
     // Write SSA file
     OpenOptions::new()
-        .read(true)
         .write(true)
         .create(true)
         .truncate(true)
@@ -82,9 +85,22 @@ fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
         .write_all(&buf)
         .map_err(|e| format!("Failed to write SSA file: {}", e))?;
 
+    // Write C builtins file
+    let raw_builtins = Builtins::get("builtin_qbe.c")
+        .expect("Could not locate QBE builtin functions")
+        .data;
+    std::fs::write(&builtins_path, &*raw_builtins)
+        .map_err(|e| format!("Failed to write builtins file: {}", e))?;
+
     // Compile and run
-    run_command(Command::new("qbe").arg(&ssa_path).arg("-o").arg(&asm_path))?;
-    run_command(Command::new("gcc").arg(&asm_path).arg("-o").arg(&exe_path))?;
+    run_command(Command::new("qbe").arg("-o").arg(&asm_path).arg(&ssa_path))?;
+    run_command(
+        Command::new("gcc")
+            .arg(&builtins_path)
+            .arg(&asm_path)
+            .arg("-o")
+            .arg(&exe_path),
+    )?;
     run_command(&mut Command::new(&exe_path))
 }
 

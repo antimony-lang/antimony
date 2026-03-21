@@ -496,9 +496,39 @@ impl QbeGenerator {
         op: &BinOp,
         rhs: &Expression,
     ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
-        let (_, lhs_val) = self.generate_expression(func, lhs)?;
+        let (lhs_ty, lhs_val) = self.generate_expression(func, lhs)?;
         let (_, rhs_val) = self.generate_expression(func, rhs)?;
         let tmp = self.new_temporary();
+
+        // String concatenation: when both operands are strings (Long/pointers),
+        // emit a call to the _str_concat C builtin instead of an add instruction.
+        let is_string = matches!(
+            (&lhs_ty, op),
+            (qbe::Type::Long, BinOp::Addition | BinOp::AddAssign)
+        );
+
+        if is_string {
+            func.assign_instr(
+                tmp.clone(),
+                qbe::Type::Long,
+                qbe::Instr::Call(
+                    "_str_concat".into(),
+                    vec![
+                        (qbe::Type::Long, lhs_val.clone()),
+                        (qbe::Type::Long, rhs_val),
+                    ],
+                    None,
+                ),
+            );
+
+            // Handle AddAssign for strings
+            if matches!(op, BinOp::AddAssign) {
+                let tmp_clone = tmp.clone();
+                self.generate_assignment(func, lhs, tmp_clone)?;
+            }
+
+            return Ok((qbe::Type::Long, tmp));
+        }
 
         // TODO: take the biggest
         let ty = qbe::Type::Word;
