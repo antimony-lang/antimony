@@ -19,7 +19,6 @@ use crate::lexer::Position;
 use crate::lexer::{Token, TokenKind};
 use crate::parser::infer::infer;
 use crate::util::string_util::highlight_position_in_file;
-use std::convert::TryFrom;
 use std::iter::Peekable;
 use std::vec::IntoIter;
 
@@ -110,10 +109,6 @@ impl Parser {
                 Err(error)
             }
         }
-    }
-
-    pub(super) fn match_operator(&mut self) -> Result<HBinOp, String> {
-        HBinOp::try_from(self.next()?.kind)
     }
 
     pub(super) fn match_identifier(&mut self) -> Result<String, String> {
