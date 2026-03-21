@@ -1174,4 +1174,144 @@ mod tests {
 
         assert_eq!(normalize_qbe(&result), expected);
     }
+
+    #[test]
+    fn test_array_access_read() {
+        // let arr: int[] = [10, 20, 30]
+        // return arr[1]
+        let arr_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
+        };
+        let decl_arr = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(arr_expr),
+        );
+        let access_expr = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(1)),
+        };
+        let ret_stmt = create_return_stmt(Some(access_expr));
+        let block = create_block_stmt(vec![decl_arr, ret_stmt]);
+        let func = create_function("test_arr_read", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // Verify array access generates: extsw (index to long), mul (by elem size),
+        // add 8 (skip length header), add base, then loadw
+        assert!(result.contains("extsw"), "should sign-extend index to long");
+        assert!(
+            result.contains("mul"),
+            "should multiply index by element size"
+        );
+        assert!(result.contains("loadw"), "should load word element");
+        assert!(
+            result.contains("alloc8 20"),
+            "should allocate 8 + 3*4 = 20 bytes"
+        );
+    }
+
+    #[test]
+    fn test_array_access_write() {
+        // let arr: int[] = [10, 20, 30]
+        // arr[0] = 99
+        // return arr[0]
+        let arr_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
+        };
+        let decl_arr = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(arr_expr),
+        );
+        let assign_stmt = create_assign_stmt(
+            Expression::ArrayAccess {
+                name: "arr".to_string(),
+                index: Box::new(create_int_expr(0)),
+            },
+            create_int_expr(99),
+        );
+        let access_expr = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(0)),
+        };
+        let ret_stmt = create_return_stmt(Some(access_expr));
+        let block = create_block_stmt(vec![decl_arr, assign_stmt, ret_stmt]);
+        let func = create_function("test_arr_write", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // Verify array write generates storew for the assignment
+        // and loadw for reading it back
+        let storew_count = result.matches("storew").count();
+        // 3 stores for array init elements + 1 for the assignment = 4
+        assert!(
+            storew_count >= 4,
+            "should have at least 4 storew (3 init + 1 assign), got {}",
+            storew_count
+        );
+        assert!(result.contains("loadw"), "should load word element back");
+        assert!(result.contains("copy 99"), "should have the assigned value");
+    }
+
+    #[test]
+    fn test_for_in_loop() {
+        // let arr: int[] = [10, 20, 30]
+        // let sum: int = 0
+        // for x in arr { sum = sum + x }
+        // return sum
+        let arr_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
+        };
+        let decl_arr = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(arr_expr),
+        );
+        let decl_sum = create_declare_stmt("sum", AstType::Int, Some(create_int_expr(0)));
+        let loop_body = create_block_stmt(vec![create_assign_stmt(
+            create_var_expr("sum"),
+            create_binop_expr(
+                create_var_expr("sum"),
+                BinOp::Addition,
+                create_var_expr("x"),
+            ),
+        )]);
+        let for_stmt = Statement::For {
+            ident: create_variable("x", AstType::Int),
+            expr: create_var_expr("arr"),
+            body: Box::new(loop_body),
+        };
+        let ret_stmt = create_return_stmt(Some(create_var_expr("sum")));
+        let block = create_block_stmt(vec![decl_arr, decl_sum, for_stmt, ret_stmt]);
+        let func = create_function("test_for", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // Verify key structural elements rather than exact tmp numbering
+        assert!(result.contains("@loop."), "should contain loop labels");
+        assert!(result.contains(".cond"), "should contain condition block");
+        assert!(result.contains(".body"), "should contain body block");
+        assert!(result.contains(".end"), "should contain end block");
+        assert!(
+            result.contains("csltl"),
+            "should compare longs for counter < len"
+        );
+        assert!(result.contains("loadl"), "should load array length");
+    }
 }
