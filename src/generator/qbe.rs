@@ -44,12 +44,67 @@ pub struct QbeGenerator {
     fn_signatures: HashMap<String, Option<qbe::Type<'static>>>,
     /// Function name -> parameter types (populated by pre-pass before codegen)
     fn_param_types: HashMap<String, Vec<qbe::Type<'static>>>,
+    /// Function name -> AST return type (populated by pre-pass before codegen)
+    fn_ast_signatures: HashMap<String, Option<Type>>,
+    /// Function name -> AST parameter types (populated by pre-pass before codegen)
+    fn_param_ast_types: HashMap<String, Vec<Option<Type>>>,
     /// Module being built
     module: qbe::Module<'static>,
 }
 
 /// Mapping of field -> (type, offset, ast_type)
 type StructMeta = HashMap<String, (qbe::Type<'static>, u64, Option<Type>)>;
+
+/// Infer the return type of a function from its body when no annotation is present.
+/// Scans declarations for typed variables, then looks for a matching return statement.
+///
+/// TODO: This logic belongs in `src/parser/infer.rs`, which should populate
+/// `HFunction::ret_type` so all backends get inferred return types for free.
+/// Once that's done, remove these helpers and the `fn_ast_signatures` pre-pass.
+fn infer_fn_return_type(body: &Statement) -> Option<Type> {
+    let mut var_types: HashMap<String, Type> = HashMap::new();
+    collect_decl_types(body, &mut var_types);
+    find_return_struct(body, &var_types)
+}
+
+fn collect_decl_types(stmt: &Statement, out: &mut HashMap<String, Type>) {
+    match stmt {
+        Statement::Block { statements, .. } => {
+            for s in statements {
+                collect_decl_types(s, out);
+            }
+        }
+        Statement::Declare { variable, .. } => {
+            if let Some(ty) = &variable.ty {
+                out.insert(variable.name.clone(), ty.clone());
+            }
+        }
+        _ => {}
+    }
+}
+
+fn find_return_struct(stmt: &Statement, var_types: &HashMap<String, Type>) -> Option<Type> {
+    match stmt {
+        Statement::Block { statements, .. } => {
+            for s in statements {
+                if let Some(ty) = find_return_struct(s, var_types) {
+                    return Some(ty);
+                }
+            }
+            None
+        }
+        Statement::Return(Some(Expression::Variable(name))) => {
+            var_types.get(name).and_then(|ty| match ty {
+                Type::Struct(_) => Some(ty.clone()),
+                _ => None,
+            })
+        }
+        Statement::Return(Some(Expression::StructInitialization { name, .. })) => {
+            Some(Type::Struct(name.clone()))
+        }
+        _ => None,
+    }
+}
 
 impl Generator for QbeGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
@@ -62,6 +117,8 @@ impl Generator for QbeGenerator {
             typedefs: Vec::new(),
             fn_signatures: HashMap::new(),
             fn_param_types: HashMap::new(),
+            fn_ast_signatures: HashMap::new(),
+            fn_param_ast_types: HashMap::new(),
             module: qbe::Module::new(),
         };
 
@@ -103,12 +160,19 @@ impl Generator for QbeGenerator {
 
         // Pre-pass: collect function return types so callers know what type to expect
         for func in &prog.func {
-            let ret_type = if let Some(ty) = &func.ret_type {
-                Some(generator.get_type(ty.to_owned())?.into_abi())
-            } else {
-                None
+            let ast_ret = func
+                .ret_type
+                .clone()
+                .or_else(|| infer_fn_return_type(&func.body));
+            let ret_type = match &ast_ret {
+                Some(Type::Struct(_)) => Some(qbe::Type::Long),
+                Some(ty) => Some(generator.get_type(ty.to_owned())?.into_abi()),
+                None => None,
             };
             generator.fn_signatures.insert(func.name.clone(), ret_type);
+            generator
+                .fn_ast_signatures
+                .insert(func.name.clone(), ast_ret);
 
             let param_types: Vec<qbe::Type<'static>> = func
                 .arguments
@@ -119,6 +183,15 @@ impl Generator for QbeGenerator {
             generator
                 .fn_param_types
                 .insert(func.name.clone(), param_types);
+
+            let param_ast_types: Vec<Option<Type>> = func
+                .arguments
+                .iter()
+                .map(|arg| arg.ty.clone())
+                .collect();
+            generator
+                .fn_param_ast_types
+                .insert(func.name.clone(), param_ast_types);
         }
 
         // Pre-pass: collect method return types
@@ -269,10 +342,14 @@ impl QbeGenerator {
             arguments.push((ty.into_abi(), tmp));
         }
 
-        let return_ty = if let Some(ty) = &func.ret_type {
-            Some(self.get_type(ty.to_owned())?.into_abi())
-        } else {
-            None
+        let effective_ret = func
+            .ret_type
+            .clone()
+            .or_else(|| infer_fn_return_type(&func.body));
+        let return_ty = match &effective_ret {
+            Some(Type::Struct(_)) => Some(qbe::Type::Long),
+            Some(ty) => Some(self.get_type(ty.to_owned())?.into_abi()),
+            None => None,
         };
 
         let mut qfunc = qbe::Function::new(
@@ -537,8 +614,30 @@ impl QbeGenerator {
 
                 // Widen arguments if the callee expects a larger type (e.g. Type::Any → Long)
                 let param_types_opt = self.fn_param_types.get(fn_name).cloned();
+                let param_ast_types_opt = self.fn_param_ast_types.get(fn_name).cloned();
                 let mut new_args: Vec<(qbe::Type<'static>, qbe::Value)> = Vec::new();
                 for (i, (arg_ty, arg_val)) in arg_results.into_iter().enumerate() {
+                    // int → string coercion: call _int_to_str when passing an int to a string param
+                    if arg_ty == qbe::Type::Word {
+                        let param_ast_ty = param_ast_types_opt
+                            .as_ref()
+                            .and_then(|v| v.get(i))
+                            .and_then(|t| t.as_ref());
+                        if matches!(param_ast_ty, Some(Type::Str)) {
+                            let str_tmp = self.new_temporary();
+                            func.assign_instr(
+                                str_tmp.clone(),
+                                qbe::Type::Long,
+                                qbe::Instr::Call(
+                                    "_int_to_str".to_string(),
+                                    vec![(qbe::Type::Word, arg_val)],
+                                    None,
+                                ),
+                            );
+                            new_args.push((qbe::Type::Long, str_tmp));
+                            continue;
+                        }
+                    }
                     if let Some(ref param_types) = param_types_opt {
                         if let Some(param_ty) = param_types.get(i) {
                             if *param_ty == qbe::Type::Long && arg_ty == qbe::Type::Word {
@@ -912,7 +1011,7 @@ impl QbeGenerator {
             }
             Expression::FieldAccess { expr, field } => {
                 // First get all the info we need
-                let access_result = self.resolve_field_access(expr, field)?;
+                let access_result = self.resolve_field_access(func, expr, field)?;
                 let (src, ty, offset) = access_result;
 
                 // Then create a temporary for the field pointer
@@ -1047,7 +1146,7 @@ impl QbeGenerator {
         field: &Expression,
     ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
         // Get the field info first
-        let access_result = self.resolve_field_access(obj, field)?;
+        let access_result = self.resolve_field_access(func, obj, field)?;
         let (src, ty, offset) = access_result;
 
         // Create a temporary for the field pointer
@@ -1073,6 +1172,7 @@ impl QbeGenerator {
     /// returning `(source_value, struct_name, base_offset)`.
     fn resolve_struct_expr(
         &mut self,
+        func: &mut qbe::Function<'static>,
         expr: &Expression,
     ) -> GeneratorResult<(qbe::Value, String, u64)> {
         match expr {
@@ -1090,8 +1190,25 @@ impl QbeGenerator {
                     _ => Err("'self' must refer to a struct".to_owned()),
                 }
             }
+            Expression::FunctionCall { fn_name, .. } => {
+                let ast_ret = self
+                    .fn_ast_signatures
+                    .get(fn_name)
+                    .cloned()
+                    .flatten();
+                match ast_ret {
+                    Some(Type::Struct(struct_name)) => {
+                        let (_, val) = self.generate_expression(func, expr)?;
+                        Ok((val, struct_name, 0))
+                    }
+                    _ => Err(format!(
+                        "Function '{}' does not return a struct",
+                        fn_name
+                    )),
+                }
+            }
             Expression::FieldAccess { expr, field } => {
-                let (src, parent_name, parent_off) = self.resolve_struct_expr(expr)?;
+                let (src, parent_name, parent_off) = self.resolve_struct_expr(func, expr)?;
                 let field_name = match field.as_ref() {
                     Expression::Variable(v) => v,
                     _ => unreachable!(),
@@ -1124,10 +1241,11 @@ impl QbeGenerator {
     /// Retrieves `(source, field_type, offset)` from field access expression
     fn resolve_field_access(
         &mut self,
+        func: &mut qbe::Function<'static>,
         obj: &Expression,
         field: &Expression,
     ) -> GeneratorResult<(qbe::Value, qbe::Type<'static>, u64)> {
-        let (src, struct_name, base_off) = self.resolve_struct_expr(obj)?;
+        let (src, struct_name, base_off) = self.resolve_struct_expr(func, obj)?;
 
         let field_name = match field {
             Expression::Variable(v) => v,

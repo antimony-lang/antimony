@@ -344,6 +344,46 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Result<HExpression, String> {
+        let primary = self.parse_primary()?;
+        self.parse_binop_rhs(primary, 0)
+    }
+
+    /// Precedence-climbing binary operator parser.
+    /// Collects right-hand side operands as long as the next operator
+    /// has precedence >= `min_prec`, respecting standard precedence rules.
+    fn parse_binop_rhs(
+        &mut self,
+        mut lhs: HExpression,
+        min_prec: u8,
+    ) -> Result<HExpression, String> {
+        loop {
+            if !self.has_more() {
+                break;
+            }
+            let op = match HBinOp::try_from(self.peek()?.kind.clone()) {
+                Ok(op) if op.precedence() >= min_prec => op,
+                _ => break,
+            };
+            self.next()?; // consume the operator
+
+            // Parse primary for RHS
+            let primary_rhs = self.parse_primary()?;
+
+            // Collect higher-precedence operators into rhs
+            let rhs = self.parse_binop_rhs(primary_rhs, op.precedence() + 1)?;
+
+            lhs = HExpression::BinOp {
+                lhs: Box::new(lhs),
+                op,
+                rhs: Box::new(rhs),
+            };
+        }
+        Ok(lhs)
+    }
+
+    /// Parses a primary expression (literal, identifier, function call, etc.)
+    /// without consuming any trailing binary operators.
+    fn parse_primary(&mut self) -> Result<HExpression, String> {
         let token = self.peek()?;
 
         let expr = match token.kind {
@@ -362,7 +402,6 @@ impl Parser {
             // 5
             TokenKind::Literal(Value::Int) => {
                 let token = self.next()?;
-                // Ignore spacing character (E.g. 1_000_000)
                 let clean_str = token.raw.replace('_', "");
                 let val = match clean_str {
                     c if c.starts_with("0b") => {
@@ -413,26 +452,14 @@ impl Parser {
             other => return Err(format!("Expected Expression, found `{other}`")),
         };
 
-        if !self.has_more() {
-            return Ok(expr);
+        // Handle field access after primary
+        if self.has_more() {
+            if let TokenKind::Dot = self.peek()?.kind {
+                return self.parse_field_access(expr);
+            }
         }
 
-        // Now it's safe to peek since we know we have more tokens
-        let next = self.peek()?;
-        match next.kind {
-            TokenKind::Dot => self.parse_field_access(expr),
-            kind if HBinOp::try_from(kind.clone()).is_ok() => {
-                self.next()?; // consume the operator
-                let op = HBinOp::try_from(kind).unwrap();
-                let rhs = self.parse_expression()?;
-                Ok(HExpression::BinOp {
-                    lhs: Box::from(expr),
-                    op,
-                    rhs: Box::from(rhs),
-                })
-            }
-            _ => Ok(expr),
-        }
+        Ok(expr)
     }
 
     fn parse_field_access(&mut self, lhs: HExpression) -> Result<HExpression, String> {
@@ -657,8 +684,18 @@ impl Parser {
             let next = self.peek()?;
             match next.kind {
                 TokenKind::Literal(_)
-                | TokenKind::Identifier(_)
                 | TokenKind::Keyword(Keyword::Boolean) => arms.push(self.parse_match_arm()?),
+                TokenKind::Identifier(ref id) if id == "_" => {
+                    if has_else {
+                        return Err(self.make_error_msg(
+                            next.pos,
+                            "Multiple else arms are not allowed".to_string(),
+                        ));
+                    }
+                    has_else = true;
+                    arms.push(self.parse_match_arm()?);
+                }
+                TokenKind::Identifier(_) => arms.push(self.parse_match_arm()?),
                 TokenKind::Keyword(Keyword::Else) => {
                     if has_else {
                         return Err(self.make_error_msg(
@@ -683,6 +720,11 @@ impl Parser {
         match next.kind {
             TokenKind::Keyword(Keyword::Else) => {
                 self.match_keyword(Keyword::Else)?;
+                self.match_token(TokenKind::ArrowRight)?;
+                Ok(HMatchArm::Else(self.parse_statement()?))
+            }
+            TokenKind::Identifier(ref id) if id == "_" => {
+                self.next()?;
                 self.match_token(TokenKind::ArrowRight)?;
                 Ok(HMatchArm::Else(self.parse_statement()?))
             }
@@ -734,16 +776,9 @@ impl Parser {
     fn parse_bin_op(&mut self, lhs: Option<HExpression>) -> Result<HExpression, String> {
         let left = match lhs {
             Some(lhs) => lhs,
-            None => self.parse_expression()?,
+            None => self.parse_primary()?,
         };
-
-        let op = self.match_operator()?;
-
-        Ok(HExpression::BinOp {
-            lhs: Box::from(left),
-            op,
-            rhs: Box::from(self.parse_expression()?),
-        })
+        self.parse_binop_rhs(left, 0)
     }
 
     fn parse_declare(&mut self) -> Result<HStatement, String> {

@@ -207,6 +207,28 @@ pub enum HBinOp {
     DivideAssign,
 }
 
+impl HBinOp {
+    /// Returns the binding power (precedence) of the operator.
+    /// Higher values bind more tightly.
+    pub fn precedence(&self) -> u8 {
+        match self {
+            HBinOp::AddAssign
+            | HBinOp::SubtractAssign
+            | HBinOp::MultiplyAssign
+            | HBinOp::DivideAssign => 1,
+            HBinOp::Or => 2,
+            HBinOp::And => 3,
+            HBinOp::Equal | HBinOp::NotEqual => 4,
+            HBinOp::LessThan
+            | HBinOp::LessThanOrEqual
+            | HBinOp::GreaterThan
+            | HBinOp::GreaterThanOrEqual => 5,
+            HBinOp::Addition | HBinOp::Subtraction => 6,
+            HBinOp::Multiplication | HBinOp::Division | HBinOp::Modulus => 7,
+        }
+    }
+}
+
 impl TryFrom<TokenKind> for HBinOp {
     type Error = String;
     fn try_from(token: TokenKind) -> Result<HBinOp, String> {
