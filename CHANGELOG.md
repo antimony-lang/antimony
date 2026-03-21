@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+**Features**
+
+- QBE: Add builtins (`_printf`, `_exit`), stdlib support, and string concatenation for native executables ([#147](https://github.com/antimony-lang/antimony/pull/147))
+
 **Fixes**
 
 - Fixed array access in member variable expressions ([#123](https://github.com/antimony-lang/antimony/pull/123))
