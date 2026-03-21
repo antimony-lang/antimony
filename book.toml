@@ -1,6 +1,5 @@
 [book]
 authors = ["Garrit Franke"]
 language = "en"
-multilingual = false
 src = "docs"
 title = "The Antimony Programming Language"
