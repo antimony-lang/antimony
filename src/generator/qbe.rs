@@ -173,6 +173,24 @@ impl QbeGenerator {
         alignment_of(ty)
     }
 
+    /// Returns the wider of two QBE types (Byte < Word < Long).
+    fn wider_type(a: &qbe::Type<'static>, b: &qbe::Type<'static>) -> qbe::Type<'static> {
+        fn rank(ty: &qbe::Type) -> u8 {
+            match ty {
+                qbe::Type::Byte | qbe::Type::SignedByte | qbe::Type::UnsignedByte => 1,
+                qbe::Type::Halfword | qbe::Type::SignedHalfword | qbe::Type::UnsignedHalfword => 2,
+                qbe::Type::Word | qbe::Type::Single => 3,
+                qbe::Type::Long | qbe::Type::Double => 4,
+                _ => 3, // default to Word-sized
+            }
+        }
+        if rank(a) >= rank(b) {
+            a.clone()
+        } else {
+            b.clone()
+        }
+    }
+
     /// Calculate the aligned offset for a field
     fn align_offset(&self, offset: u64, alignment: u64) -> u64 {
         (offset + alignment - 1) & !(alignment - 1)
@@ -759,8 +777,8 @@ impl QbeGenerator {
         op: &BinOp,
         rhs: &Expression,
     ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
-        let (_, lhs_val) = self.generate_expression(func, lhs)?;
-        let (_, rhs_val) = self.generate_expression(func, rhs)?;
+        let (lhs_ty, lhs_val) = self.generate_expression(func, lhs)?;
+        let (rhs_ty, rhs_val) = self.generate_expression(func, rhs)?;
         let tmp = self.new_temporary();
 
         // String concatenation: when the LHS is a string expression and the
@@ -793,8 +811,32 @@ impl QbeGenerator {
             return Ok((qbe::Type::Long, tmp));
         }
 
-        // TODO: take the biggest
-        let ty = qbe::Type::Word;
+        // Use the wider of the two operand types for the result
+        let ty = Self::wider_type(&lhs_ty, &rhs_ty);
+
+        // Widen operands if needed (e.g. Byte → Word via extub)
+        let lhs_val = if lhs_ty == qbe::Type::Byte && ty != qbe::Type::Byte {
+            let widened = self.new_temporary();
+            func.assign_instr(widened.clone(), ty.clone(), qbe::Instr::Extub(lhs_val));
+            widened
+        } else if lhs_ty == qbe::Type::Word && ty == qbe::Type::Long {
+            let widened = self.new_temporary();
+            func.assign_instr(widened.clone(), ty.clone(), qbe::Instr::Extuw(lhs_val));
+            widened
+        } else {
+            lhs_val
+        };
+        let rhs_val = if rhs_ty == qbe::Type::Byte && ty != qbe::Type::Byte {
+            let widened = self.new_temporary();
+            func.assign_instr(widened.clone(), ty.clone(), qbe::Instr::Extub(rhs_val));
+            widened
+        } else if rhs_ty == qbe::Type::Word && ty == qbe::Type::Long {
+            let widened = self.new_temporary();
+            func.assign_instr(widened.clone(), ty.clone(), qbe::Instr::Extuw(rhs_val));
+            widened
+        } else {
+            rhs_val
+        };
 
         func.assign_instr(
             tmp.clone(),
@@ -1020,69 +1062,85 @@ impl QbeGenerator {
         Ok((ty, tmp))
     }
 
-    /// Retrieves `(source, offset)` from field access expression
+    /// Resolves an expression that should evaluate to a struct value,
+    /// returning `(source_value, struct_name, base_offset)`.
+    fn resolve_struct_expr(
+        &mut self,
+        expr: &Expression,
+    ) -> GeneratorResult<(qbe::Value, String, u64)> {
+        match expr {
+            Expression::Variable(var) => {
+                let (_, src, ast_type) = self.get_var(var)?.to_owned();
+                match ast_type {
+                    Some(Type::Struct(name)) => Ok((src, name, 0)),
+                    _ => Err(format!("Variable '{}' is not a struct", var)),
+                }
+            }
+            Expression::Selff => {
+                let (_, src, ast_type) = self.get_var("self")?.to_owned();
+                match ast_type {
+                    Some(Type::Struct(name)) => Ok((src, name, 0)),
+                    _ => Err("'self' must refer to a struct".to_owned()),
+                }
+            }
+            Expression::FieldAccess { expr, field } => {
+                let (src, parent_name, parent_off) = self.resolve_struct_expr(expr)?;
+                let field_name = match field.as_ref() {
+                    Expression::Variable(v) => v,
+                    _ => unreachable!(),
+                };
+                let (_, meta, _) = self
+                    .struct_map
+                    .get(&parent_name)
+                    .ok_or_else(|| format!("Unknown struct '{}'", parent_name))?;
+                let (_, field_off, ast_type) = meta
+                    .get(field_name.as_str())
+                    .ok_or_else(|| {
+                        format!("No field '{}' on struct '{}'", field_name, parent_name)
+                    })?
+                    .to_owned();
+                match ast_type {
+                    Some(Type::Struct(name)) => Ok((src, name, parent_off + field_off)),
+                    _ => Err(format!(
+                        "Field '{}' on struct '{}' is not a struct",
+                        field_name, parent_name
+                    )),
+                }
+            }
+            other => Err(format!(
+                "Invalid field access type: expected variable, field access or 'self', got {:?}",
+                other,
+            )),
+        }
+    }
+
+    /// Retrieves `(source, field_type, offset)` from field access expression
     fn resolve_field_access(
         &mut self,
         obj: &Expression,
         field: &Expression,
     ) -> GeneratorResult<(qbe::Value, qbe::Type<'static>, u64)> {
-        let (src, ty, off) = match obj {
-            Expression::Variable(var) => {
-                let (ty, src, _) = self.get_var(var)?.to_owned();
-                (src, ty, 0)
-            }
-            Expression::FieldAccess { expr, field } => self.resolve_field_access(expr, field)?,
-            Expression::Selff => {
-                let (_, src, ast_type) = self.get_var("self")?.to_owned();
-                let struct_name = match ast_type {
-                    Some(Type::Struct(name)) => name,
-                    _ => return Err("'self' must refer to a struct".to_owned()),
-                };
-                let (ty, ..) = self
-                    .struct_map
-                    .get(&struct_name)
-                    .ok_or_else(|| format!("Unknown struct '{}'", struct_name))?
-                    .to_owned();
-                (src, ty, 0)
-            }
-            other => {
-                return Err(format!(
-                    "Invalid field access type: expected variable, field access or 'self', got {:?}",
-                    other,
-                ));
-            }
-        };
-        let field = match field {
+        let (src, struct_name, base_off) = self.resolve_struct_expr(obj)?;
+
+        let field_name = match field {
             Expression::Variable(v) => v,
             Expression::FunctionCall { .. } => {
                 unreachable!("method calls should be intercepted in generate_expression")
             }
-            // Parser should ensure this won't happen
             _ => unreachable!(),
         };
 
-        // XXX: this is very hacky and inefficient
-        let (name, meta) = self
+        let (_, meta, _) = self
             .struct_map
-            .iter()
-            .filter_map(
-                |(name, (sty, meta, _))| {
-                    if ty == *sty {
-                        Some((name, meta))
-                    } else {
-                        None
-                    }
-                },
-            )
-            .next()
-            .unwrap();
+            .get(&struct_name)
+            .ok_or_else(|| format!("Unknown struct '{}'", struct_name))?;
 
-        let (ty, offset, _) = meta
-            .get(field)
-            .ok_or_else(|| format!("No field '{}' on struct {}", field, name))?
+        let (ty, field_off, _) = meta
+            .get(field_name.as_str())
+            .ok_or_else(|| format!("No field '{}' on struct {}", field_name, struct_name))?
             .to_owned();
 
-        Ok((src, ty, offset + off))
+        Ok((src, ty, base_off + field_off))
     }
 
     /// Generates a `for` loop (for-in over an array)

@@ -12,6 +12,9 @@
 
 **Fixes**
 
+- QBE: Fix arithmetic type propagation — use the wider operand type instead of hardcoded `Word`, and widen `Byte` (bool) operands with `extub` when needed
+- QBE: Clean up `resolve_field_access` — use name-based struct lookup instead of fragile QBE type equality scan
+- QBE: Clean up temp files after `run_qbe` execution
 - QBE: Fix function return types and struct aggregate types ([#148](https://github.com/antimony-lang/antimony/pull/148))
 - Fixed array access in member variable expressions ([#123](https://github.com/antimony-lang/antimony/pull/123))
 
