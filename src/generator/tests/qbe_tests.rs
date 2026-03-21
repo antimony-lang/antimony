@@ -940,11 +940,7 @@ mod tests {
         let counter_struct = create_struct_def_with_methods(
             "Counter",
             vec![create_variable("value", AstType::Int)],
-            vec![create_function(
-                "reset",
-                None,
-                create_block_stmt(vec![]),
-            )],
+            vec![create_function("reset", None, create_block_stmt(vec![]))],
         );
         let main_func = create_function("main", None, create_block_stmt(vec![]));
         let module = create_module(vec![main_func], vec![counter_struct]);
@@ -978,7 +974,12 @@ mod tests {
         let counter_struct = create_struct_def_with_methods(
             "Counter",
             vec![create_variable("count", AstType::Int)],
-            vec![create_function_with_args("get", vec![], Some(AstType::Int), get_body)],
+            vec![create_function_with_args(
+                "get",
+                vec![],
+                Some(AstType::Int),
+                get_body,
+            )],
         );
 
         let call_expr = Expression::FieldAccess {

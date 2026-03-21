@@ -298,8 +298,11 @@ impl QbeGenerator {
         self.scopes.push(HashMap::new());
 
         // Prepend self as first argument (Long pointer to struct)
-        let self_tmp =
-            self.new_var(&qbe::Type::Long, "self", Some(Type::Struct(struct_def.name.clone())))?;
+        let self_tmp = self.new_var(
+            &qbe::Type::Long,
+            "self",
+            Some(Type::Struct(struct_def.name.clone())),
+        )?;
         let mut arguments: Vec<(qbe::Type<'static>, qbe::Value)> =
             vec![(qbe::Type::Long, self_tmp)];
 
@@ -366,8 +369,7 @@ impl QbeGenerator {
         let struct_name = self.get_struct_name_of(obj)?;
         let (_, obj_ptr) = self.generate_expression(func, obj)?;
 
-        let mut call_args: Vec<(qbe::Type<'static>, qbe::Value)> =
-            vec![(qbe::Type::Long, obj_ptr)];
+        let mut call_args: Vec<(qbe::Type<'static>, qbe::Value)> = vec![(qbe::Type::Long, obj_ptr)];
         for arg in args {
             let result = self.generate_expression(func, arg)?;
             call_args.push(result);
@@ -623,7 +625,6 @@ impl QbeGenerator {
 
                 Ok((elem_qbe_type, result))
             }
-            _ => todo!("expression: {:?}", expr),
         }
     }
 
