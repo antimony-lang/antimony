@@ -806,6 +806,123 @@ mod tests {
     }
 
     #[test]
+    fn test_array_read() {
+        // fn test_arr_read() -> int {
+        //     let arr: int[3] = [10, 20, 30]
+        //     return arr[1]
+        // }
+        let array_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
+        };
+        let decl = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(array_expr),
+        );
+        let access = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(1)),
+        };
+        let ret = create_return_stmt(Some(access));
+        let block = create_block_stmt(vec![decl, ret]);
+        let func = create_function("test_arr_read", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :array.9 = { l, w 3 }
+            export function w $test_arr_read() {
+            @start
+                %tmp.2 =w copy 10
+                %tmp.3 =w copy 20
+                %tmp.4 =w copy 30
+                %tmp.5 =l alloc8 20
+                storel 3, %tmp.5
+                %tmp.6 =l add %tmp.5, 8
+                storew %tmp.2, %tmp.6
+                %tmp.7 =l add %tmp.5, 12
+                storew %tmp.3, %tmp.7
+                %tmp.8 =l add %tmp.5, 16
+                storew %tmp.4, %tmp.8
+                %tmp.1 =l copy %tmp.5
+                %tmp.10 =w copy 1
+                %tmp.11 =l extsw %tmp.10
+                %tmp.12 =l mul %tmp.11, 4
+                %tmp.13 =l add %tmp.12, 8
+                %tmp.14 =l add %tmp.1, %tmp.13
+                %tmp.15 =w loadw %tmp.14
+                ret %tmp.15
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_array_write() {
+        // fn test_arr_write() {
+        //     let arr: int[3] = [0, 0, 0]
+        //     arr[0] = 42
+        // }
+        let array_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![create_int_expr(0), create_int_expr(0), create_int_expr(0)],
+        };
+        let decl = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(array_expr),
+        );
+        let lhs = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(0)),
+        };
+        let assign = create_assign_stmt(lhs, create_int_expr(42));
+        let block = create_block_stmt(vec![decl, assign]);
+        let func = create_function("test_arr_write", None, block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :array.9 = { l, w 3 }
+            export function $test_arr_write() {
+            @start
+                %tmp.2 =w copy 0
+                %tmp.3 =w copy 0
+                %tmp.4 =w copy 0
+                %tmp.5 =l alloc8 20
+                storel 3, %tmp.5
+                %tmp.6 =l add %tmp.5, 8
+                storew %tmp.2, %tmp.6
+                %tmp.7 =l add %tmp.5, 12
+                storew %tmp.3, %tmp.7
+                %tmp.8 =l add %tmp.5, 16
+                storew %tmp.4, %tmp.8
+                %tmp.1 =l copy %tmp.5
+                %tmp.10 =w copy 42
+                %tmp.11 =w copy 0
+                %tmp.12 =l extsw %tmp.11
+                %tmp.13 =l mul %tmp.12, 4
+                %tmp.14 =l add %tmp.13, 8
+                %tmp.15 =l add %tmp.1, %tmp.14
+                storew %tmp.10, %tmp.15
+                ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
     fn test_boolean_operations() {
         let operations = vec![(BinOp::And, "and"), (BinOp::Or, "or")];
 

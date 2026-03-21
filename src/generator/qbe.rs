@@ -399,6 +399,58 @@ impl QbeGenerator {
             Expression::FieldAccess { expr, field } => {
                 self.generate_field_access(func, expr, field)
             }
+            Expression::ArrayAccess { name, index } => {
+                // Clone to avoid borrow conflicts with the later generate_expression call
+                let (_, base, ast_type) = self.get_var(name)?.clone();
+                let elem_ast_type = match ast_type {
+                    Some(Type::Array(inner, _)) => *inner,
+                    _ => return Err(format!("'{}' is not an array", name)),
+                };
+                let elem_qbe_type = self.get_type(elem_ast_type)?;
+                let elem_size = self.type_size(&elem_qbe_type);
+
+                let (_, idx_val) = self.generate_expression(func, index)?;
+
+                // Sign-extend Word index to Long for pointer arithmetic
+                let idx_long = self.new_temporary();
+                func.assign_instr(
+                    idx_long.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Extsw(idx_val),
+                );
+
+                // scaled = index * elem_size
+                let scaled = self.new_temporary();
+                func.assign_instr(
+                    scaled.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Mul(idx_long, qbe::Value::Const(elem_size)),
+                );
+
+                // elem_ptr = base + 8 + scaled
+                let with_header = self.new_temporary();
+                func.assign_instr(
+                    with_header.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Add(scaled, qbe::Value::Const(8)),
+                );
+                let elem_ptr = self.new_temporary();
+                func.assign_instr(
+                    elem_ptr.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Add(base, with_header),
+                );
+
+                // Load and return the element
+                let result = self.new_temporary();
+                func.assign_instr(
+                    result.clone(),
+                    elem_qbe_type.clone(),
+                    qbe::Instr::Load(elem_qbe_type.clone(), elem_ptr),
+                );
+
+                Ok((elem_qbe_type, result))
+            }
             _ => todo!("expression: {:?}", expr),
         }
     }
@@ -651,7 +703,47 @@ impl QbeGenerator {
 
                 func.add_instr(qbe::Instr::Store(ty, field_ptr, rhs));
             }
-            Expression::ArrayAccess { name: _, index: _ } => todo!(),
+            Expression::ArrayAccess { name, index } => {
+                let (_, base, ast_type) = self.get_var(name)?.clone();
+                let elem_ast_type = match ast_type {
+                    Some(Type::Array(inner, _)) => *inner,
+                    _ => return Err(format!("'{}' is not an array", name)),
+                };
+                let elem_qbe_type = self.get_type(elem_ast_type)?;
+                let elem_size = self.type_size(&elem_qbe_type);
+
+                let (_, idx_val) = self.generate_expression(func, index)?;
+
+                let idx_long = self.new_temporary();
+                func.assign_instr(
+                    idx_long.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Extsw(idx_val),
+                );
+
+                let scaled = self.new_temporary();
+                func.assign_instr(
+                    scaled.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Mul(idx_long, qbe::Value::Const(elem_size)),
+                );
+
+                let with_header = self.new_temporary();
+                func.assign_instr(
+                    with_header.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Add(scaled, qbe::Value::Const(8)),
+                );
+
+                let elem_ptr = self.new_temporary();
+                func.assign_instr(
+                    elem_ptr.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Add(base, with_header),
+                );
+
+                func.add_instr(qbe::Instr::Store(elem_qbe_type, elem_ptr, rhs));
+            }
             _ => return Err("Left side of an assignment must be either a variable, field access or array access".to_owned()),
         }
 
