@@ -219,9 +219,8 @@ impl Generator for QbeGenerator {
                     continue;
                 }
                 if let Statement::Block { statements, .. } = &func.body {
-                    if let [Statement::Return(Some(Expression::FunctionCall {
-                        fn_name, ..
-                    }))] = statements.as_slice()
+                    if let [Statement::Return(Some(Expression::FunctionCall { fn_name, .. }))] =
+                        statements.as_slice()
                     {
                         if fn_name.starts_with('_') {
                             generator
