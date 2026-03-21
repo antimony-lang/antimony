@@ -1,3 +1,4 @@
+use crate::ast::hast::{HBinOp, HExpression, HMatchArm, HStatement};
 use crate::ast::types::Type;
 /**
  * Copyright 2020 Garrit Franke
@@ -1079,4 +1080,50 @@ fn test_nested_array_access() {
     let tokens = tokenize(raw).unwrap();
     let tree = parse(tokens, Some(raw.to_string()));
     assert!(tree.is_ok(), "{:?}", tree.err());
+}
+
+#[test]
+fn test_operator_precedence_modulo_equals() {
+    // `x % 3 == 0` must parse as `(x % 3) == 0`, not `x % (3 == 0)`
+    let raw = "fn main() { let x = 6\n if x % 3 == 0 { return 1 } }";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string())).unwrap();
+
+    let HStatement::Block { statements, .. } = &tree.func[0].body else {
+        panic!("expected block body");
+    };
+    // statements[0] = Declare x, statements[1] = If
+    let HStatement::If { condition, .. } = &statements[1] else {
+        panic!("expected if statement");
+    };
+    let HExpression::BinOp { op, lhs, .. } = condition else {
+        panic!("expected binop condition");
+    };
+    assert_eq!(*op, HBinOp::Equal, "outer op should be ==");
+    let HExpression::BinOp { op: inner_op, .. } = lhs.as_ref() else {
+        panic!("lhs should be a binop (x % 3)");
+    };
+    assert_eq!(*inner_op, HBinOp::Modulus, "inner op should be %");
+}
+
+#[test]
+fn test_wildcard_match_arm_parsed_as_else() {
+    // `_` in a match arm must be treated as a catch-all else branch
+    let raw = "fn main() { let x = 1\n match x { 1 => return 1\n _ => return 0 } }";
+    let tokens = tokenize(raw).unwrap();
+    let tree = parse(tokens, Some(raw.to_string())).unwrap();
+
+    let HStatement::Block { statements, .. } = &tree.func[0].body else {
+        panic!("expected block body");
+    };
+    // statements[0] = Declare x, statements[1] = Match
+    let HStatement::Match { arms, .. } = &statements[1] else {
+        panic!("expected match statement");
+    };
+    assert_eq!(arms.len(), 2, "expected 2 match arms");
+    assert!(
+        matches!(arms[1], HMatchArm::Else(_)),
+        "_ arm should be HMatchArm::Else, got {:?}",
+        arms[1]
+    );
 }

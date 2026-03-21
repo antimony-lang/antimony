@@ -177,7 +177,6 @@ fn test_testcases_js() -> Result<(), Error> {
 }
 
 #[test]
-#[ignore] // tests/conditionals.sb uses `_` wildcard in match arms, which the AST transformer lowers to a variable lookup instead of an else branch
 fn test_testcases_qbe() -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
     let dir_out = dir.join("tests_out_qbe");

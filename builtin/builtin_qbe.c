@@ -9,7 +9,14 @@ void _printf(char *msg)
 
 void _exit(int code)
 {
-    exit(code);
+    _Exit(code);
+}
+
+char *_int_to_str(long n)
+{
+    char *buf = malloc(32);
+    snprintf(buf, 32, "%ld", n);
+    return buf;
 }
 
 char *_str_concat(char *a, char *b)
