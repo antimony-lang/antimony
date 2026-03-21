@@ -100,7 +100,9 @@ fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
             .arg("-o")
             .arg(&exe_path),
     )?;
-    run_command(&mut Command::new(&exe_path))
+    let result = run_command(&mut Command::new(&exe_path));
+    let _ = std::fs::remove_dir_all(&dir); // best-effort cleanup
+    result
 }
 
 pub fn run(target: Target, in_file: PathBuf) -> Result<()> {
