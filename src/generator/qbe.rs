@@ -459,10 +459,12 @@ impl QbeGenerator {
                     return Err("continue used outside of a loop".to_owned());
                 }
             }
+            Statement::For { ident, expr, body } => {
+                self.generate_for_loop(func, ident, expr, body)?;
+            }
             Statement::Exp(expr) => {
                 self.generate_expression(func, expr)?;
             }
-            _ => todo!("statement: {:?}", stmt),
         }
         Ok(())
     }
@@ -1081,6 +1083,140 @@ impl QbeGenerator {
             .to_owned();
 
         Ok((src, ty, offset + off))
+    }
+
+    /// Generates a `for` loop (for-in over an array)
+    fn generate_for_loop(
+        &mut self,
+        func: &mut qbe::Function<'static>,
+        ident: &Variable,
+        expr: &Expression,
+        body: &Statement,
+    ) -> GeneratorResult<()> {
+        // Element type from ident's declared type
+        let elem_ast_type = ident
+            .ty
+            .as_ref()
+            .ok_or_else(|| format!("Missing type for for-loop variable '{}'", ident.name))?
+            .clone();
+        let elem_type = self.get_type(elem_ast_type.clone())?;
+        let elem_size = self.type_size(&elem_type);
+
+        // Generate array expression -> base pointer
+        let (_, base_ptr) = self.generate_expression(func, expr)?;
+
+        // Load length (Long) from array header (offset 0)
+        let len_tmp = self.new_temporary();
+        func.assign_instr(
+            len_tmp.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Load(qbe::Type::Long, base_ptr.clone()),
+        );
+
+        // Set up loop labels
+        self.tmp_counter += 1;
+        let loop_n = self.tmp_counter;
+        let cond_label = format!("loop.{}.cond", loop_n);
+        let body_label = format!("loop.{}.body", loop_n);
+        let end_label = format!("loop.{}.end", loop_n);
+        self.loop_labels.push(format!("loop.{}", loop_n));
+
+        // Push a scope for counter + ident variables
+        self.scopes.push(HashMap::new());
+
+        // Declare counter (Long) initialized to 0
+        let counter_name = format!("__for_{}_counter", loop_n);
+        let counter_tmp = self.new_var(&qbe::Type::Long, &counter_name, None)?;
+        func.assign_instr(
+            counter_tmp.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Copy(qbe::Value::Const(0)),
+        );
+
+        // Declare ident variable (will be overwritten each iteration)
+        let ident_tmp = self.new_var(&elem_type, &ident.name, Some(elem_ast_type))?;
+        func.assign_instr(
+            ident_tmp.clone(),
+            elem_type.clone(),
+            qbe::Instr::Copy(qbe::Value::Const(0)),
+        );
+
+        // Condition block: counter < len
+        func.add_block(cond_label.clone());
+        let cmp_tmp = self.new_temporary();
+        func.assign_instr(
+            cmp_tmp.clone(),
+            qbe::Type::Word,
+            qbe::Instr::Cmp(
+                qbe::Type::Long,
+                qbe::Cmp::Slt,
+                counter_tmp.clone(),
+                len_tmp,
+            ),
+        );
+        func.add_instr(qbe::Instr::Jnz(
+            cmp_tmp,
+            body_label.clone(),
+            end_label.clone(),
+        ));
+
+        // Body block: load arr[counter] into ident, run body, increment
+        func.add_block(body_label);
+
+        // element_ptr = base + 8 + counter * elem_size
+        let off = self.new_temporary();
+        func.assign_instr(
+            off.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Mul(counter_tmp.clone(), qbe::Value::Const(elem_size)),
+        );
+        let off2 = self.new_temporary();
+        func.assign_instr(
+            off2.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Add(off, qbe::Value::Const(8)),
+        );
+        let elem_ptr = self.new_temporary();
+        func.assign_instr(
+            elem_ptr.clone(),
+            qbe::Type::Long,
+            qbe::Instr::Add(base_ptr, off2),
+        );
+        let elem_val = self.new_temporary();
+        func.assign_instr(
+            elem_val.clone(),
+            elem_type.clone(),
+            qbe::Instr::Load(elem_type.clone(), elem_ptr),
+        );
+        // Assign loaded value to ident
+        func.assign_instr(ident_tmp, elem_type, qbe::Instr::Copy(elem_val));
+
+        // Execute loop body
+        self.generate_statement(func, body)?;
+
+        // Increment counter and jump to cond (unless body already jumped)
+        if !func.blocks.last().is_some_and(|b| b.jumps()) {
+            let inc = self.new_temporary();
+            func.assign_instr(
+                inc.clone(),
+                qbe::Type::Long,
+                qbe::Instr::Add(counter_tmp.clone(), qbe::Value::Const(1)),
+            );
+            func.assign_instr(
+                counter_tmp,
+                qbe::Type::Long,
+                qbe::Instr::Copy(inc),
+            );
+            func.add_instr(qbe::Instr::Jmp(cond_label));
+        }
+
+        // End block
+        func.add_block(end_label);
+
+        self.scopes.pop();
+        self.loop_labels.pop();
+
+        Ok(())
     }
 
     /// Generates an array literal
