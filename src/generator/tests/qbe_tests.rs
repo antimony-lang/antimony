@@ -564,6 +564,74 @@ mod tests {
     }
 
     #[test]
+    fn test_string_concatenation() {
+        // Test that string + string emits a _str_concat call
+        let decl_a = create_declare_stmt("a", AstType::Str, Some(create_str_expr("hello ")));
+        let decl_b = create_declare_stmt("b", AstType::Str, Some(create_str_expr("world")));
+
+        let concat_expr =
+            create_binop_expr(create_var_expr("a"), BinOp::Addition, create_var_expr("b"));
+
+        let ret_stmt = create_return_stmt(Some(concat_expr));
+        let block = create_block_stmt(vec![decl_a, decl_b, ret_stmt]);
+
+        let func = create_function("test_concat", Some(AstType::Str), block);
+        let module = create_module(vec![func], Vec::new());
+
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function l $test_concat() {
+            @start
+                %tmp.1 =l copy $string.2
+                %tmp.3 =l copy $string.4
+                %tmp.5 =l call $_str_concat(l %tmp.1, l %tmp.3)
+                ret %tmp.5
+            }
+            export data $string.2 = { b "hello ", b 0 }
+            export data $string.4 = { b "world", b 0 }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_int_addition_not_str_concat() {
+        // Test that int + int emits add, NOT _str_concat
+        let decl_a = create_declare_stmt("a", AstType::Int, Some(create_int_expr(1)));
+        let decl_b = create_declare_stmt("b", AstType::Int, Some(create_int_expr(2)));
+
+        let add_expr =
+            create_binop_expr(create_var_expr("a"), BinOp::Addition, create_var_expr("b"));
+
+        let ret_stmt = create_return_stmt(Some(add_expr));
+        let block = create_block_stmt(vec![decl_a, decl_b, ret_stmt]);
+
+        let func = create_function("test_int_add", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function w $test_int_add() {
+            @start
+                %tmp.2 =w copy 1
+                %tmp.1 =w copy %tmp.2
+                %tmp.4 =w copy 2
+                %tmp.3 =w copy %tmp.4
+                %tmp.5 =w add %tmp.1, %tmp.3
+                ret %tmp.5
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
     fn test_boolean_operations() {
         // Test boolean operations (AND, OR)
         let operations = vec![(BinOp::And, "and"), (BinOp::Or, "or")];
