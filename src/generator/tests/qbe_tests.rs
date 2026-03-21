@@ -819,7 +819,11 @@ mod tests {
                 create_int_expr(30),
             ],
         };
-        let decl = create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), Some(array_expr));
+        let decl = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(array_expr),
+        );
         let access = Expression::ArrayAccess {
             name: "arr".to_string(),
             index: Box::new(create_int_expr(1)),
@@ -831,7 +835,10 @@ mod tests {
         let result = QbeGenerator::generate(module).unwrap();
 
         // The generated code should contain array pointer arithmetic instructions
-        assert!(result.contains("extsw"), "expected extsw for index sign-extension");
+        assert!(
+            result.contains("extsw"),
+            "expected extsw for index sign-extension"
+        );
         assert!(result.contains("mul"), "expected mul for index scaling");
         assert!(result.contains("loadw"), "expected loadw for element load");
     }
@@ -844,13 +851,13 @@ mod tests {
         // }
         let array_expr = Expression::Array {
             capacity: 3,
-            elements: vec![
-                create_int_expr(0),
-                create_int_expr(0),
-                create_int_expr(0),
-            ],
+            elements: vec![create_int_expr(0), create_int_expr(0), create_int_expr(0)],
         };
-        let decl = create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), Some(array_expr));
+        let decl = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(array_expr),
+        );
         let lhs = Expression::ArrayAccess {
             name: "arr".to_string(),
             index: Box::new(create_int_expr(0)),
@@ -862,9 +869,15 @@ mod tests {
         let result = QbeGenerator::generate(module).unwrap();
 
         // The generated code should contain array pointer arithmetic and a store
-        assert!(result.contains("extsw"), "expected extsw for index sign-extension");
+        assert!(
+            result.contains("extsw"),
+            "expected extsw for index sign-extension"
+        );
         assert!(result.contains("mul"), "expected mul for index scaling");
-        assert!(result.contains("storew"), "expected storew for element store");
+        assert!(
+            result.contains("storew"),
+            "expected storew for element store"
+        );
     }
 
     #[test]
