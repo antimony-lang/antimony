@@ -24,11 +24,14 @@ use std::rc::Rc;
 // TODO: This should be fixed in the QBE library
 type RcTypeDef = Rc<qbe::TypeDef<'static>>;
 
+/// Information stored for each variable in scope
+type VarInfo = (qbe::Type<'static>, qbe::Value, Option<Type>);
+
 pub struct QbeGenerator {
     /// Counter for unique temporary names
     tmp_counter: u32,
-    /// Block-scoped variable -> temporary mappings
-    scopes: Vec<HashMap<String, (qbe::Type<'static>, qbe::Value)>>,
+    /// Block-scoped variable -> (qbe_type, temporary, ast_type) mappings
+    scopes: Vec<HashMap<String, VarInfo>>,
     /// Structure -> (type, meta data, size) mappings
     struct_map: HashMap<String, (qbe::Type<'static>, StructMeta, u64)>,
     /// Label prefix of loop scopes
@@ -173,13 +176,13 @@ impl QbeGenerator {
 
         let mut arguments: Vec<(qbe::Type<'static>, qbe::Value)> = Vec::new();
         for arg in &func.arguments {
-            let ty = self.get_type(
-                arg.ty
-                    .as_ref()
-                    .ok_or("Function arguments must have a type")?
-                    .to_owned(),
-            )?;
-            let tmp = self.new_var(&ty, &arg.name)?;
+            let ast_type = arg
+                .ty
+                .as_ref()
+                .ok_or("Function arguments must have a type")?
+                .to_owned();
+            let ty = self.get_type(ast_type.clone())?;
+            let tmp = self.new_var(&ty, &arg.name, Some(ast_type))?;
 
             arguments.push((ty.into_abi(), tmp));
         }
@@ -246,14 +249,13 @@ impl QbeGenerator {
                 self.scopes.pop();
             }
             Statement::Declare { variable, value } => {
-                let ty = self.get_type(
-                    variable
-                        .ty
-                        .as_ref()
-                        .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
-                        .to_owned(),
-                )?;
-                let tmp = self.new_var(&ty, &variable.name)?;
+                let ast_type = variable
+                    .ty
+                    .as_ref()
+                    .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
+                    .to_owned();
+                let ty = self.get_type(ast_type.clone())?;
+                let tmp = self.new_var(&ty, &variable.name, Some(ast_type))?;
 
                 if let Some(expr) = value {
                     let (expr_type, expr_value) = self.generate_expression(func, expr)?;
@@ -355,7 +357,10 @@ impl QbeGenerator {
 
                 Ok((qbe::Type::Word, tmp))
             }
-            Expression::Variable(name) => self.get_var(name).map(|v| v.to_owned()),
+            Expression::Variable(name) => {
+                let (ty, val, _) = self.get_var(name)?;
+                Ok((ty.to_owned(), val.to_owned()))
+            }
             Expression::BinOp { lhs, op, rhs } => self.generate_binop(func, lhs, op, rhs),
             Expression::StructInitialization { name, fields } => {
                 self.generate_struct_init(func, name, fields)
@@ -496,16 +501,16 @@ impl QbeGenerator {
         op: &BinOp,
         rhs: &Expression,
     ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
-        let (lhs_ty, lhs_val) = self.generate_expression(func, lhs)?;
+        let (_, lhs_val) = self.generate_expression(func, lhs)?;
         let (_, rhs_val) = self.generate_expression(func, rhs)?;
         let tmp = self.new_temporary();
 
-        // String concatenation: when both operands are strings (Long/pointers),
-        // emit a call to the _str_concat C builtin instead of an add instruction.
-        let is_string = matches!(
-            (&lhs_ty, op),
-            (qbe::Type::Long, BinOp::Addition | BinOp::AddAssign)
-        );
+        // String concatenation: when the LHS is a string expression and the
+        // operator is addition, emit a call to the _str_concat C builtin.
+        // We check the AST expression rather than the QBE type because
+        // both strings and arrays map to qbe::Type::Long.
+        let is_string = matches!(op, BinOp::Addition | BinOp::AddAssign)
+            && self.is_string_expression(lhs);
 
         if is_string {
             func.assign_instr(
@@ -591,7 +596,7 @@ impl QbeGenerator {
     ) -> GeneratorResult<()> {
         match lhs {
             Expression::Variable(name) => {
-                let (vty, tmp) = self.get_var(name)?;
+                let (vty, tmp, _) = self.get_var(name)?;
                 func.assign_instr(
                     tmp.to_owned(),
                     vty.to_owned(),
@@ -725,7 +730,7 @@ impl QbeGenerator {
     ) -> GeneratorResult<(qbe::Value, qbe::Type<'static>, u64)> {
         let (src, ty, off) = match obj {
             Expression::Variable(var) => {
-                let (ty, src) = self.get_var(var)?.to_owned();
+                let (ty, src, _) = self.get_var(var)?.to_owned();
                 (src, ty, 0)
             }
             Expression::FieldAccess { expr, field } => self.resolve_field_access(expr, field)?,
@@ -885,7 +890,12 @@ impl QbeGenerator {
     }
 
     /// Returns a new temporary bound to a variable
-    fn new_var(&mut self, ty: &qbe::Type<'static>, name: &str) -> GeneratorResult<qbe::Value> {
+    fn new_var(
+        &mut self,
+        ty: &qbe::Type<'static>,
+        name: &str,
+        ast_type: Option<Type>,
+    ) -> GeneratorResult<qbe::Value> {
         if self.get_var(name).is_ok() {
             return Err(format!("Re-declaration of variable '{}'", name));
         }
@@ -896,13 +906,13 @@ impl QbeGenerator {
             .scopes
             .last_mut()
             .expect("expected last scope to be present");
-        scope.insert(name.to_owned(), (ty.to_owned(), tmp.to_owned()));
+        scope.insert(name.to_owned(), (ty.to_owned(), tmp.to_owned(), ast_type));
 
         Ok(tmp)
     }
 
     /// Returns a temporary associated to a variable
-    fn get_var(&self, name: &str) -> GeneratorResult<&(qbe::Type<'static>, qbe::Value)> {
+    fn get_var(&self, name: &str) -> GeneratorResult<&VarInfo> {
         self.scopes
             .iter()
             .rev()
@@ -933,5 +943,23 @@ impl QbeGenerator {
     // Returns a size, in bytes of a type
     fn type_size(&self, ty: &qbe::Type) -> u64 {
         ty.size()
+    }
+
+    /// Checks whether an AST expression is known to produce a string value.
+    /// This uses the AST type stored in scope to distinguish strings from
+    /// arrays, since both map to qbe::Type::Long.
+    fn is_string_expression(&self, expr: &Expression) -> bool {
+        match expr {
+            Expression::Str(_) => true,
+            Expression::Variable(name) => self
+                .get_var(name)
+                .map(|(_, _, ast_ty)| matches!(ast_ty, Some(Type::Str)))
+                .unwrap_or(false),
+            Expression::BinOp { lhs, op, .. } => {
+                matches!(op, BinOp::Addition | BinOp::AddAssign)
+                    && self.is_string_expression(lhs)
+            }
+            _ => false,
+        }
     }
 }
