@@ -28,7 +28,9 @@ jobs:
           version: "10"
           directory: ${{ runner.temp }}/llvm
       - name: Install QBE
-        run: sudo apt-get install -y qbe
+        run: |
+          curl -fsSL https://c9x.me/compile/release/qbe-1.2.tar.xz | tar xJ -C /tmp
+          cd /tmp/qbe-1.2 && make && sudo cp qbe /usr/local/bin/
       - uses: actions-rs/cargo@v1
         with:
           command: test
