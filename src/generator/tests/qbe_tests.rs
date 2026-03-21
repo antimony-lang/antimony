@@ -836,4 +836,70 @@ mod tests {
             assert_eq!(normalize_qbe(&result), expected);
         }
     }
+
+    #[test]
+    fn test_any_type_parameter_int_widening() {
+        // Define print_any(x: any) with empty body
+        let print_any = create_function_with_args(
+            "print_any",
+            vec![create_variable("x", AstType::Any)],
+            None,
+            create_block_stmt(vec![]),
+        );
+
+        // Define main() that calls print_any(5) — int (Word) must be widened to Long
+        let call = create_call_expr("print_any", vec![create_int_expr(5)]);
+        let main_fn = create_function(
+            "main",
+            None,
+            create_block_stmt(vec![Statement::Exp(call)]),
+        );
+
+        let module = create_module(vec![print_any, main_fn], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function $print_any(l %tmp.1) {
+            @start
+                ret
+            }
+            export function $main() {
+            @start
+                %tmp.2 =w copy 5
+                %tmp.4 =l extuw %tmp.2
+                %tmp.3 =w call $print_any(l %tmp.4)
+                ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_any_type_parameter_string_no_widening() {
+        // Define print_any(x: any) with empty body
+        let print_any = create_function_with_args(
+            "print_any",
+            vec![create_variable("x", AstType::Any)],
+            None,
+            create_block_stmt(vec![]),
+        );
+
+        // Define main() that calls print_any("hello") — string is already Long, no widening
+        let call = create_call_expr("print_any", vec![create_str_expr("hello")]);
+        let main_fn = create_function(
+            "main",
+            None,
+            create_block_stmt(vec![Statement::Exp(call)]),
+        );
+
+        let module = create_module(vec![print_any, main_fn], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // String arg should pass through as Long without extuw
+        assert!(!result.contains("extuw"));
+        assert!(!result.contains("extub"));
+    }
 }

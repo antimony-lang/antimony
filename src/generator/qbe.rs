@@ -42,6 +42,8 @@ pub struct QbeGenerator {
     typedefs: Vec<RcTypeDef>,
     /// Function name -> return type (populated by pre-pass before codegen)
     fn_signatures: HashMap<String, Option<qbe::Type<'static>>>,
+    /// Function name -> parameter types (populated by pre-pass before codegen)
+    fn_param_types: HashMap<String, Vec<qbe::Type<'static>>>,
     /// Module being built
     module: qbe::Module<'static>,
 }
@@ -59,6 +61,7 @@ impl Generator for QbeGenerator {
             datadefs: Vec::new(),
             typedefs: Vec::new(),
             fn_signatures: HashMap::new(),
+            fn_param_types: HashMap::new(),
             module: qbe::Module::new(),
         };
 
@@ -99,6 +102,16 @@ impl Generator for QbeGenerator {
                 None
             };
             generator.fn_signatures.insert(func.name.clone(), ret_type);
+
+            let param_types: Vec<qbe::Type<'static>> = func
+                .arguments
+                .iter()
+                .filter_map(|arg| arg.ty.as_ref())
+                .map(|ty| generator.get_type(ty.to_owned()).map(|t| t.into_abi()))
+                .collect::<Result<Vec<_>, _>>()?;
+            generator
+                .fn_param_types
+                .insert(func.name.clone(), param_types);
         }
 
         for func in &prog.func {
@@ -369,8 +382,35 @@ impl QbeGenerator {
 
                 let tmp = self.new_temporary();
 
-                // Now build the call args
-                let new_args: Vec<(qbe::Type<'static>, qbe::Value)> = arg_results;
+                // Widen arguments if the callee expects a larger type (e.g. Type::Any → Long)
+                let param_types_opt = self.fn_param_types.get(fn_name).cloned();
+                let mut new_args: Vec<(qbe::Type<'static>, qbe::Value)> = Vec::new();
+                for (i, (arg_ty, arg_val)) in arg_results.into_iter().enumerate() {
+                    if let Some(ref param_types) = param_types_opt {
+                        if let Some(param_ty) = param_types.get(i) {
+                            if *param_ty == qbe::Type::Long && arg_ty == qbe::Type::Word {
+                                let widened = self.new_temporary();
+                                func.assign_instr(
+                                    widened.clone(),
+                                    qbe::Type::Long,
+                                    qbe::Instr::Extuw(arg_val),
+                                );
+                                new_args.push((qbe::Type::Long, widened));
+                                continue;
+                            } else if *param_ty == qbe::Type::Long && arg_ty == qbe::Type::Byte {
+                                let widened = self.new_temporary();
+                                func.assign_instr(
+                                    widened.clone(),
+                                    qbe::Type::Long,
+                                    qbe::Instr::Extub(arg_val),
+                                );
+                                new_args.push((qbe::Type::Long, widened));
+                                continue;
+                            }
+                        }
+                    }
+                    new_args.push((arg_ty, arg_val));
+                }
 
                 // Look up the return type from the pre-pass signature map
                 let ret_type = self
@@ -955,7 +995,7 @@ impl QbeGenerator {
     /// Returns a QBE type for the given AST type
     fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type<'static>> {
         match ty {
-            Type::Any => Err("'any' type is not supported".into()),
+            Type::Any => Ok(qbe::Type::Long),
             Type::Int => Ok(qbe::Type::Word),
             Type::Bool => Ok(qbe::Type::Byte),
             Type::Str => Ok(qbe::Type::Long),
