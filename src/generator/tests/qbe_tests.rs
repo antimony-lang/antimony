@@ -806,6 +806,68 @@ mod tests {
     }
 
     #[test]
+    fn test_array_read() {
+        // fn test_arr_read() -> int {
+        //     let arr: int[3] = [10, 20, 30]
+        //     return arr[1]
+        // }
+        let array_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
+        };
+        let decl = create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), Some(array_expr));
+        let access = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(1)),
+        };
+        let ret = create_return_stmt(Some(access));
+        let block = create_block_stmt(vec![decl, ret]);
+        let func = create_function("test_arr_read", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // The generated code should contain array pointer arithmetic instructions
+        assert!(result.contains("extsw"), "expected extsw for index sign-extension");
+        assert!(result.contains("mul"), "expected mul for index scaling");
+        assert!(result.contains("loadw"), "expected loadw for element load");
+    }
+
+    #[test]
+    fn test_array_write() {
+        // fn test_arr_write() {
+        //     let arr: int[3] = [0, 0, 0]
+        //     arr[0] = 42
+        // }
+        let array_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_int_expr(0),
+                create_int_expr(0),
+                create_int_expr(0),
+            ],
+        };
+        let decl = create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), Some(array_expr));
+        let lhs = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(0)),
+        };
+        let assign = create_assign_stmt(lhs, create_int_expr(42));
+        let block = create_block_stmt(vec![decl, assign]);
+        let func = create_function("test_arr_write", None, block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // The generated code should contain array pointer arithmetic and a store
+        assert!(result.contains("extsw"), "expected extsw for index sign-extension");
+        assert!(result.contains("mul"), "expected mul for index scaling");
+        assert!(result.contains("storew"), "expected storew for element store");
+    }
+
+    #[test]
     fn test_boolean_operations() {
         let operations = vec![(BinOp::And, "and"), (BinOp::Or, "or")];
 
