@@ -29,7 +29,7 @@ jobs:
           directory: ${{ runner.temp }}/llvm
       - name: Install QBE
         run: |
-          git clone https://c9x.me/git/qbe.git /tmp/qbe
+          git clone https://github.com/8l/qbe.git /tmp/qbe
           cd /tmp/qbe && make && sudo cp qbe /usr/local/bin/
       - uses: actions-rs/cargo@v1
         with:
