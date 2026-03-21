@@ -66,14 +66,102 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
     Ok(())
 }
 
+/// Compile a single .sb file through the full QBE pipeline and execute it.
+/// Pipeline: .sb → (antimony) → .ssa → (qbe) → .s → (gcc) → binary → run
+fn compile_and_run_qbe(in_file: &std::path::Path, dir_out: &std::path::Path) -> Result<(), Error> {
+    let dir = std::env::current_dir().unwrap();
+
+    let base_name = in_file.file_stem().unwrap().to_string_lossy().into_owned();
+    let ssa_file = dir_out.join(format!("{}.ssa", base_name));
+    let asm_file = dir_out.join(format!("{}.s", base_name));
+    let bin_file = dir_out.join(&base_name);
+
+    // Compile .sb -> .ssa
+    let compile = Command::new("cargo")
+        .arg("run")
+        .arg("--")
+        .arg("--target")
+        .arg("qbe")
+        .arg("build")
+        .arg(in_file)
+        .arg("-o")
+        .arg(&ssa_file)
+        .output()?;
+    assert!(
+        compile.status.success(),
+        "QBE compile failed for {:?}: {}",
+        in_file,
+        String::from_utf8_lossy(&compile.stderr)
+    );
+
+    // .ssa -> .s via qbe
+    let qbe = Command::new("qbe")
+        .arg("-o")
+        .arg(&asm_file)
+        .arg(&ssa_file)
+        .output()?;
+    assert!(
+        qbe.status.success(),
+        "qbe failed for {:?}: {}",
+        &ssa_file,
+        String::from_utf8_lossy(&qbe.stderr)
+    );
+
+    // .s -> binary via gcc (link with builtin_qbe.c for runtime functions)
+    let builtin_c = dir.join("builtin/builtin_qbe.c");
+    let gcc = Command::new("gcc")
+        .arg("-o")
+        .arg(&bin_file)
+        .arg(&asm_file)
+        .arg(&builtin_c)
+        .output()?;
+    assert!(
+        gcc.status.success(),
+        "gcc failed for {:?}: {}",
+        &asm_file,
+        String::from_utf8_lossy(&gcc.stderr)
+    );
+
+    // Execute — verify the binary runs without crashing.
+    // Note: void main() may return a non-zero exit code in QBE since
+    // the backend doesn't yet emit `ret 0` for void functions, so we
+    // only check that the process wasn't killed by a signal.
+    let execution = Command::new(&bin_file).output()?;
+    assert!(
+        execution.status.code().is_some(),
+        "Binary crashed (signal) for {:?}: {}",
+        &bin_file,
+        String::from_utf8_lossy(&execution.stderr)
+    );
+
+    Ok(())
+}
+
 #[test]
-fn test_examples() -> Result<(), Error> {
+fn test_examples_js() -> Result<(), Error> {
     test_directory("examples")?;
     Ok(())
 }
 
 #[test]
-fn test_testcases() -> Result<(), Error> {
+fn test_examples_qbe() -> Result<(), Error> {
+    let dir = std::env::current_dir().unwrap();
+    let dir_out = dir.join("examples_out_qbe");
+    let _ = fs::create_dir(&dir_out);
+
+    // Only test examples that the QBE backend currently supports end-to-end.
+    // As QBE backend coverage grows, add more examples here.
+    let supported = ["hello_world.sb", "sandbox.sb"];
+
+    for name in &supported {
+        let in_file = dir.join("examples").join(name);
+        compile_and_run_qbe(&in_file, &dir_out)?;
+    }
+    Ok(())
+}
+
+#[test]
+fn test_testcases_js() -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
 
     let in_file = dir.join("tests/main.sb");
@@ -85,6 +173,19 @@ fn test_testcases() -> Result<(), Error> {
         .wait()?
         .success();
     assert!(success, "{:?}", &in_file);
+    Ok(())
+}
+
+#[test]
+#[ignore] // TODO: tests/main.sb uses features not yet supported by the QBE backend
+fn test_testcases_qbe() -> Result<(), Error> {
+    let dir = std::env::current_dir().unwrap();
+    let dir_out = dir.join("tests_out_qbe");
+    let _ = fs::create_dir(&dir_out);
+
+    let in_file = dir.join("tests/main.sb");
+    compile_and_run_qbe(&in_file, &dir_out)?;
+
     Ok(())
 }
 

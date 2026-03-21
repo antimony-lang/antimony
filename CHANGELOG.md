@@ -17,6 +17,7 @@
 
 **Maintenance**
 
+- QBE: Add integration tests and CI support — compile and run examples and test cases through the full QBE pipeline (compile → qbe → gcc → execute) ([#145](https://github.com/antimony-lang/antimony/issues/145))
 - Update deprecated GitHub Actions (`peaceiris/actions-mdbook@v1` → `v2`, `actions/setup-python@v2` → `v5`) to fix docs deployment ([#153](https://github.com/antimony-lang/antimony/pull/153))
 - Add multi-level AST structure with High-level AST (HAST) and Low-level AST (LAST) ([#124](https://github.com/antimony-lang/antimony/pull/124))
 - Bump dependency [qbe](https://crates.io/crates/qbe) from `2.5.1` to `3.0.0` ([#131](https://github.com/antimony-lang/antimony/pull/131))

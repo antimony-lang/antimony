@@ -1,6 +1,8 @@
 target/
 .vscode/
 examples_out/
+examples_out_qbe/
 tests_out/
+tests_out_qbe/
 book/
 examples/playground.sb
