@@ -898,8 +898,22 @@ mod tests {
         let module = create_module(vec![print_any, main_fn], Vec::new());
         let result = QbeGenerator::generate(module).unwrap();
 
-        // String arg should pass through as Long without extuw
-        assert!(!result.contains("extuw"));
-        assert!(!result.contains("extub"));
+        // String arg should pass through as Long without widening
+        let expected = normalize_qbe(
+            r#"
+            export function $print_any(l %tmp.1) {
+            @start
+                ret
+            }
+            export function $main() {
+            @start
+                %tmp.3 =w call $print_any(l $string.2)
+                ret
+            }
+            export data $string.2 = { b "hello", b 0 }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
     }
 }
