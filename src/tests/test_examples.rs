@@ -177,7 +177,7 @@ fn test_testcases() -> Result<(), Error> {
 }
 
 #[test]
-#[ignore] // tests/main.sb uses features not yet supported by the QBE backend
+#[ignore] // TODO: tests/main.sb uses features not yet supported by the QBE backend
 fn test_testcases_qbe() -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
     let dir_out = dir.join("tests_out_qbe");
