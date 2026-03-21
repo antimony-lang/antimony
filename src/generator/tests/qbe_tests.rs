@@ -703,6 +703,109 @@ mod tests {
     }
 
     #[test]
+    fn test_function_call_return_type_int() {
+        // Define add_one(x: int): int that returns x + 1
+        let arg = create_variable("x", AstType::Int);
+        let add_expr = create_binop_expr(create_var_expr("x"), BinOp::Addition, create_int_expr(1));
+        let add_one = create_function_with_args(
+            "add_one",
+            vec![arg],
+            Some(AstType::Int),
+            create_return_stmt(Some(add_expr)),
+        );
+
+        // Define main() that calls add_one and returns the result
+        let call_expr = create_call_expr("add_one", vec![create_int_expr(5)]);
+        let ret_stmt = create_return_stmt(Some(call_expr));
+        let main_func = create_function("main", Some(AstType::Int), ret_stmt);
+
+        let module = create_module(vec![add_one, main_func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // The call to add_one should use =w (Word) since it returns int
+        let expected = normalize_qbe(
+            r#"
+            export function w $add_one(w %tmp.1) {
+            @start
+                %tmp.2 =w copy 1
+                %tmp.3 =w add %tmp.1, %tmp.2
+                ret %tmp.3
+            }
+            export function w $main() {
+            @start
+                %tmp.4 =w copy 5
+                %tmp.5 =w call $add_one(w %tmp.4)
+                ret %tmp.5
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_function_call_return_type_string() {
+        // Define greet(name: string): string that returns name
+        let arg = create_variable("name", AstType::Str);
+        let greet = create_function_with_args(
+            "greet",
+            vec![arg],
+            Some(AstType::Str),
+            create_return_stmt(Some(create_var_expr("name"))),
+        );
+
+        // Define main() that calls greet and stores the result
+        let call_expr = create_call_expr("greet", vec![create_str_expr("World")]);
+        let decl = create_declare_stmt("msg", AstType::Str, Some(call_expr));
+        let main_func = create_function("main", None, create_block_stmt(vec![decl]));
+
+        let module = create_module(vec![greet, main_func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // The call to greet should use =l (Long) since it returns string
+        let expected = normalize_qbe(
+            r#"
+            export function l $greet(l %tmp.1) {
+            @start
+                ret %tmp.1
+            }
+            export function $main() {
+            @start
+                %tmp.4 =l call $greet(l $string.3)
+                %tmp.2 =l copy %tmp.4
+                ret
+            }
+            export data $string.3 = { b "World", b 0 }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_function_call_unknown_defaults_to_word() {
+        // Calling an unknown/external function should fall back to Word
+        let call_expr = create_call_expr("unknown_fn", vec![create_int_expr(42)]);
+        let stmt = Statement::Exp(call_expr);
+        let func = create_function("test", None, create_block_stmt(vec![stmt]));
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function $test() {
+            @start
+                %tmp.1 =w copy 42
+                %tmp.2 =w call $unknown_fn(w %tmp.1)
+                ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
     fn test_boolean_operations() {
         let operations = vec![(BinOp::And, "and"), (BinOp::Or, "or")];
 
