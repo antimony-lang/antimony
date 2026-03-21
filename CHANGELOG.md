@@ -4,6 +4,8 @@
 
 **Features**
 
+- QBE: Support field access on function call results, e.g. `user_stub().first_name` ([#161](https://github.com/antimony-lang/antimony/pull/161))
+- QBE: Auto-coerce `int` arguments to `string` parameters via `_int_to_str` ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - QBE: Implement for-in loops over arrays ([#152](https://github.com/antimony-lang/antimony/pull/152))
 - QBE: Implement struct methods and `self` — methods are generated as `StructName__methodName(self: Long, ...)` and method calls on struct values are lowered correctly ([#151](https://github.com/antimony-lang/antimony/pull/151))
 - QBE: Implement array element reads and writes (`arr[i]`, `arr[i] = v`) ([#149](https://github.com/antimony-lang/antimony/pull/149))
@@ -12,6 +14,9 @@
 
 **Fixes**
 
+- Parser: fix operator precedence — `a % b == 0` now correctly parses as `(a % b) == 0` ([#161](https://github.com/antimony-lang/antimony/pull/161))
+- Parser: treat `_` in match arms as a catch-all else branch instead of a variable lookup ([#161](https://github.com/antimony-lang/antimony/pull/161))
+- QBE: fix `_exit` infinite recursion by using `_Exit()` instead of `exit()` ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - QBE: Fix arithmetic type propagation — use the wider operand type instead of hardcoded `Word`, and widen `Byte` (bool) operands with `extub` when needed ([#159](https://github.com/antimony-lang/antimony/pull/159))
 - QBE: Clean up `resolve_field_access` — use name-based struct lookup instead of fragile QBE type equality scan ([#159](https://github.com/antimony-lang/antimony/pull/159))
 - QBE: Clean up temp files after `run_qbe` execution ([#159](https://github.com/antimony-lang/antimony/pull/159))
