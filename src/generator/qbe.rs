@@ -67,10 +67,9 @@ impl Generator for QbeGenerator {
 
         // Pre-pass: register all struct names so forward references work
         for def in &prog.structs {
-            generator.struct_map.insert(
-                def.name.clone(),
-                (qbe::Type::Word, StructMeta::new(), 0),
-            );
+            generator
+                .struct_map
+                .insert(def.name.clone(), (qbe::Type::Word, StructMeta::new(), 0));
         }
 
         for def in &prog.structs {
