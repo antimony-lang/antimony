@@ -849,11 +849,7 @@ mod tests {
 
         // Define main() that calls print_any(5) — int (Word) must be widened to Long
         let call = create_call_expr("print_any", vec![create_int_expr(5)]);
-        let main_fn = create_function(
-            "main",
-            None,
-            create_block_stmt(vec![Statement::Exp(call)]),
-        );
+        let main_fn = create_function("main", None, create_block_stmt(vec![Statement::Exp(call)]));
 
         let module = create_module(vec![print_any, main_fn], Vec::new());
         let result = QbeGenerator::generate(module).unwrap();
@@ -889,11 +885,7 @@ mod tests {
 
         // Define main() that calls print_any("hello") — string is already Long, no widening
         let call = create_call_expr("print_any", vec![create_str_expr("hello")]);
-        let main_fn = create_function(
-            "main",
-            None,
-            create_block_stmt(vec![Statement::Exp(call)]),
-        );
+        let main_fn = create_function("main", None, create_block_stmt(vec![Statement::Exp(call)]));
 
         let module = create_module(vec![print_any, main_fn], Vec::new());
         let result = QbeGenerator::generate(module).unwrap();
