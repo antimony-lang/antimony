@@ -509,8 +509,8 @@ impl QbeGenerator {
         // operator is addition, emit a call to the _str_concat C builtin.
         // We check the AST expression rather than the QBE type because
         // both strings and arrays map to qbe::Type::Long.
-        let is_string = matches!(op, BinOp::Addition | BinOp::AddAssign)
-            && self.is_string_expression(lhs);
+        let is_string =
+            matches!(op, BinOp::Addition | BinOp::AddAssign) && self.is_string_expression(lhs);
 
         if is_string {
             func.assign_instr(
@@ -956,8 +956,7 @@ impl QbeGenerator {
                 .map(|(_, _, ast_ty)| matches!(ast_ty, Some(Type::Str)))
                 .unwrap_or(false),
             Expression::BinOp { lhs, op, .. } => {
-                matches!(op, BinOp::Addition | BinOp::AddAssign)
-                    && self.is_string_expression(lhs)
+                matches!(op, BinOp::Addition | BinOp::AddAssign) && self.is_string_expression(lhs)
             }
             _ => false,
         }

@@ -62,8 +62,7 @@ fn run_node(buf: &[u8]) -> Result<()> {
 
 fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
     let dir = std::env::temp_dir().join("antimony_qbe");
-    std::fs::create_dir_all(&dir)
-        .map_err(|e| format!("Failed to create temp directory: {}", e))?;
+    std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create temp directory: {}", e))?;
 
     let filename = in_file
         .file_stem()
