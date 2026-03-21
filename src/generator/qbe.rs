@@ -208,12 +208,29 @@ impl Generator for QbeGenerator {
             }
         }
 
-        // Seed return types for external C builtins that return a pointer (Long).
-        // Builtins not listed here default to Word, which is correct for void/int returns.
-        for builtin in &["_str_concat", "_read_line"] {
-            generator
-                .fn_signatures
-                .insert(builtin.to_string(), Some(qbe::Type::Long));
+        // Pre-pass: infer return types for external C builtins (underscore-prefixed names)
+        // by examining thin wrapper functions whose body is a single `return _builtin(...)`.
+        // This lets the call-site emit the correct QBE type without hardcoding builtin names.
+        for func in &prog.func {
+            if let Some(ret_ty) = &func.ret_type {
+                let qbe_ret_ty = generator.get_type(ret_ty.to_owned())?.into_abi();
+                // Word is already the fallback, so only register non-Word return types.
+                if qbe_ret_ty == qbe::Type::Word {
+                    continue;
+                }
+                if let Statement::Block { statements, .. } = &func.body {
+                    if let [Statement::Return(Some(Expression::FunctionCall {
+                        fn_name, ..
+                    }))] = statements.as_slice()
+                    {
+                        if fn_name.starts_with('_') {
+                            generator
+                                .fn_signatures
+                                .insert(fn_name.clone(), Some(qbe_ret_ty));
+                        }
+                    }
+                }
+            }
         }
 
         // Pre-pass: collect function return types so callers know what type to expect
