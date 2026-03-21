@@ -135,6 +135,18 @@ mod tests {
         }
     }
 
+    fn create_struct_def_with_methods(
+        name: &str,
+        fields: Vec<Variable>,
+        methods: Vec<Function>,
+    ) -> StructDef {
+        StructDef {
+            name: name.to_string(),
+            fields,
+            methods,
+        }
+    }
+
     fn create_module(funcs: Vec<Function>, structs: Vec<StructDef>) -> Module {
         Module {
             func: funcs,
@@ -920,6 +932,122 @@ mod tests {
         );
 
         assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_method_generation() {
+        // struct Counter { value: int; fn reset() { } }
+        let counter_struct = create_struct_def_with_methods(
+            "Counter",
+            vec![create_variable("value", AstType::Int)],
+            vec![create_function(
+                "reset",
+                None,
+                create_block_stmt(vec![]),
+            )],
+        );
+        let main_func = create_function("main", None, create_block_stmt(vec![]));
+        let module = create_module(vec![main_func], vec![counter_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // The method should be emitted as a standalone function with mangled name
+        // and self (Long) as first parameter
+        assert!(
+            result.contains("$Counter_reset"),
+            "Expected mangled method name $Counter_reset in output:\n{}",
+            result
+        );
+        assert!(
+            result.contains("l %tmp."),
+            "Expected Long self parameter in method signature:\n{}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_method_call_codegen() {
+        // struct Counter { count: int; fn get(): int { return self.count } }
+        // fn test(): int { let c: Counter = new Counter { count: 5 }; return c.get() }
+        let get_body = create_return_stmt(Some(Expression::FieldAccess {
+            expr: Box::new(Expression::Selff),
+            field: Box::new(Expression::Variable("count".to_string())),
+        }));
+        let counter_struct = create_struct_def_with_methods(
+            "Counter",
+            vec![create_variable("count", AstType::Int)],
+            vec![create_function_with_args("get", vec![], Some(AstType::Int), get_body)],
+        );
+
+        let call_expr = Expression::FieldAccess {
+            expr: Box::new(Expression::Variable("c".to_string())),
+            field: Box::new(Expression::FunctionCall {
+                fn_name: "get".to_string(),
+                args: vec![],
+            }),
+        };
+        let test_body = create_block_stmt(vec![
+            Statement::Declare {
+                variable: create_variable("c", AstType::Struct("Counter".to_string())),
+                value: Some(Expression::StructInitialization {
+                    name: "Counter".to_string(),
+                    fields: std::collections::HashMap::from([(
+                        "count".to_string(),
+                        Box::new(create_int_expr(5)),
+                    )]),
+                }),
+            },
+            create_return_stmt(Some(call_expr)),
+        ]);
+        let test_func = create_function("test", Some(AstType::Int), test_body);
+        let module = create_module(vec![test_func], vec![counter_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // Method should be emitted, and calling site should use mangled name
+        assert!(
+            result.contains("$Counter_get"),
+            "Expected mangled method $Counter_get in output:\n{}",
+            result
+        );
+        // Call should pass the struct pointer as first Long argument
+        assert!(
+            result.contains("call $Counter_get(l"),
+            "Expected call with Long self arg:\n{}",
+            result
+        );
+    }
+
+    #[test]
+    fn test_self_field_access_in_method() {
+        // struct Point { x: int; fn get_x(): int { return self.x } }
+        let get_x_body = create_return_stmt(Some(Expression::FieldAccess {
+            expr: Box::new(Expression::Selff),
+            field: Box::new(Expression::Variable("x".to_string())),
+        }));
+        let point_struct = create_struct_def_with_methods(
+            "Point",
+            vec![create_variable("x", AstType::Int)],
+            vec![create_function_with_args(
+                "get_x",
+                vec![],
+                Some(AstType::Int),
+                get_x_body,
+            )],
+        );
+        let dummy = create_function("main", None, create_block_stmt(vec![]));
+        let module = create_module(vec![dummy], vec![point_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // Method should load x from self pointer
+        assert!(
+            result.contains("$Point_get_x"),
+            "Expected $Point_get_x in output:\n{}",
+            result
+        );
+        assert!(
+            result.contains("loadw"),
+            "Expected loadw to read int field from self:\n{}",
+            result
+        );
     }
 
     #[test]
