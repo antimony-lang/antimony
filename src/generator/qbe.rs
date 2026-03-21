@@ -184,11 +184,8 @@ impl Generator for QbeGenerator {
                 .fn_param_types
                 .insert(func.name.clone(), param_types);
 
-            let param_ast_types: Vec<Option<Type>> = func
-                .arguments
-                .iter()
-                .map(|arg| arg.ty.clone())
-                .collect();
+            let param_ast_types: Vec<Option<Type>> =
+                func.arguments.iter().map(|arg| arg.ty.clone()).collect();
             generator
                 .fn_param_ast_types
                 .insert(func.name.clone(), param_ast_types);
@@ -1191,20 +1188,13 @@ impl QbeGenerator {
                 }
             }
             Expression::FunctionCall { fn_name, .. } => {
-                let ast_ret = self
-                    .fn_ast_signatures
-                    .get(fn_name)
-                    .cloned()
-                    .flatten();
+                let ast_ret = self.fn_ast_signatures.get(fn_name).cloned().flatten();
                 match ast_ret {
                     Some(Type::Struct(struct_name)) => {
                         let (_, val) = self.generate_expression(func, expr)?;
                         Ok((val, struct_name, 0))
                     }
-                    _ => Err(format!(
-                        "Function '{}' does not return a struct",
-                        fn_name
-                    )),
+                    _ => Err(format!("Function '{}' does not return a struct", fn_name)),
                 }
             }
             Expression::FieldAccess { expr, field } => {

@@ -683,8 +683,9 @@ impl Parser {
         loop {
             let next = self.peek()?;
             match next.kind {
-                TokenKind::Literal(_)
-                | TokenKind::Keyword(Keyword::Boolean) => arms.push(self.parse_match_arm()?),
+                TokenKind::Literal(_) | TokenKind::Keyword(Keyword::Boolean) => {
+                    arms.push(self.parse_match_arm()?)
+                }
                 TokenKind::Identifier(ref id) if id == "_" => {
                     if has_else {
                         return Err(self.make_error_msg(
