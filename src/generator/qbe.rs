@@ -40,6 +40,8 @@ pub struct QbeGenerator {
     datadefs: Vec<qbe::DataDef<'static>>,
     /// Type defintions collected during generation
     typedefs: Vec<RcTypeDef>,
+    /// Function name -> return type (populated by pre-pass before codegen)
+    fn_signatures: HashMap<String, Option<qbe::Type<'static>>>,
     /// Module being built
     module: qbe::Module<'static>,
 }
@@ -56,6 +58,7 @@ impl Generator for QbeGenerator {
             loop_labels: Vec::new(),
             datadefs: Vec::new(),
             typedefs: Vec::new(),
+            fn_signatures: HashMap::new(),
             module: qbe::Module::new(),
         };
 
@@ -76,6 +79,26 @@ impl Generator for QbeGenerator {
             let typedef_rc = Rc::new(structure);
             generator.module.add_type((*typedef_rc).clone());
             generator.typedefs.push(typedef_rc);
+
+            // Replace the Word placeholder in struct_map with the proper Aggregate type
+            let struct_type = unsafe {
+                std::mem::transmute::<qbe::Type<'_>, qbe::Type<'static>>(qbe::Type::Aggregate(
+                    generator.typedefs.last().unwrap(),
+                ))
+            };
+            if let Some(entry) = generator.struct_map.get_mut(&def.name) {
+                entry.0 = struct_type;
+            }
+        }
+
+        // Pre-pass: collect function return types so callers know what type to expect
+        for func in &prog.func {
+            let ret_type = if let Some(ty) = &func.ret_type {
+                Some(generator.get_type(ty.to_owned())?.into_abi())
+            } else {
+                None
+            };
+            generator.fn_signatures.insert(func.name.clone(), ret_type);
         }
 
         for func in &prog.func {
@@ -349,13 +372,21 @@ impl QbeGenerator {
                 // Now build the call args
                 let new_args: Vec<(qbe::Type<'static>, qbe::Value)> = arg_results;
 
+                // Look up the return type from the pre-pass signature map
+                let ret_type = self
+                    .fn_signatures
+                    .get(fn_name)
+                    .cloned()
+                    .flatten()
+                    .unwrap_or(qbe::Type::Word);
+
                 func.assign_instr(
                     tmp.clone(),
-                    qbe::Type::Word,
+                    ret_type.clone(),
                     qbe::Instr::Call(fn_name.clone(), new_args, None),
                 );
 
-                Ok((qbe::Type::Word, tmp))
+                Ok((ret_type, tmp))
             }
             Expression::Variable(name) => {
                 let (ty, val, _) = self.get_var(name)?;
