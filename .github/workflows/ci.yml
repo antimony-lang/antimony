@@ -27,6 +27,10 @@ jobs:
         with:
           version: "10"
           directory: ${{ runner.temp }}/llvm
+      - name: Install QBE
+        run: |
+          git clone https://c9x.me/git/qbe.git /tmp/qbe
+          cd /tmp/qbe && make && sudo cp qbe /usr/local/bin/
       - uses: actions-rs/cargo@v1
         with:
           command: test
