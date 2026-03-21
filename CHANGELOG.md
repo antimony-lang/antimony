@@ -8,6 +8,7 @@
 
 **Fixes**
 
+- QBE: Fix function return types and struct aggregate types ([#148](https://github.com/antimony-lang/antimony/pull/148))
 - Fixed array access in member variable expressions ([#123](https://github.com/antimony-lang/antimony/pull/123))
 
 **Maintenance**
