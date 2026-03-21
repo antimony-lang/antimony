@@ -28,9 +28,7 @@ jobs:
           version: "10"
           directory: ${{ runner.temp }}/llvm
       - name: Install QBE
-        run: |
-          git clone https://github.com/8l/qbe.git /tmp/qbe
-          cd /tmp/qbe && make && sudo cp qbe /usr/local/bin/
+        run: sudo apt-get install -y qbe
       - uses: actions-rs/cargo@v1
         with:
           command: test
