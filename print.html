@@ -13,21 +13,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="favicon-8114d1fc.png">
+        <link rel="stylesheet" href="css/variables-8adf115d.css">
+        <link rel="stylesheet" href="css/general-2459343d.css">
+        <link rel="stylesheet" href="css/chrome-ae938929.css">
+        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="highlight-css" href="highlight.css">
-        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
-        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -37,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex.js";
+            window.path_to_searchindex_js = "searchindex-11993848.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc.js"></script>
+        <script src="toc-aee83e08.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -54,7 +53,7 @@
             </div>
         </div>
     </div>
-    <div id="body-container">
+    <div id="mdbook-body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
             try {
@@ -83,12 +82,12 @@
             html.classList.add("js");
         </script>
 
-        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
 
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             let sidebar = null;
-            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
@@ -103,39 +102,39 @@
             }
         </script>
 
-        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
                 <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
             </noscript>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
             </div>
         </nav>
 
-        <div id="page-wrapper" class="page-wrapper">
+        <div id="mdbook-page-wrapper" class="page-wrapper">
 
             <div class="page">
-                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
-                            <i class="fa fa-bars"></i>
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
                         </label>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
                         </button>
-                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
-                            <i class="fa fa-search"></i>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
                         </button>
                     </div>
 
@@ -143,50 +142,51 @@
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
-                            <i id="print-button" class="fa fa-print"></i>
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
 
                     </div>
                 </div>
 
-                <div id="search-wrapper" class="hidden">
-                    <form id="searchbar-outer" class="searchbar-outer">
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
                         <div class="search-wrapper">
-                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
                             <div class="spinner-wrapper">
-                                <i class="fa fa-spinner fa-spin"></i>
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
                             </div>
                         </div>
                     </form>
-                    <div id="searchresults-outer" class="searchresults-outer hidden">
-                        <div id="searchresults-header" class="searchresults-header"></div>
-                        <ul id="searchresults">
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
                         </ul>
                     </div>
                 </div>
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
                 <script>
-                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
                         link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
                     });
                 </script>
 
-                <div id="content" class="content">
+                <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
 <p>Antimony is a bullshit-free (©) programming language that gets out of your way.
-It is meant to "just work", without adding unnecessary and bloated language features.</p>
+It is meant to “just work”, without adding unnecessary and bloated language features.</p>
 <p>To get started with Antimony, continue with the <a href="introduction/introduction/installation.html">installation</a>.</p>
 <blockquote>
 <p><strong>Note</strong>: Some parts of this documentation have been copied from the <a href="https://doc.rust-lang.org/book/">Rust book</a>.</p>
 </blockquote>
 <blockquote>
-<p><strong>Note</strong>: I consider this documentation <em>usable</em>, but it may be incomplete in some places. If you feel like that a feature or behavior should be documented, feel free to contact the maintainers. You can search for the word <em>TODO</em>, if you want to help improving this documentation but don't know where to start. Any help is always welcome!</p>
+<p><strong>Note</strong>: I consider this documentation <em>usable</em>, but it may be incomplete in some places. If you feel like that a feature or behavior should be documented, feel free to contact the maintainers. You can search for the word <em>TODO</em>, if you want to help improving this documentation but don’t know where to start. Any help is always welcome!</p>
 </blockquote>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
 <blockquote>
 <p><strong>Note:</strong> An installation of the Rust programming language is needed to compile Antimony.</p>
 </blockquote>
@@ -199,13 +199,14 @@ It is meant to "just work", without adding unnecessary and bloated language feat
 <pre><code class="language-sh">cargo install --path .
 </code></pre>
 <h2 id="docker"><a class="header" href="#docker">Docker</a></h2>
-<p>Antimony provides a <a href="https://hub.docker.com/r/antimony-lang/antimony">Docker image</a>. It currently only supports the x64 architecture. Please reach out if you need a ARM variant (needed for Raspberry Pi). If you don't want to wait, you can build the image yourself by running this command in the root of the project:</p>
+<p>Antimony provides a <a href="https://hub.docker.com/r/antimony-lang/antimony">Docker image</a>. It currently only supports the x64 architecture. Please reach out if you need a ARM variant (needed for Raspberry Pi). If you don’t want to wait, you can build the image yourself by running this command in the root of the project:</p>
 <pre><code>docker build . -t antimony
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="the-command-line-interface"><a class="header" href="#the-command-line-interface">The command line interface</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="the-command-line-interface"><a class="header" href="#the-command-line-interface">The command line interface</a></h1>
 <p>Now that you have installed Antimony, it is time to write our first program. This is a program that will simply print a string to the screen.</p>
 <h1 id="creating-a-project-directory"><a class="header" href="#creating-a-project-directory">Creating a project directory</a></h1>
-<p>Let's begin by setting up our development workspace. Antimony really doesn't care where you store the code, so feel free to choose a different directory, than the one in this example.</p>
+<p>Let’s begin by setting up our development workspace. Antimony really doesn’t care where you store the code, so feel free to choose a different directory, than the one in this example.</p>
 <pre><code>mkdir ~/sources
 cd ~/sources
 mkdir hello_world
@@ -222,11 +223,13 @@ cd hello_world
 <pre><code>$ sb run main.sb
 </code></pre>
 <p>You should see the string <code>Hello World!</code> on the screen. Congrats! You have officially written a Antimony Program!</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="common-language-concepts"><a class="header" href="#common-language-concepts">Common language concepts</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="common-language-concepts"><a class="header" href="#common-language-concepts">Common language concepts</a></h1>
 <p>This chapter covers concepts that appear in almost every programming language and how they work in Antimony. Many programming languages have much in common at their core.</p>
 <p>Specifically, you’ll learn about variables, basic types, functions, comments, and control flow. These foundations will be in every Antimony program, and learning them early will give you a strong core to start from.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="variables"><a class="header" href="#variables">Variables</a></h1>
-<p>If you are familiar with some other programming language, the way Antimony handles variables won't surprise you.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="variables"><a class="header" href="#variables">Variables</a></h1>
+<p>If you are familiar with some other programming language, the way Antimony handles variables won’t surprise you.</p>
 <p>To declare a variable, the <code>let</code> keyword is used. The type of the variable is infered, but can be specified explicitly.</p>
 <blockquote>
 <p><strong>Note</strong>: Type inference currently only works when using the node-backend. For most other backends, the types need to be specified, until proper type inference is implemented.</p>
@@ -242,7 +245,8 @@ fn main() {
 <pre><code>$ sb run variables.sb
 15
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="datatypes"><a class="header" href="#datatypes">Datatypes</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="datatypes"><a class="header" href="#datatypes">Datatypes</a></h1>
 <p>Antimony comes with some generic data types.</p>
 <h2 id="the-boolean-type"><a class="header" href="#the-boolean-type">The Boolean type</a></h2>
 <p>As in most other programming languages, a Boolean type in Antimony has two possible values: <code>true</code> and <code>false</code>. Booleans are one byte in size. The Boolean type in Antimony is specified using <code>bool</code>. For example:</p>
@@ -251,7 +255,7 @@ fn main() {
     let f: bool = false // with explicit type annotation
 }
 </code></pre>
-<p>The main way to use Boolean values is through conditionals, such as an <code>if</code> expression. We’ll cover how <code>if</code> expressions work in the <a href="concepts/introduction/control-flow.html">"Control Flow"</a> section.</p>
+<p>The main way to use Boolean values is through conditionals, such as an <code>if</code> expression. We’ll cover how <code>if</code> expressions work in the <a href="concepts/introduction/control-flow.html">“Control Flow”</a> section.</p>
 <h2 id="the-integer-type"><a class="header" href="#the-integer-type">The Integer type</a></h2>
 <p>The <code>integer</code> datatype represents a 4 byte decimal number.</p>
 <pre><code>fn main() {
@@ -296,7 +300,7 @@ Banana
 Apple
 Pineapple
 </code></pre>
-<p>Arrays have a fixed capacity. In most cases, the capacity of an array can be infered. In the example above, the compiler knows that three elements are in the array, so it can be inferred. If the capacity can't be inferred by the compiler, it is necessary to mark it explicitely. This is the case for uninitialized arrays:</p>
+<p>Arrays have a fixed capacity. In most cases, the capacity of an array can be infered. In the example above, the compiler knows that three elements are in the array, so it can be inferred. If the capacity can’t be inferred by the compiler, it is necessary to mark it explicitely. This is the case for uninitialized arrays:</p>
 <pre><code>let arr: int[3]
 arr[0] = 1
 arr[1] = 2
@@ -337,8 +341,9 @@ Hello
 Two
 3
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="functions"><a class="header" href="#functions">Functions</a></h1>
-<p>Functions are pervasive in Antimony code. You’ve already seen one of the most important functions in the language: the <code>main</code> function, which is the entry point of many programs. You've also seen the <code>fn</code> keyword, which allows you to declare new functions.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="functions"><a class="header" href="#functions">Functions</a></h1>
+<p>Functions are pervasive in Antimony code. You’ve already seen one of the most important functions in the language: the <code>main</code> function, which is the entry point of many programs. You’ve also seen the <code>fn</code> keyword, which allows you to declare new functions.</p>
 <p>Antimony code uses snake_case as the conventional style for function and variable names. In snake case, all letters are lowercase and underscores separate words. Here’s a program that contains an example function definition:</p>
 <pre><code>fn main() {
     println("Hello, world!")
@@ -362,10 +367,10 @@ fn another_function(x: int) {
 }
 </code></pre>
 <h2 id="return-types"><a class="header" href="#return-types">Return types</a></h2>
-<p>Functions can optionally return a value. To specify the return type, it is added to the function signature, similar to how variables and parameters do. Here's a simple example of a function that returns an integer:</p>
+<p>Functions can optionally return a value. To specify the return type, it is added to the function signature, similar to how variables and parameters do. Here’s a simple example of a function that returns an integer:</p>
 <pre><code>fn add_one(x: int): int {}
 </code></pre>
-<p>Note that this function won't compile, since it doesn't actually return anything. Let's fix that by adding a <code>return</code> statement with an expression:</p>
+<p>Note that this function won’t compile, since it doesn’t actually return anything. Let’s fix that by adding a <code>return</code> statement with an expression:</p>
 <pre><code>fn add_one(x: int): int {
     return x + 1
 }
@@ -384,7 +389,7 @@ fn add_one(x: int): int {
 2
 </code></pre>
 <h1 id="simplified-function-syntax-for-single-statements"><a class="header" href="#simplified-function-syntax-for-single-statements">Simplified Function Syntax for Single Statements</a></h1>
-<p>Antimony supports a more concise syntax for functions that perform a single operation. This syntax is particularly useful for simple tasks, such as arithmetic operations, printing to the console, or returning a single expression. Instead of wrapping the function's body in curly braces, you can define the function using an equals sign (<code>=</code>) followed by the expression that constitutes the function's body.</p>
+<p>Antimony supports a more concise syntax for functions that perform a single operation. This syntax is particularly useful for simple tasks, such as arithmetic operations, printing to the console, or returning a single expression. Instead of wrapping the function’s body in curly braces, you can define the function using an equals sign (<code>=</code>) followed by the expression that constitutes the function’s body.</p>
 <h2 id="syntax"><a class="header" href="#syntax">Syntax</a></h2>
 <p>The syntax for this simplified function declaration is as follows:</p>
 <pre><code>fn function_name(parameters): return_type = expression
@@ -398,7 +403,8 @@ fn add_one(x: int): int {
 <p><strong>Defining a function that concatenates two strings</strong>:</p>
 <pre><code>fn concat(a: string, b: string): string = a + b
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="comments"><a class="header" href="#comments">Comments</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="comments"><a class="header" href="#comments">Comments</a></h1>
 <p>All programmers strive to make their code easy to understand, but sometimes extra explanation is warranted. In these cases, programmers leave notes, or comments, in their source code that the compiler will ignore but people reading the source code may find useful.</p>
 <p>Here’s a simple comment:</p>
 <pre><code>// I'm a comment!
@@ -419,10 +425,11 @@ fn add_one(x: int): int {
     let lucky_number = 7
 }
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="control-flow"><a class="header" href="#control-flow">Control Flow</a></h1>
 <p>Deciding whether or not to run some code depending on if a condition is true and deciding to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Antimony code are <code>if</code> expressions and loops.</p>
 <h2 id="if-expressions"><a class="header" href="#if-expressions"><code>if</code> Expressions</a></h2>
-<p>An <code>if</code> expression allows you to branch your code depending on conditions. You provide a condition and then state, "If this condition is met, run this block of code. If the condition is not met, do not run this block of code."</p>
+<p>An <code>if</code> expression allows you to branch your code depending on conditions. You provide a condition and then state, “If this condition is met, run this block of code. If the condition is not met, do not run this block of code.”</p>
 <p>Here is a basic example of an <code>if</code> expression:</p>
 <pre><code>fn main() {
     let number = 3
@@ -448,7 +455,7 @@ condition was true
 condition was false
 </code></pre>
 <blockquote>
-<p><strong>Note</strong>: It's worth noting that the condition in this code must be a bool. At the current state of the project, this is not the case, but it is subject to change at any time. <strong>TODO</strong>: Discuss this behavior.</p>
+<p><strong>Note</strong>: It’s worth noting that the condition in this code must be a bool. At the current state of the project, this is not the case, but it is subject to change at any time. <strong>TODO</strong>: Discuss this behavior.</p>
 </blockquote>
 <h3 id="handling-multiple-conditions-with-else-if"><a class="header" href="#handling-multiple-conditions-with-else-if">Handling multiple conditions with <code>else if</code></a></h3>
 <p>You can have multiple conditions by combining <code>if</code> and <code>else</code> in an <code>else if</code> expression. For example:</p>
@@ -472,7 +479,7 @@ number is divisible by 3
 </code></pre>
 <p>When this program executes, it checks each <code>if</code> expression in turn and executes the first body for which the condition holds true. Note that even though 6 is divisible by 2, we don’t see the output <code>number is divisible by 2</code>, nor do we see the <code>number is not divisible by 4, 3, or 2</code> text from the else block. That’s because Antimony only executes the block for the first true condition, and once it finds one, it doesn’t even check the rest.</p>
 <h3 id="value-matching"><a class="header" href="#value-matching">Value matching</a></h3>
-<p>Working with <code>if</code> statements with multiple <code>else</code> branches can become tedious. <code>match</code> statements provide a cleaner syntax for this case. You can compare <code>match</code> statements to <code>switch</code> in many other languages. Let's look at a very simple match statement.</p>
+<p>Working with <code>if</code> statements with multiple <code>else</code> branches can become tedious. <code>match</code> statements provide a cleaner syntax for this case. You can compare <code>match</code> statements to <code>switch</code> in many other languages. Let’s look at a very simple match statement.</p>
 <pre><code>    let x = 42
 
     match x {
@@ -499,8 +506,8 @@ number is divisible by 3
 </code></pre>
 <p>Keep in mind that excessive use of this could hurt the readability of your code. Instead, you could try to outsource those statements into a function and call that instead.</p>
 <h2 id="loops"><a class="header" href="#loops">Loops</a></h2>
-<p>It's often useful to execute a block of code more than once. For this task, Antimony provides different kind of <em>loops</em>. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.</p>
-<p>Antimony has two types of loops: <code>while</code> and <code>for</code>. Let's go through each of them.</p>
+<p>It’s often useful to execute a block of code more than once. For this task, Antimony provides different kind of <em>loops</em>. A loop runs through the code inside the its body to the end and then starts immediately back at the beginning.</p>
+<p>Antimony has two types of loops: <code>while</code> and <code>for</code>. Let’s go through each of them.</p>
 <h3 id="conditional-loops-with-while"><a class="header" href="#conditional-loops-with-while">Conditional Loops with <code>while</code></a></h3>
 <p>It’s often useful for a program to evaluate a condition within a loop. While the condition is true, the loop runs. When the condition ceases to be true, the program calls <code>break</code>, stopping the loop.</p>
 <p>The example below loops three times, counting down each time, and then, after the loop, it prints another message and exits.</p>
@@ -538,7 +545,7 @@ the value is: 40
 the value is: 50
 </code></pre>
 <p>All five array values appear in the terminal, as expected. Even though index will reach a value of 5 at some point, the loop stops executing before trying to fetch a sixth value from the array.</p>
-<p>But this approach is error prone; we could cause the program to crash if the index length is incorrect. It's also slow, because the compiler adds runtime code to perform the conditional check on every element on every iteration through the loop.</p>
+<p>But this approach is error prone; we could cause the program to crash if the index length is incorrect. It’s also slow, because the compiler adds runtime code to perform the conditional check on every element on every iteration through the loop.</p>
 <p>As a more concise alternative, you can use a <code>for</code> loop and execute some code for each item in a collection. A <code>for</code> loop looks like the following:</p>
 <pre><code>fn main() {
     let a = [10, 20, 30, 40, 50]
@@ -550,7 +557,8 @@ the value is: 50
 </code></pre>
 <p>When we run this code, we’ll see the same output as in the previous example. More importantly, the code is faster and less prone to errors.</p>
 <p>For example, in the code in the previous example, if you changed the definition of the a array to have four elements but forgot to update the condition to <code>while index &lt; 4</code>, the program would crash. Using the <code>for</code> loop, you wouldn’t need to remember to change any other code if you changed the number of values in the array.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="structured-data"><a class="header" href="#structured-data">Structured data</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="structured-data"><a class="header" href="#structured-data">Structured data</a></h1>
 <p>When working with data, you often find yourself needing to group information together. This is where a <code>struct</code> could come into play. A <em>struct</em>, or <em>structure</em>, is a custom data type that lets you name and package together multiple related values that make up a meaningful group. If you’re familiar with an object-oriented language, a struct is like an object’s data attributes.</p>
 <h2 id="defining-structs"><a class="header" href="#defining-structs">Defining structs</a></h2>
 <p>To define a struct, we enter the keyword <code>struct</code> and name the entire struct. A struct’s name should describe the significance of the pieces of data being grouped together. Then, inside curly brackets, we define the names and types of the pieces of data, which we call fields. The following example shows a struct that stores information about a user account.</p>
@@ -576,7 +584,7 @@ struct User {
 }
 </code></pre>
 <h2 id="instantiating-structs"><a class="header" href="#instantiating-structs">Instantiating structs</a></h2>
-<p>To use a struct after we’ve defined it, we create an <em>instance</em> of that struct by specifying concrete values for each of the fields. We create an instance by stating the name of the struct and then add curly brackets containing <code>key: value</code> pairs, where the keys are the names of the fields and the values are the data we want to store in those fields. We don’t have to specify the fields in the same order in which we declared them in the struct. In other words, the struct definition is like a general template for the type, and instances fill in that template with particular data to create values of the type. Let's use our <code>User</code> struct from a previous example and create an user called <code>alice</code>.</p>
+<p>To use a struct after we’ve defined it, we create an <em>instance</em> of that struct by specifying concrete values for each of the fields. We create an instance by stating the name of the struct and then add curly brackets containing <code>key: value</code> pairs, where the keys are the names of the fields and the values are the data we want to store in those fields. We don’t have to specify the fields in the same order in which we declared them in the struct. In other words, the struct definition is like a general template for the type, and instances fill in that template with particular data to create values of the type. Let’s use our <code>User</code> struct from a previous example and create an user called <code>alice</code>.</p>
 <pre><code>struct User {
     username: string
     email: string
@@ -591,7 +599,7 @@ let alice = new User {
     active: true
 }
 </code></pre>
-<p>To get a specific value from a struct, we can use dot notation. If we wanted just alice's email address, we could use <code>alice.email</code> wherever we wanted to use this value. Fields of structs can also be reassigned using the dot notation:</p>
+<p>To get a specific value from a struct, we can use dot notation. If we wanted just alice’s email address, we could use <code>alice.email</code> wherever we wanted to use this value. Fields of structs can also be reassigned using the dot notation:</p>
 <pre><code>let alice = new User {
     email: "alice@example.com"
     username: "alice"
@@ -602,7 +610,7 @@ let alice = new User {
 alice.sign_in_count = 2
 </code></pre>
 <h2 id="struct-methods"><a class="header" href="#struct-methods">Struct methods</a></h2>
-<p>Antimony supports the concept of methods. A method can be described as a function on a struct. Let's take a look at a struct implementing a method.</p>
+<p>Antimony supports the concept of methods. A method can be described as a function on a struct. Let’s take a look at a struct implementing a method.</p>
 <pre><code>struct User {
     first_name: string
     last_name: string
@@ -625,10 +633,11 @@ println(alice.full_name())
 Jon Doe
 </code></pre>
 <p>Methods behave just like functions. They can return a value and take parameters. The only difference is the <code>self</code> keyword, which allows you to execute it on a specific instance of a struct.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="modules-and-imports"><a class="header" href="#modules-and-imports">Modules and Imports</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="modules-and-imports"><a class="header" href="#modules-and-imports">Modules and Imports</a></h1>
 <p>Projects naturally grow over time, and digging through 10.000 lines of code in a single file can be cumbersome. By grouping related functionality and separating code with distinct features, you’ll clarify where to find code that implements a particular feature and where to go to change how a feature works.</p>
-<p>The programs we've written so far have been in one file. As a project grows, you can organize code by splitting it into multiple modules with a clear name.</p>
-<p>In Antimony, every file is also a module. Let's take a look at a project structure and identify its modules.</p>
+<p>The programs we’ve written so far have been in one file. As a project grows, you can organize code by splitting it into multiple modules with a clear name.</p>
+<p>In Antimony, every file is also a module. Let’s take a look at a project structure and identify its modules.</p>
 <pre><code>.
 ├── foo
 │   ├── bar.sb
@@ -639,7 +648,7 @@ Jon Doe
 </code></pre>
 <p>As per convention, the entrypoint for this project is the <code>main.sb</code> file in the root directory.</p>
 <p>There is a child-module called <code>some_logic</code> at the same directory-level.</p>
-<p>Below it, there is a directory called <code>foo</code>, containing the submodule <code>bar</code>. To address the <code>bar</code> module from our entrypoint, we'd import the following:</p>
+<p>Below it, there is a directory called <code>foo</code>, containing the submodule <code>bar</code>. To address the <code>bar</code> module from our entrypoint, we’d import the following:</p>
 <pre><code>import "foo/bar"
 </code></pre>
 <blockquote>
@@ -655,8 +664,8 @@ import "foo/baz/module"
 import "foo/baz"
 </code></pre>
 <h2 id="using-imported-modules"><a class="header" href="#using-imported-modules">Using imported modules</a></h2>
-<p>To use code defined in a separate module, we first need to import it. This is usually done at the top of the file, but it technically doesn't make a difference where in the document the import is defined. Once the module is imported, we can use the code inside it, as if it were in the current file.</p>
-<p>Let's say we have a module named <code>math.sb</code> in the same directory as out <code>main.sb</code>, and it defines the function <code>add(x: int, y: int): int</code>. To call it in our <code>main.sb</code>, we'd do the following:</p>
+<p>To use code defined in a separate module, we first need to import it. This is usually done at the top of the file, but it technically doesn’t make a difference where in the document the import is defined. Once the module is imported, we can use the code inside it, as if it were in the current file.</p>
+<p>Let’s say we have a module named <code>math.sb</code> in the same directory as out <code>main.sb</code>, and it defines the function <code>add(x: int, y: int): int</code>. To call it in our <code>main.sb</code>, we’d do the following:</p>
 <pre><code>import "math"
 
 fn main() {
@@ -667,8 +676,11 @@ fn main() {
 <pre><code>$ sb run main.sb
 3
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><p>This chapter includes resources that might be helpful for developers hacking on the Antimony compiler.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="specification"><a class="header" href="#specification">Specification</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="developer-resources"><a href="#developer-resources" class="header">Developer Resources</a></h1>
+<p>This chapter includes resources that might be helpful for developers hacking on the Antimony compiler.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="specification"><a class="header" href="#specification">Specification</a></h1>
 <blockquote>
 <p><strong>Note</strong>: This specification is a work in progress.</p>
 </blockquote>
@@ -811,7 +823,7 @@ optional prefix sets a non-decimal base: <code>0b</code> or <code>0B</code> for 
 decimal zero. In hexadecimal literals, letters <code>a</code> through <code>f</code> and <code>A</code> through
 <code>F</code> represent values <code>10</code> through <code>15</code>.</p>
 <p>For readability, an underscore character <code>_</code> may appear after a base prefix or
-between successive digits; such underscores do not change the literal's value.</p>
+between successive digits; such underscores do not change the literal’s value.</p>
 <pre><code>int_lit        = decimal_lit | binary_lit | octal_lit | hex_lit .
 decimal_lit    = "0" | ( "1" … "9" ) [ [ "_" ] decimal_digits ] .
 binary_lit     = "0" ( "b" | "B" ) [ "_" ] binary_digits .
@@ -847,7 +859,7 @@ _42         // an identifier, not an integer literal
 <h3 id="string-literals"><a class="header" href="#string-literals">String literals</a></h3>
 <p>A string literal represents a string constant obtained from concatenating a
 sequence of characters. String literals are character sequences between double
-quotes, as in "bar". Within the quotes, any character may appear except newline
+quotes, as in “bar”. Within the quotes, any character may appear except newline
 and unescaped double quote.</p>
 <p>If <code>\</code> character appears in the string, the character(s) following it <em>must</em> be
 interpreted specially:</p>
@@ -879,7 +891,8 @@ string_lit = `"` { any | string_escape } `"` .
 "C:\\Users" # Should emit C:\Users
 "日本語"
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="ast-design"><a class="header" href="#ast-design">AST Design</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="ast-design"><a class="header" href="#ast-design">AST Design</a></h1>
 <p>The Antimony compiler uses a sophisticated two-level Abstract Syntax Tree (AST) design to balance language expressiveness with code generation simplicity.</p>
 <h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
 <p>The compiler transforms source code through two distinct AST representations:</p>
@@ -937,7 +950,7 @@ string_lit = `"` { any | string_escape } `"` .
 <p>The transformation from HAST to LAST is handled by the <code>AstTransformer</code> in <code>src/ast/transform.rs</code>. This process performs several key lowering operations:</p>
 <h3 id="match-statement-lowering"><a class="header" href="#match-statement-lowering">Match Statement Lowering</a></h3>
 <p>The most significant transformation is converting match statements into if-else chains:</p>
-<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span>// HAST: High-level match
 match value {
@@ -954,7 +967,7 @@ if value == 1 {
 } else {
     default_action()
 }
-<span class="boring">}</span></code></pre></pre>
+<span class="boring">}</span></code></pre>
 <h3 id="expression-simplification"><a class="header" href="#expression-simplification">Expression Simplification</a></h3>
 <p>Complex expressions are broken down into simpler operations that backends can easily handle.</p>
 <h3 id="structure-flattening"><a class="header" href="#structure-flattening">Structure Flattening</a></h3>
@@ -971,7 +984,7 @@ if value == 1 {
 <p>The low-level AST ensures that code generators remain simple and maintainable:</p>
 <ul>
 <li><strong>Consistent interface</strong> - All backends work with the same simplified constructs</li>
-<li><strong>Easier implementation</strong> - New backends don't need to handle complex language features</li>
+<li><strong>Easier implementation</strong> - New backends don’t need to handle complex language features</li>
 <li><strong>Better optimization</strong> - Target-specific optimizations can focus on simple patterns</li>
 </ul>
 <h3 id="maintainability"><a class="header" href="#maintainability">Maintainability</a></h3>
@@ -1002,23 +1015,31 @@ if value == 1 {
 <li><strong>Multiple lowering strategies</strong> can be implemented for different optimization profiles</li>
 <li><strong>Incremental compilation</strong> can cache transformations at different levels</li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="backends"><a class="header" href="#backends">Backends</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="backends"><a class="header" href="#backends">Backends</a></h1>
 <p>Antimony currently implements a JavaScript backend, but C and QBE backends are in development. WASM, ARM and x86 are planned.</p>
 <p>Backend can be specified when running on building with <code>--target</code> (<code>-t</code>) option, default is <code>js</code>:</p>
 <pre><code class="language-sh">sb -t c build in.sb --out-file out
 </code></pre>
 <h2 id="available-backends"><a class="header" href="#available-backends">Available Backends</a></h2>
-<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Target Language</th><th style="text-align: left">Identifier</th><th style="text-align: left">Stability notice</th></tr></thead><tbody>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: left">Target Language</th><th style="text-align: left">Identifier</th><th style="text-align: left">Stability notice</th></tr>
+</thead>
+<tbody>
 <tr><td style="text-align: left">Node.js</td><td style="text-align: left"><code>js</code></td><td style="text-align: left">mostly stable</td></tr>
 <tr><td style="text-align: left"><a href="https://c9x.me/compile">QBE</a></td><td style="text-align: left"><code>qbe</code></td><td style="text-align: left">work in progess</td></tr>
 <tr><td style="text-align: left">LLVM</td><td style="text-align: left"><code>llvm</code></td><td style="text-align: left">unstable</td></tr>
 <tr><td style="text-align: left">C</td><td style="text-align: left"><code>c</code></td><td style="text-align: left">unstable</td></tr>
-</tbody></table>
+</tbody>
+</table>
 </div>
 <p>LLVM also requires to enable <code>llvm</code> feature when building:</p>
 <pre><code class="language-sh">cargo build --features llvm
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="debugging"><a class="header" href="#debugging">Debugging</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="debugging"><a class="header" href="#debugging">Debugging</a></h1>
 <blockquote>
 <p><strong>NOTE</strong>: Currently, debugging is still nearly impossible in Antimony.</p>
 </blockquote>
@@ -1031,7 +1052,8 @@ target backend:</p>
 <p>Or, if Antimony is installed in your path:</p>
 <pre><code class="language-sh">sb -t js build -o - examples/fib.sb
 </code></pre>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="release-workflow"><a class="header" href="#release-workflow">Release Workflow</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="release-workflow"><a class="header" href="#release-workflow">Release Workflow</a></h1>
 <ol>
 <li>Run prerelease checks: <code>sh contrib/prerelease_check.sh</code></li>
 <li>Update version in <code>Cargo.toml</code></li>
@@ -1059,6 +1081,11 @@ target backend:</p>
 
         </div>
 
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
 
 
@@ -1067,13 +1094,13 @@ target backend:</p>
         </script>
 
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+        <script src="elasticlunr-ef4e11c1.min.js"></script>
+        <script src="mark-09e88c2c.min.js"></script>
+        <script src="searcher-c2a407aa.js"></script>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
+        <script src="clipboard-1626706a.min.js"></script>
+        <script src="highlight-abc7f01d.js"></script>
+        <script src="book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 
