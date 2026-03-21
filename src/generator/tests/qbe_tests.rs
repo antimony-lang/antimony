@@ -950,18 +950,21 @@ mod tests {
         let module = create_module(vec![main_func], vec![counter_struct]);
         let result = QbeGenerator::generate(module).unwrap();
 
-        // The method should be emitted as a standalone function with mangled name
-        // and self (Long) as first parameter
-        assert!(
-            result.contains("$Counter_reset"),
-            "Expected mangled method name $Counter_reset in output:\n{}",
-            result
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function $main() {
+            @start
+                ret
+            }
+            export function $Counter_reset(l %tmp.2) {
+            @start
+                ret
+            }
+        "#,
         );
-        assert!(
-            result.contains("l %tmp."),
-            "Expected Long self parameter in method signature:\n{}",
-            result
-        );
+
+        assert_eq!(normalize_qbe(&result), expected);
     }
 
     #[test]
@@ -1002,18 +1005,29 @@ mod tests {
         let module = create_module(vec![test_func], vec![counter_struct]);
         let result = QbeGenerator::generate(module).unwrap();
 
-        // Method should be emitted, and calling site should use mangled name
-        assert!(
-            result.contains("$Counter_get"),
-            "Expected mangled method $Counter_get in output:\n{}",
-            result
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function w $test() {
+            @start
+                %tmp.3 =l alloc8 4
+                %tmp.4 =w copy 5
+                %tmp.5 =l add %tmp.3, 0
+                storew %tmp.4, %tmp.5
+                %tmp.2 =l copy %tmp.3
+                %tmp.6 =w call $Counter_get(l %tmp.2)
+                ret %tmp.6
+            }
+            export function w $Counter_get(l %tmp.7) {
+            @start
+                %tmp.8 =l add %tmp.7, 0
+                %tmp.9 =w loadw %tmp.8
+                ret %tmp.9
+            }
+        "#,
         );
-        // Call should pass the struct pointer as first Long argument
-        assert!(
-            result.contains("call $Counter_get(l"),
-            "Expected call with Long self arg:\n{}",
-            result
-        );
+
+        assert_eq!(normalize_qbe(&result), expected);
     }
 
     #[test]
@@ -1037,17 +1051,23 @@ mod tests {
         let module = create_module(vec![dummy], vec![point_struct]);
         let result = QbeGenerator::generate(module).unwrap();
 
-        // Method should load x from self pointer
-        assert!(
-            result.contains("$Point_get_x"),
-            "Expected $Point_get_x in output:\n{}",
-            result
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function $main() {
+            @start
+                ret
+            }
+            export function w $Point_get_x(l %tmp.2) {
+            @start
+                %tmp.3 =l add %tmp.2, 0
+                %tmp.4 =w loadw %tmp.3
+                ret %tmp.4
+            }
+        "#,
         );
-        assert!(
-            result.contains("loadw"),
-            "Expected loadw to read int field from self:\n{}",
-            result
-        );
+
+        assert_eq!(normalize_qbe(&result), expected);
     }
 
     #[test]
