@@ -17,15 +17,6 @@ use std::fs;
 use std::io::Error;
 use std::process::Command;
 
-fn qbe_available() -> bool {
-    Command::new("qbe")
-        .arg("-h")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .is_ok()
-}
-
 fn test_directory(dir_in: &str) -> Result<(), Error> {
     let dir_out = format!("{}_out", dir_in);
     let dir = std::env::current_dir().unwrap();
@@ -154,11 +145,6 @@ fn test_examples() -> Result<(), Error> {
 
 #[test]
 fn test_examples_qbe() -> Result<(), Error> {
-    if !qbe_available() {
-        eprintln!("Skipping QBE tests: qbe not found in PATH");
-        return Ok(());
-    }
-
     let dir = std::env::current_dir().unwrap();
     let dir_out = dir.join("examples_out_qbe");
     let _ = fs::create_dir(&dir_out);
@@ -193,11 +179,6 @@ fn test_testcases() -> Result<(), Error> {
 #[test]
 #[ignore] // tests/main.sb uses features not yet supported by the QBE backend
 fn test_testcases_qbe() -> Result<(), Error> {
-    if !qbe_available() {
-        eprintln!("Skipping QBE tests: qbe not found in PATH");
-        return Ok(());
-    }
-
     let dir = std::env::current_dir().unwrap();
     let dir_out = dir.join("tests_out_qbe");
     let _ = fs::create_dir(&dir_out);
