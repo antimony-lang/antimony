@@ -26,6 +26,12 @@ pub fn infer(program: &mut HModule) {
     let table = &program.get_symbol_table();
     for func in &mut program.func {
         let mut var_map: HashMap<String, Type> = HashMap::new();
+        // Seed with parameter types
+        for arg in &func.arguments {
+            if let Some(ty) = &arg.ty {
+                var_map.insert(arg.name.clone(), ty.clone());
+            }
+        }
         infer_statement(&mut func.body, table, &mut var_map);
     }
 }
@@ -124,7 +130,8 @@ fn infer_expression(
             | HBinOp::And
             | HBinOp::Or => Some(Type::Bool),
             _ => infer_expression(lhs, table, var_map)
-                .or_else(|| infer_expression(rhs, table, var_map)),
+                .or_else(|| infer_expression(rhs, table, var_map))
+                .or(Some(Type::Int)),
         },
         _ => None,
     }
@@ -151,6 +158,13 @@ fn infer_array(
 fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
     match table.get(name) {
         Some(t) => t.to_owned(),
-        None => None,
+        None => infer_builtin(name),
+    }
+}
+
+fn infer_builtin(name: &str) -> Option<Type> {
+    match name {
+        "len" => Some(Type::Int),
+        _ => None,
     }
 }

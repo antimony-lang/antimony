@@ -108,25 +108,43 @@ fn find_return_type(stmt: &Statement, var_types: &HashMap<String, Type>) -> Opti
             }
             None
         }
-        Statement::Return(Some(expr)) => infer_expr_return_type(expr, var_types),
+        Statement::Return(Some(expr)) => infer_expr_type(expr, var_types),
         _ => None,
     }
 }
 
-fn infer_expr_return_type(expr: &Expression, var_types: &HashMap<String, Type>) -> Option<Type> {
+fn infer_expr_type(expr: &Expression, var_types: &HashMap<String, Type>) -> Option<Type> {
     match expr {
+        Expression::Int(_) => Some(Type::Int),
         Expression::Str(_) => Some(Type::Str),
+        Expression::Bool(_) => Some(Type::Bool),
         Expression::Variable(name) => var_types.get(name).cloned(),
-        Expression::BinOp {
-            lhs,
-            op: BinOp::Addition | BinOp::AddAssign,
-            ..
-        } => match infer_expr_return_type(lhs, var_types) {
-            Some(Type::Str) => Some(Type::Str),
-            _ => None,
-        },
         Expression::StructInitialization { name, .. } => Some(Type::Struct(name.clone())),
+        Expression::BinOp { lhs, op, .. } => {
+            if matches!(op, BinOp::Addition) && is_string_expr_static(lhs, var_types) {
+                return Some(Type::Str);
+            }
+            match op {
+                BinOp::Equal | BinOp::NotEqual | BinOp::LessThan | BinOp::LessThanOrEqual
+                | BinOp::GreaterThan | BinOp::GreaterThanOrEqual | BinOp::And | BinOp::Or => {
+                    Some(Type::Bool)
+                }
+                _ => Some(Type::Int),
+            }
+        }
+        Expression::FunctionCall { .. } => None,
         _ => None,
+    }
+}
+
+fn is_string_expr_static(expr: &Expression, var_types: &HashMap<String, Type>) -> bool {
+    match expr {
+        Expression::Str(_) => true,
+        Expression::Variable(name) => matches!(var_types.get(name), Some(Type::Str)),
+        Expression::BinOp { lhs, op, .. } => {
+            matches!(op, BinOp::Addition) && is_string_expr_static(lhs, var_types)
+        }
+        _ => false,
     }
 }
 
@@ -389,6 +407,10 @@ impl QbeGenerator {
         self.generate_statement(&mut qfunc, &func.body)?;
 
         // Check if the function properly returns
+        let last_block_empty = qfunc
+            .blocks
+            .last()
+            .is_some_and(|b| b.items.is_empty());
         let returns = qfunc.blocks.last().is_some_and(|b| {
             b.items.last().is_some_and(|item| {
                 matches!(
@@ -398,9 +420,11 @@ impl QbeGenerator {
             })
         });
 
-        // Automatically add return in void functions unless it already returns
         if !returns {
-            if func.ret_type.is_none() {
+            if func.ret_type.is_none() || last_block_empty {
+                // For void functions, add an implicit return.
+                // For typed functions where the last block is empty, all
+                // reachable paths already return — add a dummy ret for QBE.
                 qfunc.add_instr(qbe::Instr::Ret(None));
             } else {
                 return Err(format!(
@@ -461,6 +485,10 @@ impl QbeGenerator {
         qfunc.add_block("start".to_owned());
         self.generate_statement(&mut qfunc, &method.body)?;
 
+        let last_block_empty = qfunc
+            .blocks
+            .last()
+            .is_some_and(|b| b.items.is_empty());
         let returns = qfunc.blocks.last().is_some_and(|b| {
             b.items.last().is_some_and(|item| {
                 matches!(
@@ -471,7 +499,7 @@ impl QbeGenerator {
         });
 
         if !returns {
-            if method.ret_type.is_none() {
+            if method.ret_type.is_none() || last_block_empty {
                 qfunc.add_instr(qbe::Instr::Ret(None));
             } else {
                 return Err(format!(
@@ -544,7 +572,7 @@ impl QbeGenerator {
                     .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
                     .to_owned();
                 let ty = self.get_type(ast_type.clone())?;
-                let tmp = self.new_var(&ty, &variable.name, Some(ast_type))?;
+                let tmp = self.new_var(&ty, &variable.name, Some(ast_type.clone()))?;
 
                 if let Some(expr) = value {
                     let (expr_type, expr_value) = self.generate_expression(func, expr)?;
