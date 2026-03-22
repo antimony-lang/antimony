@@ -1389,6 +1389,58 @@ mod tests {
     }
 
     #[test]
+    fn test_uninitialized_array_declare() {
+        // let arr: int[3]
+        // arr[0] = 42
+        // return arr[0]
+        let decl_arr =
+            create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), None);
+        let assign_stmt = create_assign_stmt(
+            Expression::ArrayAccess {
+                name: "arr".to_string(),
+                index: Box::new(create_int_expr(0)),
+            },
+            create_int_expr(42),
+        );
+        let access_expr = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(0)),
+        };
+        let ret_stmt = create_return_stmt(Some(access_expr));
+        let block = create_block_stmt(vec![decl_arr, assign_stmt, ret_stmt]);
+        let func = create_function("test_uninit_arr", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :array.2 = { l, w 3 }
+            export function w $test_uninit_arr() {
+            @start
+                %tmp.1 =l alloc8 20
+                storel 3, %tmp.1
+                %tmp.3 =w copy 42
+                %tmp.4 =w copy 0
+                %tmp.5 =l extsw %tmp.4
+                %tmp.6 =l mul %tmp.5, 4
+                %tmp.7 =l add %tmp.6, 8
+                %tmp.8 =l add %tmp.1, %tmp.7
+                storew %tmp.3, %tmp.8
+                %tmp.9 =w copy 0
+                %tmp.10 =l extsw %tmp.9
+                %tmp.11 =l mul %tmp.10, 4
+                %tmp.12 =l add %tmp.11, 8
+                %tmp.13 =l add %tmp.1, %tmp.12
+                %tmp.14 =w loadw %tmp.13
+                ret %tmp.14
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
     fn test_for_in_loop() {
         // let arr: int[] = [10, 20, 30]
         // let sum: int = 0
