@@ -1598,4 +1598,238 @@ mod tests {
             "should NOT emit a function call to len"
         );
     }
+
+    #[test]
+    fn test_bool_variable_reassignment() {
+        // let a: bool = true; a = false; return a
+        let decl = create_declare_stmt("a", AstType::Bool, Some(create_bool_expr(true)));
+        let assign = create_assign_stmt(create_var_expr("a"), create_bool_expr(false));
+        let ret = create_return_stmt(Some(create_var_expr("a")));
+        let block = create_block_stmt(vec![decl, assign, ret]);
+        let func = create_function("test_bool_reassign", Some(AstType::Bool), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function w $test_bool_reassign() {
+            @start
+                %tmp.2 =w copy 1
+                %tmp.1 =w copy %tmp.2
+                %tmp.3 =w copy 0
+                %tmp.1 =w copy %tmp.3
+                ret %tmp.1
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_bool_function_parameter() {
+        // fn identity(x: bool): bool { return x }
+        let arg = create_variable("x", AstType::Bool);
+        let ret = create_return_stmt(Some(create_var_expr("x")));
+        let func = create_function_with_args("identity", vec![arg], Some(AstType::Bool), ret);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function w $identity(w %tmp.1) {
+            @start
+                ret %tmp.1
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_struct_bool_field_definition() {
+        // struct Flags { active: bool }
+        // fn main() {}
+        let flags_struct =
+            create_struct_def("Flags", vec![create_variable("active", AstType::Bool)]);
+        let func = create_function("main", None, create_block_stmt(vec![]));
+        let module = create_module(vec![func], vec![flags_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function $main() {
+            @start
+                ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_struct_bool_field_read() {
+        // struct Flags { active: bool }
+        // fn test(): bool { let f: Flags = Flags { active: true }; return f.active }
+        let flags_struct =
+            create_struct_def("Flags", vec![create_variable("active", AstType::Bool)]);
+        let mut fields = std::collections::HashMap::new();
+        fields.insert(
+            "active".to_string(),
+            Box::new(create_bool_expr(true)),
+        );
+        let struct_init = Expression::StructInitialization {
+            name: "Flags".to_string(),
+            fields,
+        };
+        let decl =
+            create_declare_stmt("f", AstType::Struct("Flags".to_string()), Some(struct_init));
+        let field_access = Expression::FieldAccess {
+            expr: Box::new(create_var_expr("f")),
+            field: Box::new(Expression::Variable("active".to_string())),
+        };
+        let ret = create_return_stmt(Some(field_access));
+        let block = create_block_stmt(vec![decl, ret]);
+        let func = create_function("test", Some(AstType::Bool), block);
+        let module = create_module(vec![func], vec![flags_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            export function w $test() {
+            @start
+                %tmp.3 =l alloc8 4
+                %tmp.4 =w copy 1
+                %tmp.5 =l add %tmp.3, 0
+                storew %tmp.4, %tmp.5
+                %tmp.2 =l copy %tmp.3
+                %tmp.6 =l add %tmp.2, 0
+                %tmp.7 =w loadw %tmp.6
+                ret %tmp.7
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_bool_array_element_read() {
+        // fn test_arr_read(): bool {
+        //     let arr: bool[2] = [true, false]
+        //     return arr[0]
+        // }
+        let array_expr = Expression::Array {
+            capacity: 2,
+            elements: vec![create_bool_expr(true), create_bool_expr(false)],
+        };
+        let decl = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Bool), Some(2)),
+            Some(array_expr),
+        );
+        let access = Expression::ArrayAccess {
+            name: "arr".to_string(),
+            index: Box::new(create_int_expr(0)),
+        };
+        let ret = create_return_stmt(Some(access));
+        let block = create_block_stmt(vec![decl, ret]);
+        let func = create_function("test_arr_read", Some(AstType::Bool), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :array.7 = { l, w 2 }
+            export function w $test_arr_read() {
+            @start
+                %tmp.2 =w copy 1
+                %tmp.3 =w copy 0
+                %tmp.4 =l alloc8 16
+                storel 2, %tmp.4
+                %tmp.5 =l add %tmp.4, 8
+                storew %tmp.2, %tmp.5
+                %tmp.6 =l add %tmp.4, 12
+                storew %tmp.3, %tmp.6
+                %tmp.1 =l copy %tmp.4
+                %tmp.8 =w copy 0
+                %tmp.9 =l extsw %tmp.8
+                %tmp.10 =l mul %tmp.9, 4
+                %tmp.11 =l add %tmp.10, 8
+                %tmp.12 =l add %tmp.1, %tmp.11
+                %tmp.13 =w loadw %tmp.12
+                ret %tmp.13
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_for_in_bool_array() {
+        // fn test() {
+        //     let arr: bool[2] = [true, false]
+        //     for x in arr { }
+        // }
+        let arr_expr = Expression::Array {
+            capacity: 2,
+            elements: vec![create_bool_expr(true), create_bool_expr(false)],
+        };
+        let decl_arr = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Bool), Some(2)),
+            Some(arr_expr),
+        );
+        let for_stmt = Statement::For {
+            ident: create_variable("x", AstType::Bool),
+            expr: create_var_expr("arr"),
+            body: Box::new(create_block_stmt(vec![])),
+        };
+        let block = create_block_stmt(vec![decl_arr, for_stmt]);
+        let func = create_function("test", None, block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :array.7 = { l, w 2 }
+            export function $test() {
+            @start
+                %tmp.2 =w copy 1
+                %tmp.3 =w copy 0
+                %tmp.4 =l alloc8 16
+                storel 2, %tmp.4
+                %tmp.5 =l add %tmp.4, 8
+                storew %tmp.2, %tmp.5
+                %tmp.6 =l add %tmp.4, 12
+                storew %tmp.3, %tmp.6
+                %tmp.1 =l copy %tmp.4
+                %tmp.8 =l loadl %tmp.1
+                %tmp.10 =l copy 0
+                %tmp.11 =w copy 0
+            @loop.9.cond
+                %tmp.12 =w csltl %tmp.10, %tmp.8
+                jnz %tmp.12, @loop.9.body, @loop.9.end
+            @loop.9.body
+                %tmp.13 =l mul %tmp.10, 4
+                %tmp.14 =l add %tmp.13, 8
+                %tmp.15 =l add %tmp.1, %tmp.14
+                %tmp.16 =w loadw %tmp.15
+                %tmp.11 =w copy %tmp.16
+                %tmp.17 =l add %tmp.10, 1
+                %tmp.10 =l copy %tmp.17
+                jmp @loop.9.cond
+            @loop.9.end
+                ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
 }
