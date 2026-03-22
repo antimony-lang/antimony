@@ -1253,8 +1253,8 @@ mod tests {
             export function $main() {
             @start
                 %tmp.2 =w copy 5
-                %tmp.4 =l extuw %tmp.2
-                %tmp.3 =w call $print_any(l %tmp.4)
+                %tmp.3 =l extuw %tmp.2
+                call $print_any(l %tmp.3)
                 ret
             }
         "#,
@@ -1289,7 +1289,7 @@ mod tests {
             }
             export function $main() {
             @start
-                %tmp.3 =w call $print_any(l $string.2)
+                call $print_any(l $string.2)
                 ret
             }
             export data $string.2 = { b "hello", b 0 }
