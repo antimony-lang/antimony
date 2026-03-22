@@ -56,15 +56,20 @@ pub struct QbeGenerator {
 type StructMeta = HashMap<String, (qbe::Type<'static>, u64, Option<Type>)>;
 
 /// Infer the return type of a function from its body when no annotation is present.
-/// Scans declarations for typed variables, then looks for a matching return statement.
+/// Scans declarations and parameters for typed variables, then looks for a matching return statement.
 ///
 /// TODO: This logic belongs in `src/parser/infer.rs`, which should populate
 /// `HFunction::ret_type` so all backends get inferred return types for free.
 /// Once that's done, remove these helpers and the `fn_ast_signatures` pre-pass.
-fn infer_fn_return_type(body: &Statement) -> Option<Type> {
+fn infer_fn_return_type(body: &Statement, args: &[Variable]) -> Option<Type> {
     let mut var_types: HashMap<String, Type> = HashMap::new();
+    for arg in args {
+        if let Some(ty) = &arg.ty {
+            var_types.insert(arg.name.clone(), ty.clone());
+        }
+    }
     collect_decl_types(body, &mut var_types);
-    find_return_struct(body, &var_types)
+    find_return_type(body, &var_types)
 }
 
 fn collect_decl_types(stmt: &Statement, out: &mut HashMap<String, Type>) {
@@ -83,25 +88,34 @@ fn collect_decl_types(stmt: &Statement, out: &mut HashMap<String, Type>) {
     }
 }
 
-fn find_return_struct(stmt: &Statement, var_types: &HashMap<String, Type>) -> Option<Type> {
+fn find_return_type(stmt: &Statement, var_types: &HashMap<String, Type>) -> Option<Type> {
     match stmt {
         Statement::Block { statements, .. } => {
             for s in statements {
-                if let Some(ty) = find_return_struct(s, var_types) {
+                if let Some(ty) = find_return_type(s, var_types) {
                     return Some(ty);
                 }
             }
             None
         }
-        Statement::Return(Some(Expression::Variable(name))) => {
-            var_types.get(name).and_then(|ty| match ty {
-                Type::Struct(_) => Some(ty.clone()),
+        Statement::Return(Some(expr)) => infer_expr_return_type(expr, var_types),
+        _ => None,
+    }
+}
+
+fn infer_expr_return_type(expr: &Expression, var_types: &HashMap<String, Type>) -> Option<Type> {
+    match expr {
+        Expression::Str(_) => Some(Type::Str),
+        Expression::Variable(name) => var_types.get(name).cloned(),
+        Expression::BinOp { lhs, op, .. }
+            if matches!(op, BinOp::Addition | BinOp::AddAssign) =>
+        {
+            match infer_expr_return_type(lhs, var_types) {
+                Some(Type::Str) => Some(Type::Str),
                 _ => None,
-            })
+            }
         }
-        Statement::Return(Some(Expression::StructInitialization { name, .. })) => {
-            Some(Type::Struct(name.clone()))
-        }
+        Expression::StructInitialization { name, .. } => Some(Type::Struct(name.clone())),
         _ => None,
     }
 }
@@ -163,7 +177,7 @@ impl Generator for QbeGenerator {
             let ast_ret = func
                 .ret_type
                 .clone()
-                .or_else(|| infer_fn_return_type(&func.body));
+                .or_else(|| infer_fn_return_type(&func.body, &func.arguments));
             let ret_type = match &ast_ret {
                 Some(Type::Struct(_)) => Some(qbe::Type::Long),
                 Some(ty) => Some(generator.get_type(ty.to_owned())?.into_abi()),
@@ -342,7 +356,7 @@ impl QbeGenerator {
         let effective_ret = func
             .ret_type
             .clone()
-            .or_else(|| infer_fn_return_type(&func.body));
+            .or_else(|| infer_fn_return_type(&func.body, &func.arguments));
         let return_ty = match &effective_ret {
             Some(Type::Struct(_)) => Some(qbe::Type::Long),
             Some(ty) => Some(self.get_type(ty.to_owned())?.into_abi()),

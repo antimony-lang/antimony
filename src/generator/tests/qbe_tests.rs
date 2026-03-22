@@ -686,6 +686,24 @@ mod tests {
     }
 
     #[test]
+    fn test_expression_bodied_string_concat() {
+        // Mirrors: fn greet(name: string) = "Hello " + name  (no explicit return type)
+        let arg = create_variable("name", AstType::Str);
+        let concat = create_binop_expr(
+            create_str_expr("Hello "),
+            BinOp::Addition,
+            create_var_expr("name"),
+        );
+        let body = create_block_stmt(vec![create_return_stmt(Some(concat))]);
+        let greet = create_function_with_args("greet", vec![arg], None, body);
+        let module = create_module(vec![greet], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // Function must be declared with return type l (Long/string), not void
+        assert!(result.contains("export function l $greet"));
+    }
+
+    #[test]
     fn test_int_addition_not_str_concat() {
         let decl_a = create_declare_stmt("a", AstType::Int, Some(create_int_expr(1)));
         let decl_b = create_declare_stmt("b", AstType::Int, Some(create_int_expr(2)));
