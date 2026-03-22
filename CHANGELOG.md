@@ -16,6 +16,7 @@
 
 **Fixes**
 
+- QBE: Void function calls no longer assign to a temporary — `call $fn()` is now emitted instead of the invalid `%tmp =w call $fn()` ([#156](https://github.com/antimony-lang/antimony/issues/156))
 - Type inference: seed variable map with function parameter types so expressions referencing parameters can be inferred ([#163](https://github.com/antimony-lang/antimony/issues/163))
 - QBE: Fix array indexing for uninitialized sized arrays — `let foo: int[5]` now allocates memory correctly ([#174](https://github.com/antimony-lang/antimony/pull/174))
 - QBE: Infer for-in loop variable type from array element type — `for x in arr {}` no longer requires an explicit type annotation on `x` ([#168](https://github.com/antimony-lang/antimony/issues/168))

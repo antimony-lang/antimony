@@ -553,21 +553,26 @@ impl QbeGenerator {
         }
 
         let mangled_name = format!("{}_{}", struct_name, method_name);
-        let ret_type = self
+        let is_void = self
             .fn_signatures
             .get(&mangled_name)
-            .cloned()
-            .flatten()
-            .unwrap_or(qbe::Type::Word);
+            .map(|v| v.is_none())
+            .unwrap_or(false);
+        let ret_type_opt = self.fn_signatures.get(&mangled_name).cloned().flatten();
 
-        let tmp = self.new_temporary();
-        func.assign_instr(
-            tmp.clone(),
-            ret_type.clone(),
-            qbe::Instr::Call(mangled_name, call_args, None),
-        );
-
-        Ok((ret_type, tmp))
+        if is_void {
+            func.add_instr(qbe::Instr::Call(mangled_name, call_args, None));
+            Ok((qbe::Type::Word, qbe::Value::Const(0)))
+        } else {
+            let ret_type = ret_type_opt.unwrap_or(qbe::Type::Word);
+            let tmp = self.new_temporary();
+            func.assign_instr(
+                tmp.clone(),
+                ret_type.clone(),
+                qbe::Instr::Call(mangled_name, call_args, None),
+            );
+            Ok((ret_type, tmp))
+        }
     }
 
     /// Generates a statement
@@ -749,8 +754,6 @@ impl QbeGenerator {
                     arg_results.push(result);
                 }
 
-                let tmp = self.new_temporary();
-
                 // Widen arguments if the callee expects a larger type (e.g. Type::Any → Long)
                 let param_types_opt = self.fn_param_types.get(fn_name).cloned();
                 let param_ast_types_opt = self.fn_param_ast_types.get(fn_name).cloned();
@@ -803,21 +806,28 @@ impl QbeGenerator {
                     new_args.push((arg_ty, arg_val));
                 }
 
-                // Look up the return type from the pre-pass signature map
-                let ret_type = self
+                // Look up the return type from the pre-pass signature map.
+                // A map entry of None means the function is void (no return value).
+                let is_void = self
                     .fn_signatures
                     .get(fn_name)
-                    .cloned()
-                    .flatten()
-                    .unwrap_or(qbe::Type::Word);
+                    .map(|v| v.is_none())
+                    .unwrap_or(false);
+                let ret_type_opt = self.fn_signatures.get(fn_name).cloned().flatten();
 
-                func.assign_instr(
-                    tmp.clone(),
-                    ret_type.clone(),
-                    qbe::Instr::Call(fn_name.clone(), new_args, None),
-                );
-
-                Ok((ret_type, tmp))
+                if is_void {
+                    func.add_instr(qbe::Instr::Call(fn_name.clone(), new_args, None));
+                    Ok((qbe::Type::Word, qbe::Value::Const(0)))
+                } else {
+                    let ret_type = ret_type_opt.unwrap_or(qbe::Type::Word);
+                    let tmp = self.new_temporary();
+                    func.assign_instr(
+                        tmp.clone(),
+                        ret_type.clone(),
+                        qbe::Instr::Call(fn_name.clone(), new_args, None),
+                    );
+                    Ok((ret_type, tmp))
+                }
             }
             Expression::Variable(name) => {
                 let (ty, val, _) = self.get_var(name)?;

@@ -1,6 +1,7 @@
 fn functions_main() {
     log_test_stage("Testing functions")
     test_functions_basics()
+    test_void_call()
 }
 
 fn test_functions_basics() {
@@ -11,4 +12,13 @@ fn test_functions_basics() {
 
 fn add_one(x: int): int {
     return x + 1
+}
+
+fn void_helper() {
+    let x = 1
+}
+
+fn test_void_call() {
+    void_helper()
+    assert(1 == 1)
 }
