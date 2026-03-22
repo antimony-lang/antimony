@@ -1829,4 +1829,70 @@ mod tests {
 
         assert_eq!(normalize_qbe(&result), expected);
     }
+
+    #[test]
+    fn test_nested_struct_uses_blit() {
+        let inner_struct = create_struct_def("Inner", vec![create_variable("value", AstType::Int)]);
+        let wrapper_struct = create_struct_def(
+            "Wrapper",
+            vec![create_variable(
+                "inner",
+                AstType::Struct("Inner".to_string()),
+            )],
+        );
+
+        let inner_init = Expression::StructInitialization {
+            name: "Inner".to_string(),
+            fields: std::collections::HashMap::from([(
+                "value".to_string(),
+                Box::new(create_int_expr(42)),
+            )]),
+        };
+        let inner_decl = Statement::Declare {
+            variable: create_variable("i", AstType::Struct("Inner".to_string())),
+            value: Some(inner_init),
+        };
+
+        let wrapper_init = Expression::StructInitialization {
+            name: "Wrapper".to_string(),
+            fields: std::collections::HashMap::from([(
+                "inner".to_string(),
+                Box::new(create_var_expr("i")),
+            )]),
+        };
+        let wrapper_decl = Statement::Declare {
+            variable: create_variable("w", AstType::Struct("Wrapper".to_string())),
+            value: Some(wrapper_init),
+        };
+
+        let func = create_function(
+            "test_nested",
+            None,
+            create_block_stmt(vec![inner_decl, wrapper_decl]),
+        );
+        let module = create_module(vec![func], vec![inner_struct, wrapper_struct]);
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :struct.1 = align 4 { w }
+            type :struct.2 = align 4 { :struct.1 }
+            export function $test_nested() {
+            @start
+                %tmp.4 =l alloc8 4
+                %tmp.5 =w copy 42
+                %tmp.6 =l add %tmp.4, 0
+                storew %tmp.5, %tmp.6
+                %tmp.3 =l copy %tmp.4
+                %tmp.8 =l alloc8 4
+                %tmp.9 =l add %tmp.8, 0
+                blit %tmp.3, %tmp.9, 4
+                %tmp.7 =l copy %tmp.8
+                ret
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
 }

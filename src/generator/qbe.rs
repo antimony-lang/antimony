@@ -1266,16 +1266,7 @@ impl QbeGenerator {
                         qbe::Instr::Add(base.clone(), qbe::Value::Const(offset)),
                     );
                     let sz = self.type_size(&expr_type);
-                    // TODO: avoid memcpy here
-                    func.add_instr(qbe::Instr::Call(
-                        "memcpy".into(),
-                        vec![
-                            (qbe::Type::Long, field_tmp),
-                            (qbe::Type::Long, expr_tmp),
-                            (qbe::Type::Long, qbe::Value::Const(sz)),
-                        ],
-                        None,
-                    ));
+                    func.add_instr(qbe::Instr::Blit(expr_tmp, field_tmp, sz));
                 }
                 _ => {
                     let field_tmp = self.new_temporary();
