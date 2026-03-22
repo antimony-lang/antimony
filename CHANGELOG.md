@@ -13,6 +13,10 @@
 - QBE: Implement array element reads and writes (`arr[i]`, `arr[i] = v`) ([#149](https://github.com/antimony-lang/antimony/pull/149))
 - QBE: Add builtins (`_printf`, `_exit`), stdlib support, and string concatenation for native executables ([#147](https://github.com/antimony-lang/antimony/pull/147))
 - QBE: Support `Type::Any` with argument widening for native executables ([#150](https://github.com/antimony-lang/antimony/pull/150))
+- stdlib: Add `math` module with `min`, `max`, `abs`, `pow`, and `clamp` functions ([#160](https://github.com/antimony-lang/antimony/pull/160))
+- stdlib: Add `string` module with `str_len`, `repeat`, and `to_int` functions ([#160](https://github.com/antimony-lang/antimony/pull/160))
+- stdlib: Extend `array` module with `sum`, `contains`, `min_array`, `max_array`, `first`, and `last` functions ([#160](https://github.com/antimony-lang/antimony/pull/160))
+- stdlib: Add `read_line()` to `io` module for reading a line from stdin ([#160](https://github.com/antimony-lang/antimony/pull/160))
 
 **Fixes**
 
@@ -32,6 +36,7 @@
 - QBE: Clean up temp files after `run_qbe` execution ([#159](https://github.com/antimony-lang/antimony/pull/159))
 - QBE: Fix function return types and struct aggregate types ([#148](https://github.com/antimony-lang/antimony/pull/148))
 - Fixed array access in member variable expressions ([#123](https://github.com/antimony-lang/antimony/pull/123))
+- stdlib: Fix `rev()` bug in `array` module (incorrect loop logic) ([#160](https://github.com/antimony-lang/antimony/pull/160))
 
 **Maintenance**
 
