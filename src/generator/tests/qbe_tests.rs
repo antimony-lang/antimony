@@ -409,9 +409,105 @@ mod tests {
             @cond.3.else
                 %tmp.5 =w copy 20
                 ret %tmp.5
-            @cond.3.end
                 %tmp.6 =w copy 30
                 ret %tmp.6
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_if_else_all_branches_return() {
+        // Regression test for #164: complete if/else if/else chains
+        // where all branches return should not produce a false
+        // "does not return in all code paths" error.
+        let decl_m = create_declare_stmt("m", AstType::Int, Some(create_int_expr(1)));
+        let decl_n = create_declare_stmt("n", AstType::Int, Some(create_int_expr(2)));
+        let if_stmt = create_if_stmt(
+            create_binop_expr(create_var_expr("m"), BinOp::Equal, create_int_expr(0)),
+            create_return_stmt(Some(create_int_expr(1))),
+            Some(create_if_stmt(
+                create_binop_expr(create_var_expr("n"), BinOp::Equal, create_int_expr(0)),
+                create_return_stmt(Some(create_int_expr(2))),
+                Some(create_return_stmt(Some(create_int_expr(3)))),
+            )),
+        );
+        let block = create_block_stmt(vec![decl_m, decl_n, if_stmt]);
+        let func = create_function("test_all_return", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function w $test_all_return() {
+            @start
+                %tmp.2 =w copy 1
+                %tmp.1 =w copy %tmp.2
+                %tmp.4 =w copy 2
+                %tmp.3 =w copy %tmp.4
+                %tmp.5 =w copy 0
+                %tmp.6 =w ceqw %tmp.1, %tmp.5
+                jnz %tmp.6, @cond.7.if, @cond.7.else
+            @cond.7.if
+                %tmp.8 =w copy 1
+                ret %tmp.8
+            @cond.7.else
+                %tmp.9 =w copy 0
+                %tmp.10 =w ceqw %tmp.3, %tmp.9
+                jnz %tmp.10, @cond.11.if, @cond.11.else
+            @cond.11.if
+                %tmp.12 =w copy 2
+                ret %tmp.12
+            @cond.11.else
+                %tmp.13 =w copy 3
+                ret %tmp.13
+            }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_if_else_partial_return_needs_end_block() {
+        // When only the if-branch returns but else does not,
+        // the end block must still be created for fallthrough.
+        let if_stmt = create_if_stmt(
+            create_var_expr("cond"),
+            create_return_stmt(Some(create_int_expr(10))),
+            Some(create_declare_stmt(
+                "x",
+                AstType::Int,
+                Some(create_int_expr(5)),
+            )),
+        );
+        let block = create_block_stmt(vec![
+            create_declare_stmt("cond", AstType::Int, Some(create_int_expr(1))),
+            if_stmt,
+            create_return_stmt(Some(create_int_expr(99))),
+        ]);
+        let func = create_function("test_partial_return", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            export function w $test_partial_return() {
+            @start
+                %tmp.2 =w copy 1
+                %tmp.1 =w copy %tmp.2
+                jnz %tmp.1, @cond.3.if, @cond.3.else
+            @cond.3.if
+                %tmp.4 =w copy 10
+                ret %tmp.4
+            @cond.3.else
+                %tmp.6 =w copy 5
+                %tmp.5 =w copy %tmp.6
+            @cond.3.end
+                %tmp.7 =w copy 99
+                ret %tmp.7
             }
         "#,
         );

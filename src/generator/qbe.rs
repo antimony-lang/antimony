@@ -793,18 +793,24 @@ impl QbeGenerator {
         func.add_block(if_label);
         self.generate_statement(func, if_clause)?;
 
-        if let Some(else_clause) = else_clause {
-            // Jump over to the end to prevent fallthrough into else
-            // clause, unless the last block already jumps
-            if !func.blocks.last().is_some_and(|b| b.jumps()) {
+        let needs_end_block = if let Some(else_clause) = else_clause {
+            let if_falls_through = !func.blocks.last().is_some_and(|b| b.jumps());
+            if if_falls_through {
                 func.add_instr(qbe::Instr::Jmp(end_label.clone()));
             }
 
             func.add_block(else_label);
             self.generate_statement(func, else_clause)?;
-        }
 
-        func.add_block(end_label);
+            let else_falls_through = !func.blocks.last().is_some_and(|b| b.jumps());
+            if_falls_through || else_falls_through
+        } else {
+            true // if-only always needs end block for fallthrough
+        };
+
+        if needs_end_block {
+            func.add_block(end_label);
+        }
 
         Ok(())
     }
