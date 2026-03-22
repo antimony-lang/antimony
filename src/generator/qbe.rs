@@ -125,10 +125,14 @@ fn infer_expr_type(expr: &Expression, var_types: &HashMap<String, Type>) -> Opti
                 return Some(Type::Str);
             }
             match op {
-                BinOp::Equal | BinOp::NotEqual | BinOp::LessThan | BinOp::LessThanOrEqual
-                | BinOp::GreaterThan | BinOp::GreaterThanOrEqual | BinOp::And | BinOp::Or => {
-                    Some(Type::Bool)
-                }
+                BinOp::Equal
+                | BinOp::NotEqual
+                | BinOp::LessThan
+                | BinOp::LessThanOrEqual
+                | BinOp::GreaterThan
+                | BinOp::GreaterThanOrEqual
+                | BinOp::And
+                | BinOp::Or => Some(Type::Bool),
                 _ => Some(Type::Int),
             }
         }
@@ -407,10 +411,7 @@ impl QbeGenerator {
         self.generate_statement(&mut qfunc, &func.body)?;
 
         // Check if the function properly returns
-        let last_block_empty = qfunc
-            .blocks
-            .last()
-            .is_some_and(|b| b.items.is_empty());
+        let last_block_empty = qfunc.blocks.last().is_some_and(|b| b.items.is_empty());
         let returns = qfunc.blocks.last().is_some_and(|b| {
             b.items.last().is_some_and(|item| {
                 matches!(
@@ -485,10 +486,7 @@ impl QbeGenerator {
         qfunc.add_block("start".to_owned());
         self.generate_statement(&mut qfunc, &method.body)?;
 
-        let last_block_empty = qfunc
-            .blocks
-            .last()
-            .is_some_and(|b| b.items.is_empty());
+        let last_block_empty = qfunc.blocks.last().is_some_and(|b| b.items.is_empty());
         let returns = qfunc.blocks.last().is_some_and(|b| {
             b.items.last().is_some_and(|item| {
                 matches!(
