@@ -1,4 +1,4 @@
-use crate::ast::hast::{HExpression, HMatchArm, HModule, HStatement};
+use crate::ast::hast::{HBinOp, HExpression, HMatchArm, HModule, HStatement};
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -103,6 +103,19 @@ fn infer_expression(
                 _ => None,
             }
         }
+        HExpression::Variable(name) => var_map.get(name).cloned(),
+        HExpression::BinOp { lhs, op, rhs } => match op {
+            HBinOp::Equal
+            | HBinOp::NotEqual
+            | HBinOp::LessThan
+            | HBinOp::LessThanOrEqual
+            | HBinOp::GreaterThan
+            | HBinOp::GreaterThanOrEqual
+            | HBinOp::And
+            | HBinOp::Or => Some(Type::Bool),
+            _ => infer_expression(lhs, table, var_map)
+                .or_else(|| infer_expression(rhs, table, var_map)),
+        },
         _ => None,
     }
 }

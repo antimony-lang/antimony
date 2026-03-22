@@ -4,6 +4,7 @@
 
 **Features**
 
+- QBE: Fix type inference for comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`) and boolean (`&&`, `||`) operators ([#167](https://github.com/antimony-lang/antimony/issues/167))
 - QBE: Implement `len()` as a built-in intrinsic that reads the array-length header ([#171](https://github.com/antimony-lang/antimony/pull/171))
 - QBE: Support field access on function call results, e.g. `user_stub().first_name` ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - QBE: Auto-coerce `int` arguments to `string` parameters via `_int_to_str` ([#161](https://github.com/antimony-lang/antimony/pull/161))

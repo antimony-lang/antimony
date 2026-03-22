@@ -151,7 +151,7 @@ fn test_examples_qbe() -> Result<(), Error> {
 
     // Only test examples that the QBE backend currently supports end-to-end.
     // As QBE backend coverage grows, add more examples here.
-    let supported = ["hello_world.sb", "sandbox.sb", "bubblesort.sb"];
+    let supported = ["hello_world.sb", "sandbox.sb", "bubblesort.sb", "leapyear.sb"];
 
     for name in &supported {
         let in_file = dir.join("examples").join(name);
