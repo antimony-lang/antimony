@@ -699,8 +699,18 @@ mod tests {
         let module = create_module(vec![greet], Vec::new());
         let result = QbeGenerator::generate(module).unwrap();
 
-        // Function must be declared with return type l (Long/string), not void
-        assert!(result.contains("export function l $greet"));
+        let expected = normalize_qbe(
+            r#"
+            export function l $greet(l %tmp.1) {
+            @start
+                %tmp.3 =l call $_str_concat(l $string.2, l %tmp.1)
+                ret %tmp.3
+            }
+            export data $string.2 = { b "Hello ", b 0 }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
     }
 
     #[test]
