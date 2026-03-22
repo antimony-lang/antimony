@@ -149,18 +149,16 @@ fn test_examples_qbe() -> Result<(), Error> {
     let dir_out = dir.join("examples_out_qbe");
     let _ = fs::create_dir(&dir_out);
 
-    // Only test examples that the QBE backend currently supports end-to-end.
-    // As QBE backend coverage grows, add more examples here.
-    let supported = [
-        "hello_world.sb",
-        "sandbox.sb",
-        "bubblesort.sb",
-        "leapyear.sb",
-        "loops.sb",
-    ];
+    let examples = std::fs::read_dir(dir.join("examples"))?;
 
-    for name in &supported {
-        let in_file = dir.join("examples").join(name);
+    for ex in examples {
+        let example = ex?;
+        let in_file = dir.join("examples").join(example.file_name());
+
+        // Skip submodule directories
+        if in_file.is_dir() {
+            continue;
+        }
         compile_and_run_qbe(&in_file, &dir_out)?;
     }
     Ok(())
