@@ -20,6 +20,7 @@
 
 **Fixes**
 
+- QBE: Use native `blit` instruction instead of `memcpy` call for aggregate struct field copies ([#157](https://github.com/antimony-lang/antimony/issues/157))
 - QBE: Void function calls no longer assign to a temporary — `call $fn()` is now emitted instead of the invalid `%tmp =w call $fn()` ([#156](https://github.com/antimony-lang/antimony/issues/156))
 - QBE: Fix `Bool` type mapped to `Byte` (`b`) in `get_type()` — booleans now map to `Word` (`w`), consistent with how bool literals and comparisons are already emitted ([#155](https://github.com/antimony-lang/antimony/issues/155))
 - Type inference: seed variable map with function parameter types so expressions referencing parameters can be inferred ([#163](https://github.com/antimony-lang/antimony/issues/163))
