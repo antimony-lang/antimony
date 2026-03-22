@@ -1677,10 +1677,7 @@ mod tests {
         let flags_struct =
             create_struct_def("Flags", vec![create_variable("active", AstType::Bool)]);
         let mut fields = std::collections::HashMap::new();
-        fields.insert(
-            "active".to_string(),
-            Box::new(create_bool_expr(true)),
-        );
+        fields.insert("active".to_string(), Box::new(create_bool_expr(true)));
         let struct_init = Expression::StructInitialization {
             name: "Flags".to_string(),
             fields,
