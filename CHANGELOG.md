@@ -17,6 +17,7 @@
 **Fixes**
 
 - QBE: Fix array indexing for uninitialized sized arrays — `let foo: int[5]` now allocates memory correctly ([#174](https://github.com/antimony-lang/antimony/pull/174))
+- QBE: Infer for-in loop variable type from array element type — `for x in arr {}` no longer requires an explicit type annotation on `x` ([#168](https://github.com/antimony-lang/antimony/issues/168))
 - QBE: Fix expression-bodied functions with string concat (e.g. `fn greet(name: string) = "Hello " + name`) producing invalid SSA and being emitted as void functions ([#172](https://github.com/antimony-lang/antimony/pull/172))
 - QBE: Fix false "does not return in all code paths" error for complete `if/else if/else` chains where all branches return ([#170](https://github.com/antimony-lang/antimony/pull/170))
 - QBE: Fix type inference for `len()` and other cross-module function calls — inference now runs after module merge so the full symbol table is visible ([#171](https://github.com/antimony-lang/antimony/pull/171))
