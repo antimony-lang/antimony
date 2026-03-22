@@ -1832,13 +1832,13 @@ mod tests {
 
     #[test]
     fn test_nested_struct_uses_blit() {
-        let inner_struct = create_struct_def(
-            "Inner",
-            vec![create_variable("value", AstType::Int)],
-        );
+        let inner_struct = create_struct_def("Inner", vec![create_variable("value", AstType::Int)]);
         let wrapper_struct = create_struct_def(
             "Wrapper",
-            vec![create_variable("inner", AstType::Struct("Inner".to_string()))],
+            vec![create_variable(
+                "inner",
+                AstType::Struct("Inner".to_string()),
+            )],
         );
 
         let inner_init = Expression::StructInitialization {
