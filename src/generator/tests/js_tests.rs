@@ -9,494 +9,681 @@ mod tests {
     use crate::generator::Generator;
     use std::collections::HashMap;
 
-    fn create_function(name: &str, ret_type: Option<AstType>, body: Statement) -> Function {
-        Function {
-            name: name.to_string(),
-            arguments: Vec::new(),
-            ret_type,
-            body,
+    fn builtins() -> String {
+        let raw = crate::Builtins::get("builtin.js")
+            .expect("Could not locate builtin.js")
+            .data;
+        std::str::from_utf8(&raw)
+            .expect("builtin.js is not valid UTF-8")
+            .to_string()
+    }
+
+    /// Strip the fixed builtins preamble so tests only assert on generated code.
+    fn user_code(output: &str) -> &str {
+        let prefix = builtins();
+        output
+            .strip_prefix(prefix.as_str())
+            .expect("output did not start with builtins preamble")
+    }
+
+    fn block(stmts: Vec<Statement>) -> Statement {
+        Statement::Block {
+            statements: stmts,
+            scope: vec![],
         }
     }
 
-    fn create_function_with_args(
-        name: &str,
-        arguments: Vec<Variable>,
-        ret_type: Option<AstType>,
-        body: Statement,
-    ) -> Function {
-        Function {
-            name: name.to_string(),
-            arguments,
-            ret_type,
-            body,
-        }
-    }
-
-    fn create_variable(name: &str, typ: AstType) -> Variable {
+    fn var(name: &str, ty: AstType) -> Variable {
         Variable {
             name: name.to_string(),
-            ty: Some(typ),
+            ty: Some(ty),
         }
     }
 
-    fn create_block(statements: Vec<Statement>) -> Statement {
-        Statement::Block {
-            statements,
-            scope: Vec::new(),
-        }
-    }
-
-    fn create_module(funcs: Vec<Function>, structs: Vec<StructDef>) -> Module {
+    fn module(funcs: Vec<Function>, structs: Vec<StructDef>) -> Module {
         Module {
             func: funcs,
             structs,
-            globals: Vec::new(),
+            globals: vec![],
+        }
+    }
+
+    fn func(name: &str, args: Vec<Variable>, ret: Option<AstType>, body: Statement) -> Function {
+        Function {
+            name: name.to_string(),
+            arguments: args,
+            ret_type: ret,
+            body,
         }
     }
 
     // -------------------------------------------------------------------------
-    // Function definition tests
+    // Function definitions
     // -------------------------------------------------------------------------
 
     #[test]
-    fn test_empty_void_function() {
-        let func = create_function("main", None, create_block(vec![]));
-        let module = create_module(vec![func], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("function main()"));
-        assert!(result.contains("main();"));
+    fn test_empty_main() {
+        let m = module(vec![func("main", vec![], None, block(vec![]))], vec![]);
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(user_code(&result), "function main(){\n}\n\nmain();");
     }
 
     #[test]
-    fn test_function_with_return() {
-        let ret = Statement::Return(Some(Expression::Int(42)));
-        let func = create_function("answer", Some(AstType::Int), create_block(vec![ret]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("function answer()"));
-        assert!(result.contains("return 42"));
+    fn test_function_return_int() {
+        let body = block(vec![Statement::Return(Some(Expression::Int(42)))]);
+        let m = module(
+            vec![
+                func("answer", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function answer(){\nreturn 42;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
     fn test_function_with_arguments() {
-        let arg_a = create_variable("a", AstType::Int);
-        let arg_b = create_variable("b", AstType::Int);
-        let ret = Statement::Return(Some(Expression::BinOp {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
             lhs: Box::new(Expression::Variable("a".to_string())),
             op: BinOp::Addition,
             rhs: Box::new(Expression::Variable("b".to_string())),
-        }));
-        let func = create_function_with_args(
-            "add",
-            vec![arg_a, arg_b],
-            Some(AstType::Int),
-            create_block(vec![ret]),
+        }))]);
+        let m = module(
+            vec![
+                func(
+                    "add",
+                    vec![var("a", AstType::Int), var("b", AstType::Int)],
+                    Some(AstType::Int),
+                    body,
+                ),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
         );
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("function add(a, b)"));
-        assert!(result.contains("return a + b"));
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function add(a, b){\nreturn a + b;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     // -------------------------------------------------------------------------
-    // Arithmetic / binary-op tests
+    // Arithmetic operations
     // -------------------------------------------------------------------------
 
     #[test]
-    fn test_arithmetic_operations() {
-        let cases = vec![
-            (BinOp::Addition, "+"),
-            (BinOp::Subtraction, "-"),
-            (BinOp::Multiplication, "*"),
-            (BinOp::Division, "/"),
-            (BinOp::Modulus, "%"),
-        ];
-
-        for (op, sym) in cases {
-            let expr = Expression::BinOp {
-                lhs: Box::new(Expression::Int(10)),
-                op,
-                rhs: Box::new(Expression::Int(5)),
-            };
-            let ret = Statement::Return(Some(expr));
-            let func = create_function("calc", Some(AstType::Int), create_block(vec![ret]));
-            let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-            let result = JsGenerator::generate(module).unwrap();
-
-            let expected = format!("10 {} 5", sym);
-            assert!(
-                result.contains(&expected),
-                "Expected '{}' in output for op {:?}, got:\n{}",
-                expected,
-                sym,
-                result
-            );
-        }
+    fn test_arithmetic_addition() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Int(3)),
+            op: BinOp::Addition,
+            rhs: Box::new(Expression::Int(4)),
+        }))]);
+        let m = module(
+            vec![
+                func("calc", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function calc(){\nreturn 3 + 4;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
-    fn test_comparison_operations() {
-        let cases = vec![
-            (BinOp::Equal, "==="),
-            (BinOp::NotEqual, "!=="),
-            (BinOp::LessThan, "<"),
-            (BinOp::LessThanOrEqual, "<="),
-            (BinOp::GreaterThan, ">"),
-            (BinOp::GreaterThanOrEqual, ">="),
-        ];
-
-        for (op, sym) in cases {
-            let expr = Expression::BinOp {
-                lhs: Box::new(Expression::Variable("a".to_string())),
-                op,
-                rhs: Box::new(Expression::Variable("b".to_string())),
-            };
-            let ret = Statement::Return(Some(expr));
-            let a = create_variable("a", AstType::Int);
-            let b = create_variable("b", AstType::Int);
-            let func = create_function_with_args(
-                "cmp",
-                vec![a, b],
-                Some(AstType::Bool),
-                create_block(vec![ret]),
-            );
-            let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-            let result = JsGenerator::generate(module).unwrap();
-
-            let expected = format!("a {} b", sym);
-            assert!(
-                result.contains(&expected),
-                "Expected '{}' in output, got:\n{}",
-                expected,
-                result
-            );
-        }
+    fn test_arithmetic_subtraction() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Int(10)),
+            op: BinOp::Subtraction,
+            rhs: Box::new(Expression::Int(3)),
+        }))]);
+        let m = module(
+            vec![
+                func("calc", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function calc(){\nreturn 10 - 3;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
-    fn test_logical_operations() {
-        let cases = vec![(BinOp::And, "&&"), (BinOp::Or, "||")];
+    fn test_arithmetic_multiplication() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Int(4)),
+            op: BinOp::Multiplication,
+            rhs: Box::new(Expression::Int(5)),
+        }))]);
+        let m = module(
+            vec![
+                func("calc", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function calc(){\nreturn 4 * 5;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
 
-        for (op, sym) in cases {
-            let expr = Expression::BinOp {
-                lhs: Box::new(Expression::Bool(true)),
-                op,
-                rhs: Box::new(Expression::Bool(false)),
-            };
-            let ret = Statement::Return(Some(expr));
-            let func = create_function("logic", Some(AstType::Bool), create_block(vec![ret]));
-            let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-            let result = JsGenerator::generate(module).unwrap();
+    #[test]
+    fn test_arithmetic_division() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Int(8)),
+            op: BinOp::Division,
+            rhs: Box::new(Expression::Int(2)),
+        }))]);
+        let m = module(
+            vec![
+                func("calc", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function calc(){\nreturn 8 / 2;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
 
-            let expected = format!("true {} false", sym);
-            assert!(
-                result.contains(&expected),
-                "Expected '{}' in output, got:\n{}",
-                expected,
-                result
-            );
-        }
+    #[test]
+    fn test_arithmetic_modulus() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Int(9)),
+            op: BinOp::Modulus,
+            rhs: Box::new(Expression::Int(4)),
+        }))]);
+        let m = module(
+            vec![
+                func("calc", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function calc(){\nreturn 9 % 4;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     // -------------------------------------------------------------------------
-    // Variable declaration / assignment
+    // Comparison operations
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_comparison_equal() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Variable("a".to_string())),
+            op: BinOp::Equal,
+            rhs: Box::new(Expression::Variable("b".to_string())),
+        }))]);
+        let m = module(
+            vec![
+                func(
+                    "cmp",
+                    vec![var("a", AstType::Int), var("b", AstType::Int)],
+                    Some(AstType::Bool),
+                    body,
+                ),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function cmp(a, b){\nreturn a === b;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    #[test]
+    fn test_comparison_not_equal() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Variable("a".to_string())),
+            op: BinOp::NotEqual,
+            rhs: Box::new(Expression::Variable("b".to_string())),
+        }))]);
+        let m = module(
+            vec![
+                func(
+                    "cmp",
+                    vec![var("a", AstType::Int), var("b", AstType::Int)],
+                    Some(AstType::Bool),
+                    body,
+                ),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function cmp(a, b){\nreturn a !== b;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    #[test]
+    fn test_comparison_less_than() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Variable("a".to_string())),
+            op: BinOp::LessThan,
+            rhs: Box::new(Expression::Variable("b".to_string())),
+        }))]);
+        let m = module(
+            vec![
+                func(
+                    "cmp",
+                    vec![var("a", AstType::Int), var("b", AstType::Int)],
+                    Some(AstType::Bool),
+                    body,
+                ),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function cmp(a, b){\nreturn a < b;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    #[test]
+    fn test_comparison_greater_than() {
+        let body = block(vec![Statement::Return(Some(Expression::BinOp {
+            lhs: Box::new(Expression::Variable("a".to_string())),
+            op: BinOp::GreaterThan,
+            rhs: Box::new(Expression::Variable("b".to_string())),
+        }))]);
+        let m = module(
+            vec![
+                func(
+                    "cmp",
+                    vec![var("a", AstType::Int), var("b", AstType::Int)],
+                    Some(AstType::Bool),
+                    body,
+                ),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function cmp(a, b){\nreturn a > b;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // Variable declaration and assignment
     // -------------------------------------------------------------------------
 
     #[test]
     fn test_variable_declaration_with_value() {
-        let decl = Statement::Declare {
-            variable: create_variable("x", AstType::Int),
-            value: Some(Expression::Int(7)),
-        };
-        let ret = Statement::Return(Some(Expression::Variable("x".to_string())));
-        let func = create_function("get_x", Some(AstType::Int), create_block(vec![decl, ret]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("var x = 7"));
-        assert!(result.contains("return x"));
+        let body = block(vec![
+            Statement::Declare {
+                variable: var("x", AstType::Int),
+                value: Some(Expression::Int(7)),
+            },
+            Statement::Return(Some(Expression::Variable("x".to_string()))),
+        ]);
+        let m = module(
+            vec![
+                func("get_x", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function get_x(){\nvar x = 7;\nreturn x;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
     fn test_variable_declaration_no_value() {
-        let decl = Statement::Declare {
-            variable: create_variable("x", AstType::Int),
+        let body = block(vec![Statement::Declare {
+            variable: var("x", AstType::Int),
             value: None,
-        };
-        let func = create_function("decl_only", None, create_block(vec![decl]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
+        }]);
+        let m = module(
+            vec![
+                func("decl_only", vec![], None, body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function decl_only(){\nvar x;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
 
-        assert!(result.contains("var x"));
+    #[test]
+    fn test_uninitialized_array_becomes_empty_array() {
+        let body = block(vec![Statement::Declare {
+            variable: var("buf", AstType::Array(Box::new(AstType::Int), None)),
+            value: None,
+        }]);
+        let m = module(
+            vec![
+                func("f", vec![], None, body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function f(){\nvar buf = [];\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
     fn test_variable_assignment() {
-        let decl = Statement::Declare {
-            variable: create_variable("x", AstType::Int),
-            value: Some(Expression::Int(1)),
-        };
-        let assign = Statement::Assign {
-            lhs: Box::new(Expression::Variable("x".to_string())),
-            rhs: Box::new(Expression::Int(99)),
-        };
-        let func = create_function("reassign", None, create_block(vec![decl, assign]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("var x = 1"));
-        assert!(result.contains("x = 99"));
-    }
-
-    // -------------------------------------------------------------------------
-    // Conditional tests
-    // -------------------------------------------------------------------------
-
-    #[test]
-    fn test_if_statement() {
-        let if_body = create_block(vec![Statement::Return(Some(Expression::Int(1)))]);
-        let if_stmt = Statement::If {
-            condition: Expression::Bool(true),
-            body: Box::new(if_body),
-            else_branch: None,
-        };
-        let func = create_function("branching", Some(AstType::Int), create_block(vec![if_stmt]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("if (true)"));
-        assert!(result.contains("return 1"));
-    }
-
-    #[test]
-    fn test_if_else_statement() {
-        let if_body = create_block(vec![Statement::Return(Some(Expression::Int(1)))]);
-        let else_body = create_block(vec![Statement::Return(Some(Expression::Int(0)))]);
-        let if_stmt = Statement::If {
-            condition: Expression::Variable("flag".to_string()),
-            body: Box::new(if_body),
-            else_branch: Some(Box::new(else_body)),
-        };
-        let flag = create_variable("flag", AstType::Bool);
-        let func = create_function_with_args(
-            "branch_else",
-            vec![flag],
-            Some(AstType::Int),
-            create_block(vec![if_stmt]),
+        let body = block(vec![
+            Statement::Declare {
+                variable: var("x", AstType::Int),
+                value: Some(Expression::Int(1)),
+            },
+            Statement::Assign {
+                lhs: Box::new(Expression::Variable("x".to_string())),
+                rhs: Box::new(Expression::Int(99)),
+            },
+        ]);
+        let m = module(
+            vec![
+                func("reassign", vec![], None, body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
         );
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("if (flag)"));
-        assert!(result.contains("else"));
-        assert!(result.contains("return 0"));
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function reassign(){\nvar x = 1;\nx = 99;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     // -------------------------------------------------------------------------
-    // Loop tests
+    // Conditionals
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_if_no_else() {
+        let body = block(vec![Statement::If {
+            condition: Expression::Bool(true),
+            body: Box::new(block(vec![Statement::Return(Some(Expression::Int(1)))])),
+            else_branch: None,
+        }]);
+        let m = module(
+            vec![
+                func("branching", vec![], Some(AstType::Int), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function branching(){\nif (true){\nreturn 1;\n};\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    #[test]
+    fn test_if_with_else() {
+        let body = block(vec![Statement::If {
+            condition: Expression::Variable("flag".to_string()),
+            body: Box::new(block(vec![Statement::Return(Some(Expression::Int(1)))])),
+            else_branch: Some(Box::new(block(vec![Statement::Return(Some(
+                Expression::Int(0),
+            ))]))),
+        }]);
+        let m = module(
+            vec![
+                func(
+                    "branch_else",
+                    vec![var("flag", AstType::Bool)],
+                    Some(AstType::Int),
+                    body,
+                ),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function branch_else(flag){\nif (flag){\nreturn 1;\n}else {\nreturn 0;\n}\n;\n;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // Loops
     // -------------------------------------------------------------------------
 
     #[test]
     fn test_while_loop() {
-        let body = create_block(vec![Statement::Break]);
-        let while_stmt = Statement::While {
+        let body = block(vec![Statement::While {
             condition: Expression::Bool(true),
-            body: Box::new(body),
-        };
-        let func = create_function("loop_fn", None, create_block(vec![while_stmt]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("while (true)"));
-        assert!(result.contains("break"));
+            body: Box::new(block(vec![Statement::Break])),
+        }]);
+        let m = module(
+            vec![
+                func("loop_fn", vec![], None, body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function loop_fn(){\nwhile (true) {\nbreak;\n;\n}\n;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
     fn test_for_loop() {
-        let items_var = create_variable("item", AstType::Int);
-        let array_expr = Expression::Array {
-            capacity: 3,
-            elements: vec![Expression::Int(1), Expression::Int(2), Expression::Int(3)],
-        };
-        let body = create_block(vec![Statement::Continue]);
-        let for_stmt = Statement::For {
-            ident: items_var,
-            expr: array_expr,
-            body: Box::new(body),
-        };
-        let func = create_function("for_fn", None, create_block(vec![for_stmt]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("for ("));
-        assert!(result.contains("iter_item"));
-        assert!(result.contains("continue"));
+        let body = block(vec![Statement::For {
+            ident: var("item", AstType::Int),
+            expr: Expression::Array {
+                capacity: 3,
+                elements: vec![Expression::Int(1), Expression::Int(2), Expression::Int(3)],
+            },
+            body: Box::new(block(vec![])),
+        }]);
+        let m = module(
+            vec![
+                func("for_fn", vec![], None, body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function for_fn(){\nvar loop_orig_item = [1, 2, 3];\nfor (let iter_item = 0; iter_item < loop_orig_item.length; iter_item++){\nlet item = loop_orig_item[iter_item];\n}\n;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     // -------------------------------------------------------------------------
-    // Array tests
+    // Arrays
     // -------------------------------------------------------------------------
 
     #[test]
     fn test_array_literal() {
-        let arr = Expression::Array {
-            capacity: 3,
-            elements: vec![Expression::Int(1), Expression::Int(2), Expression::Int(3)],
-        };
-        let decl = Statement::Declare {
-            variable: create_variable("nums", AstType::Array(Box::new(AstType::Int), None)),
-            value: Some(arr),
-        };
-        let func = create_function("arr_fn", None, create_block(vec![decl]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("var nums = [1, 2, 3]"));
+        let body = block(vec![Statement::Declare {
+            variable: var("nums", AstType::Array(Box::new(AstType::Int), None)),
+            value: Some(Expression::Array {
+                capacity: 3,
+                elements: vec![Expression::Int(1), Expression::Int(2), Expression::Int(3)],
+            }),
+        }]);
+        let m = module(
+            vec![
+                func("arr_fn", vec![], None, body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function arr_fn(){\nvar nums = [1, 2, 3];\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
     fn test_array_access() {
-        let access = Expression::ArrayAccess {
+        let body = block(vec![Statement::Return(Some(Expression::ArrayAccess {
             name: "arr".to_string(),
             index: Box::new(Expression::Int(0)),
-        };
-        let ret = Statement::Return(Some(access));
-        let arr_var = create_variable("arr", AstType::Array(Box::new(AstType::Int), None));
-        let func = create_function_with_args(
-            "first",
-            vec![arr_var],
-            Some(AstType::Int),
-            create_block(vec![ret]),
+        }))]);
+        let m = module(
+            vec![
+                func(
+                    "first",
+                    vec![var("arr", AstType::Array(Box::new(AstType::Int), None))],
+                    Some(AstType::Int),
+                    body,
+                ),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
         );
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("arr[0]"));
-    }
-
-    #[test]
-    fn test_uninitialized_array_declaration() {
-        let decl = Statement::Declare {
-            variable: create_variable("buf", AstType::Array(Box::new(AstType::Int), None)),
-            value: None,
-        };
-        let func = create_function("buf_fn", None, create_block(vec![decl]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        // Uninitialized arrays should be initialized to [] to avoid runtime errors
-        assert!(result.contains("var buf = []"));
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function first(arr){\nreturn arr[0];\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     // -------------------------------------------------------------------------
-    // Struct tests
+    // Structs
     // -------------------------------------------------------------------------
 
     #[test]
     fn test_struct_definition() {
         let struct_def = StructDef {
             name: "Point".to_string(),
-            fields: vec![
-                create_variable("x", AstType::Int),
-                create_variable("y", AstType::Int),
-            ],
-            methods: Vec::new(),
+            fields: vec![var("x", AstType::Int), var("y", AstType::Int)],
+            methods: vec![],
         };
-        let func = create_function("main", None, create_block(vec![]));
-        let module = create_module(vec![func], vec![struct_def]);
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("function Point(args)"));
-        assert!(result.contains("this.x = args.x"));
-        assert!(result.contains("this.y = args.y"));
+        let m = module(vec![func("main", vec![], None, block(vec![]))], vec![struct_def]);
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function Point(args) {\nthis.x = args.x;\nthis.y = args.y;\n}\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     #[test]
     fn test_struct_initialization() {
         let mut fields = HashMap::new();
         fields.insert("x".to_string(), Box::new(Expression::Int(3)));
-        fields.insert("y".to_string(), Box::new(Expression::Int(4)));
-
-        let init = Expression::StructInitialization {
-            name: "Point".to_string(),
-            fields,
-        };
-        let decl = Statement::Declare {
-            variable: create_variable("p", AstType::Struct("Point".to_string())),
-            value: Some(init),
-        };
-        let func = create_function("make_point", None, create_block(vec![decl]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("new Point({"));
+        let body = block(vec![Statement::Declare {
+            variable: var("p", AstType::Struct("Point".to_string())),
+            value: Some(Expression::StructInitialization {
+                name: "Point".to_string(),
+                fields,
+            }),
+        }]);
+        let m = module(
+            vec![
+                func("make_point", vec![], None, body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function make_point(){\nvar p = new Point({x: 3,});\n}\n\nfunction main(){\n}\n\nmain();"
+        );
     }
 
     // -------------------------------------------------------------------------
-    // Function call test
+    // String and boolean literals
     // -------------------------------------------------------------------------
 
     #[test]
-    fn test_function_call() {
-        let call = Expression::FunctionCall {
+    fn test_string_return() {
+        let body = block(vec![Statement::Return(Some(Expression::Str(
+            "hello".to_string(),
+        )))]);
+        let m = module(
+            vec![
+                func("greet", vec![], Some(AstType::Str), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function greet(){\nreturn \"hello\";\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    #[test]
+    fn test_boolean_return() {
+        let body = block(vec![Statement::Return(Some(Expression::Bool(true)))]);
+        let m = module(
+            vec![
+                func("get_true", vec![], Some(AstType::Bool), body),
+                func("main", vec![], None, block(vec![])),
+            ],
+            vec![],
+        );
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function get_true(){\nreturn true;\n}\n\nfunction main(){\n}\n\nmain();"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // Function call as expression
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_function_call_statement() {
+        let body = block(vec![Statement::Exp(Expression::FunctionCall {
             fn_name: "print".to_string(),
-            args: vec![Expression::Str("hello".to_string())],
-        };
-        let stmt = Statement::Exp(call);
-        let func = create_function("main", None, create_block(vec![stmt]));
-        let module = create_module(vec![func], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("print("));
-        assert!(result.contains("\"hello\""));
+            args: vec![Expression::Str("hi".to_string())],
+        })]);
+        let m = module(vec![func("main", vec![], None, body)], vec![]);
+        let result = JsGenerator::generate(m).unwrap();
+        assert_eq!(
+            user_code(&result),
+            "function main(){\nprint(\"hi\");\n}\n\nmain();"
+        );
     }
 
     // -------------------------------------------------------------------------
-    // String literal test
+    // main(); is always the final token
     // -------------------------------------------------------------------------
 
     #[test]
-    fn test_string_literal() {
-        let ret = Statement::Return(Some(Expression::Str("world".to_string())));
-        let func = create_function("greet", Some(AstType::Str), create_block(vec![ret]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
-        assert!(result.contains("\"world\""));
-    }
-
-    // -------------------------------------------------------------------------
-    // Boolean literal test
-    // -------------------------------------------------------------------------
-
-    #[test]
-    fn test_boolean_literals() {
-        let ret_true = Statement::Return(Some(Expression::Bool(true)));
-        let func = create_function("get_true", Some(AstType::Bool), create_block(vec![ret_true]));
-        let module = create_module(vec![func, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-        assert!(result.contains("return true"));
-
-        let ret_false = Statement::Return(Some(Expression::Bool(false)));
-        let func2 = create_function("get_false", Some(AstType::Bool), create_block(vec![ret_false]));
-        let module2 = create_module(vec![func2, create_function("main", None, create_block(vec![]))], Vec::new());
-        let result2 = JsGenerator::generate(module2).unwrap();
-        assert!(result2.contains("return false"));
-    }
-
-    // -------------------------------------------------------------------------
-    // main(); is always appended
-    // -------------------------------------------------------------------------
-
-    #[test]
-    fn test_main_call_appended() {
-        let func = create_function("main", None, create_block(vec![]));
-        let module = create_module(vec![func], Vec::new());
-        let result = JsGenerator::generate(module).unwrap();
-
+    fn test_main_call_is_last() {
+        let m = module(vec![func("main", vec![], None, block(vec![]))], vec![]);
+        let result = JsGenerator::generate(m).unwrap();
         assert!(result.ends_with("main();"));
     }
 }
