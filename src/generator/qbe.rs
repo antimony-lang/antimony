@@ -107,14 +107,14 @@ fn infer_expr_return_type(expr: &Expression, var_types: &HashMap<String, Type>) 
     match expr {
         Expression::Str(_) => Some(Type::Str),
         Expression::Variable(name) => var_types.get(name).cloned(),
-        Expression::BinOp { lhs, op, .. }
-            if matches!(op, BinOp::Addition | BinOp::AddAssign) =>
-        {
-            match infer_expr_return_type(lhs, var_types) {
-                Some(Type::Str) => Some(Type::Str),
-                _ => None,
-            }
-        }
+        Expression::BinOp {
+            lhs,
+            op: BinOp::Addition | BinOp::AddAssign,
+            ..
+        } => match infer_expr_return_type(lhs, var_types) {
+            Some(Type::Str) => Some(Type::Str),
+            _ => None,
+        },
         Expression::StructInitialization { name, .. } => Some(Type::Struct(name.clone())),
         _ => None,
     }
