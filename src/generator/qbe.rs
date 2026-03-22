@@ -1691,7 +1691,7 @@ impl QbeGenerator {
         match ty {
             Type::Any => Ok(qbe::Type::Long),
             Type::Int => Ok(qbe::Type::Word),
-            Type::Bool => Ok(qbe::Type::Byte),
+            Type::Bool => Ok(qbe::Type::Word),
             Type::Str => Ok(qbe::Type::Long),
             Type::Struct(name) => {
                 let (ty, ..) = self
