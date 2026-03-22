@@ -16,6 +16,7 @@
 
 **Fixes**
 
+- Type inference: seed variable map with function parameter types so expressions referencing parameters can be inferred ([#163](https://github.com/antimony-lang/antimony/issues/163))
 - QBE: Fix array indexing for uninitialized sized arrays — `let foo: int[5]` now allocates memory correctly ([#174](https://github.com/antimony-lang/antimony/pull/174))
 - QBE: Infer for-in loop variable type from array element type — `for x in arr {}` no longer requires an explicit type annotation on `x` ([#168](https://github.com/antimony-lang/antimony/issues/168))
 - QBE: Fix expression-bodied functions with string concat (e.g. `fn greet(name: string) = "Hello " + name`) producing invalid SSA and being emitted as void functions ([#172](https://github.com/antimony-lang/antimony/pull/172))
@@ -33,6 +34,7 @@
 
 **Maintenance**
 
+- QBE: Run all examples in QBE integration tests instead of a hardcoded subset ([#163](https://github.com/antimony-lang/antimony/issues/163))
 - QBE: Add integration tests and CI support — compile and run examples and test cases through the full QBE pipeline (compile → qbe → gcc → execute) ([#145](https://github.com/antimony-lang/antimony/issues/145))
 - Update deprecated GitHub Actions (`peaceiris/actions-mdbook@v1` → `v2`, `actions/setup-python@v2` → `v5`) to fix docs deployment ([#153](https://github.com/antimony-lang/antimony/pull/153))
 - Remove unsupported `multilingual` field from `book.toml` to fix mdBook 0.5.2 compatibility ([#158](https://github.com/antimony-lang/antimony/pull/158))
