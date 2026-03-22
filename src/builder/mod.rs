@@ -63,7 +63,7 @@ impl Builder {
 
         // Append standard library
         if matches!(target, Target::JS | Target::Qbe) {
-            self.build_stdlib(target)?;
+            self.build_stdlib()?;
         }
 
         // Change back to the initial directory
@@ -130,6 +130,9 @@ impl Builder {
             condensed.merge_with(module.clone());
         }
 
+        // Infer types after all modules are merged so the full symbol table is available
+        parser::infer_types(&mut condensed);
+
         // Transform HAST to LLAST and then to Module for generators
         let module = AstTransformer::transform_module(condensed)?;
 
@@ -151,15 +154,10 @@ impl Builder {
         buffer.flush().map_err(|_| "Could not flush file".into())
     }
 
-    fn build_stdlib(&mut self, target: &Target) -> Result<(), String> {
+    fn build_stdlib(&mut self) -> Result<(), String> {
         let assets = Lib::iter();
 
         for file in assets {
-            // Skip array.sb for QBE until array access is implemented
-            if matches!(target, Target::Qbe) && file.as_ref() == "array.sb" {
-                continue;
-            }
-
             let stdlib_raw = Lib::get(&file)
                 .expect("Standard library not found. This should not occur.")
                 .data;

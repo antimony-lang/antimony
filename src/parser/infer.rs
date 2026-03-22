@@ -1,4 +1,4 @@
-use crate::ast::hast::{HExpression, HModule, HStatement};
+use crate::ast::hast::{HExpression, HMatchArm, HModule, HStatement};
 /**
  * Copyright 2021 Garrit Franke
  *
@@ -16,42 +16,74 @@ use crate::ast::hast::{HExpression, HModule, HStatement};
  */
 use crate::ast::types::Type;
 use crate::ast::SymbolTable;
+use std::collections::HashMap;
 
 /// Try to infer types of variables
 ///
 /// TODO: Global symbol table is passed around randomly.
 /// This could probably be cleaned up.
-pub(super) fn infer(program: &mut HModule) {
+pub fn infer(program: &mut HModule) {
     let table = &program.get_symbol_table();
-    // TODO: Fix aweful nesting
     for func in &mut program.func {
-        if let HStatement::Block {
-            statements,
-            scope: _,
-        } = &mut func.body
-        {
-            for statement in statements {
-                if let HStatement::Declare { variable, value } = statement {
+        let mut var_map: HashMap<String, Type> = HashMap::new();
+        infer_statement(&mut func.body, table, &mut var_map);
+    }
+}
+
+fn infer_statement(
+    stmt: &mut HStatement,
+    table: &SymbolTable,
+    var_map: &mut HashMap<String, Type>,
+) {
+    match stmt {
+        HStatement::Block { statements, .. } => {
+            for s in statements {
+                infer_statement(s, table, var_map);
+            }
+        }
+        HStatement::Declare { variable, value } => {
+            if variable.ty.is_none() {
+                if let Some(e) = value {
+                    variable.ty = infer_expression(e, table, var_map);
+                    #[cfg(debug_assertions)]
                     if variable.ty.is_none() {
-                        if let Some(e) = value {
-                            variable.ty = infer_expression(e, table);
-                            #[cfg(debug_assertions)]
-                            if variable.ty.is_none() {
-                                println!(
-                                    "Type of {} could not be infered: {:?}",
-                                    &variable.name, e
-                                );
-                            }
-                        }
+                        println!("Type of {} could not be infered: {:?}", &variable.name, e);
+                    }
+                }
+            }
+            if let Some(ty) = &variable.ty {
+                var_map.insert(variable.name.clone(), ty.clone());
+            }
+        }
+        HStatement::If {
+            body, else_branch, ..
+        } => {
+            infer_statement(body, table, var_map);
+            if let Some(else_stmt) = else_branch {
+                infer_statement(else_stmt, table, var_map);
+            }
+        }
+        HStatement::While { body, .. } => infer_statement(body, table, var_map),
+        HStatement::For { body, .. } => infer_statement(body, table, var_map),
+        HStatement::Match { arms, .. } => {
+            for arm in arms {
+                match arm {
+                    HMatchArm::Case(_, s) | HMatchArm::Else(s) => {
+                        infer_statement(s, table, var_map);
                     }
                 }
             }
         }
+        _ => {}
     }
 }
 
 /// Function table is needed to infer possible function calls
-fn infer_expression(expr: &HExpression, table: &SymbolTable) -> Option<Type> {
+fn infer_expression(
+    expr: &HExpression,
+    table: &SymbolTable,
+    var_map: &HashMap<String, Type>,
+) -> Option<Type> {
     match expr {
         HExpression::Int(_) => Some(Type::Int),
         HExpression::Bool(_) => Some(Type::Bool),
@@ -63,15 +95,26 @@ fn infer_expression(expr: &HExpression, table: &SymbolTable) -> Option<Type> {
         HExpression::Array {
             capacity: _,
             elements,
-        } => infer_array(elements, table),
+        } => infer_array(elements, table, var_map),
+        HExpression::ArrayAccess { name, .. } => {
+            // Infer element type from the array variable's type
+            match var_map.get(name) {
+                Some(Type::Array(elem_ty, _)) => Some(*elem_ty.clone()),
+                _ => None,
+            }
+        }
         _ => None,
     }
 }
 
-fn infer_array(elements: &[HExpression], table: &SymbolTable) -> Option<Type> {
+fn infer_array(
+    elements: &[HExpression],
+    table: &SymbolTable,
+    var_map: &HashMap<String, Type>,
+) -> Option<Type> {
     let types: Vec<Option<Type>> = elements
         .iter()
-        .map(|el| infer_expression(el, table))
+        .map(|el| infer_expression(el, table, var_map))
         .collect();
 
     // TODO: This approach only relies on the first element.
