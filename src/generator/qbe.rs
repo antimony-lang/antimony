@@ -529,7 +529,11 @@ impl QbeGenerator {
         }
 
         let mangled_name = format!("{}_{}", struct_name, method_name);
-        let is_void = self.fn_signatures.get(&mangled_name).map(|v| v.is_none()).unwrap_or(false);
+        let is_void = self
+            .fn_signatures
+            .get(&mangled_name)
+            .map(|v| v.is_none())
+            .unwrap_or(false);
         let ret_type_opt = self.fn_signatures.get(&mangled_name).cloned().flatten();
 
         if is_void {
@@ -780,7 +784,11 @@ impl QbeGenerator {
 
                 // Look up the return type from the pre-pass signature map.
                 // A map entry of None means the function is void (no return value).
-                let is_void = self.fn_signatures.get(fn_name).map(|v| v.is_none()).unwrap_or(false);
+                let is_void = self
+                    .fn_signatures
+                    .get(fn_name)
+                    .map(|v| v.is_none())
+                    .unwrap_or(false);
                 let ret_type_opt = self.fn_signatures.get(fn_name).cloned().flatten();
 
                 if is_void {
