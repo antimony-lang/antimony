@@ -1492,6 +1492,75 @@ mod tests {
     }
 
     #[test]
+    fn test_for_in_loop_str_array() {
+        // fn main() {
+        //     let arr: string[] = ["One", "Two", "Three"]
+        //     for x in arr { println(x) }
+        // }
+        let arr_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_str_expr("One"),
+                create_str_expr("Two"),
+                create_str_expr("Three"),
+            ],
+        };
+        let decl_arr = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Str), Some(3)),
+            Some(arr_expr),
+        );
+        let loop_body = create_block_stmt(vec![Statement::Return(None)]);
+        let for_stmt = Statement::For {
+            ident: create_variable("x", AstType::Str),
+            expr: create_var_expr("arr"),
+            body: Box::new(loop_body),
+        };
+        let block = create_block_stmt(vec![decl_arr, for_stmt]);
+        let func = create_function("main", None, block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        let expected = normalize_qbe(
+            r#"
+            type :array.9 = { l, l 3 }
+            export function $main() {
+            @start
+                %tmp.5 =l alloc8 32
+                storel 3, %tmp.5
+                %tmp.6 =l add %tmp.5, 8
+                storel $string.2, %tmp.6
+                %tmp.7 =l add %tmp.5, 16
+                storel $string.3, %tmp.7
+                %tmp.8 =l add %tmp.5, 24
+                storel $string.4, %tmp.8
+                %tmp.1 =l copy %tmp.5
+                %tmp.10 =l loadl %tmp.1
+                %tmp.12 =l copy 0
+                %tmp.13 =l copy 0
+            @loop.11.cond
+                %tmp.14 =w csltl %tmp.12, %tmp.10
+                jnz %tmp.14, @loop.11.body, @loop.11.end
+            @loop.11.body
+                %tmp.15 =l mul %tmp.12, 8
+                %tmp.16 =l add %tmp.15, 8
+                %tmp.17 =l add %tmp.1, %tmp.16
+                %tmp.18 =l loadl %tmp.17
+                %tmp.13 =l copy %tmp.18
+                ret
+            @loop.11.end
+                ret
+            }
+            export data $string.2 = { b "One", b 0 }
+            export data $string.3 = { b "Two", b 0 }
+            export data $string.4 = { b "Three", b 0 }
+        "#,
+        );
+
+        assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
     fn test_len_intrinsic() {
         // fn test_len(): int {
         //     let arr: int[3] = [10, 20, 30]

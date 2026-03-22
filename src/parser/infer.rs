@@ -64,7 +64,17 @@ fn infer_statement(
             }
         }
         HStatement::While { body, .. } => infer_statement(body, table, var_map),
-        HStatement::For { body, .. } => infer_statement(body, table, var_map),
+        HStatement::For { ident, expr, body } => {
+            if ident.ty.is_none() {
+                if let Some(Type::Array(elem_ty, _)) = infer_expression(expr, table, var_map) {
+                    ident.ty = Some(*elem_ty);
+                }
+            }
+            if let Some(ty) = &ident.ty {
+                var_map.insert(ident.name.clone(), ty.clone());
+            }
+            infer_statement(body, table, var_map);
+        }
         HStatement::Match { arms, .. } => {
             for arm in arms {
                 match arm {
@@ -96,6 +106,7 @@ fn infer_expression(
             capacity: _,
             elements,
         } => infer_array(elements, table, var_map),
+        HExpression::Variable(name) => var_map.get(name).cloned(),
         HExpression::ArrayAccess { name, .. } => {
             // Infer element type from the array variable's type
             match var_map.get(name) {
@@ -103,7 +114,6 @@ fn infer_expression(
                 _ => None,
             }
         }
-        HExpression::Variable(name) => var_map.get(name).cloned(),
         HExpression::BinOp { lhs, op, rhs } => match op {
             HBinOp::Equal
             | HBinOp::NotEqual
