@@ -614,6 +614,31 @@ impl QbeGenerator {
                 self.generate_array(func, *capacity, elements)
             }
             Expression::FunctionCall { fn_name, args } => {
+                // Handle len() as a built-in intrinsic: load array length from header (offset 0)
+                if fn_name == "len" {
+                    let arr_arg = args
+                        .first()
+                        .ok_or_else(|| "len() requires one argument".to_string())?;
+                    let (_, arr_ptr) = self.generate_expression(func, arr_arg)?;
+
+                    let len_tmp = self.new_temporary();
+                    func.assign_instr(
+                        len_tmp.clone(),
+                        qbe::Type::Long,
+                        qbe::Instr::Load(qbe::Type::Long, arr_ptr),
+                    );
+
+                    // Truncate Long → Word (len() returns int)
+                    let word_tmp = self.new_temporary();
+                    func.assign_instr(
+                        word_tmp.clone(),
+                        qbe::Type::Word,
+                        qbe::Instr::Copy(len_tmp),
+                    );
+
+                    return Ok((qbe::Type::Word, word_tmp));
+                }
+
                 // Collect arguments first to avoid multiple mutable borrows
                 let mut arg_results = Vec::new();
                 for arg in args.iter() {
