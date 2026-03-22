@@ -756,7 +756,10 @@ main();"
             fields: vec![var("x", AstType::Int), var("y", AstType::Int)],
             methods: vec![],
         };
-        let m = module(vec![func("main", vec![], None, block(vec![]))], vec![struct_def]);
+        let m = module(
+            vec![func("main", vec![], None, block(vec![]))],
+            vec![struct_def],
+        );
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
