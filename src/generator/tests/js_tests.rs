@@ -65,7 +65,13 @@ mod tests {
     fn test_empty_main() {
         let m = module(vec![func("main", vec![], None, block(vec![]))], vec![]);
         let result = JsGenerator::generate(m).unwrap();
-        assert_eq!(user_code(&result), "function main(){\n}\n\nmain();");
+        assert_eq!(
+            user_code(&result),
+            "function main(){
+}
+
+main();"
+        );
     }
 
     #[test]
@@ -81,7 +87,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function answer(){\nreturn 42;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function answer(){
+return 42;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -107,7 +120,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function add(a, b){\nreturn a + b;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function add(a, b){
+return a + b;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -132,7 +152,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function calc(){\nreturn 3 + 4;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function calc(){
+return 3 + 4;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -153,7 +180,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function calc(){\nreturn 10 - 3;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function calc(){
+return 10 - 3;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -174,7 +208,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function calc(){\nreturn 4 * 5;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function calc(){
+return 4 * 5;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -195,7 +236,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function calc(){\nreturn 8 / 2;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function calc(){
+return 8 / 2;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -216,7 +264,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function calc(){\nreturn 9 % 4;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function calc(){
+return 9 % 4;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -246,7 +301,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function cmp(a, b){\nreturn a === b;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function cmp(a, b){
+return a === b;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -272,7 +334,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function cmp(a, b){\nreturn a !== b;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function cmp(a, b){
+return a !== b;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -298,7 +367,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function cmp(a, b){\nreturn a < b;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function cmp(a, b){
+return a < b;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -324,7 +400,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function cmp(a, b){\nreturn a > b;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function cmp(a, b){
+return a > b;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -351,7 +434,15 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function get_x(){\nvar x = 7;\nreturn x;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function get_x(){
+var x = 7;
+return x;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -371,7 +462,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function decl_only(){\nvar x;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function decl_only(){
+var x;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -391,7 +489,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function f(){\nvar buf = [];\n}\n\nfunction main(){\n}\n\nmain();"
+            "function f(){
+var buf = [];
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -417,7 +522,15 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function reassign(){\nvar x = 1;\nx = 99;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function reassign(){
+var x = 1;
+x = 99;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -442,7 +555,16 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function branching(){\nif (true){\nreturn 1;\n};\n}\n\nfunction main(){\n}\n\nmain();"
+            "function branching(){
+if (true){
+return 1;
+};
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -470,7 +592,20 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function branch_else(flag){\nif (flag){\nreturn 1;\n}else {\nreturn 0;\n}\n;\n;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function branch_else(flag){
+if (flag){
+return 1;
+}else {
+return 0;
+}
+;
+;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -494,7 +629,18 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function loop_fn(){\nwhile (true) {\nbreak;\n;\n}\n;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function loop_fn(){
+while (true) {
+break;
+;
+}
+;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -518,7 +664,18 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function for_fn(){\nvar loop_orig_item = [1, 2, 3];\nfor (let iter_item = 0; iter_item < loop_orig_item.length; iter_item++){\nlet item = loop_orig_item[iter_item];\n}\n;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function for_fn(){
+var loop_orig_item = [1, 2, 3];
+for (let iter_item = 0; iter_item < loop_orig_item.length; iter_item++){
+let item = loop_orig_item[iter_item];
+}
+;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -545,7 +702,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function arr_fn(){\nvar nums = [1, 2, 3];\n}\n\nfunction main(){\n}\n\nmain();"
+            "function arr_fn(){
+var nums = [1, 2, 3];
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -570,7 +734,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function first(arr){\nreturn arr[0];\n}\n\nfunction main(){\n}\n\nmain();"
+            "function first(arr){
+return arr[0];
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -589,7 +760,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function Point(args) {\nthis.x = args.x;\nthis.y = args.y;\n}\nfunction main(){\n}\n\nmain();"
+            "function Point(args) {
+this.x = args.x;
+this.y = args.y;
+}
+function main(){
+}
+
+main();"
         );
     }
 
@@ -614,7 +792,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function make_point(){\nvar p = new Point({x: 3,});\n}\n\nfunction main(){\n}\n\nmain();"
+            "function make_point(){
+var p = new Point({x: 3,});
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -637,7 +822,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function greet(){\nreturn \"hello\";\n}\n\nfunction main(){\n}\n\nmain();"
+            "function greet(){
+return \"hello\";
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -654,7 +846,14 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function get_true(){\nreturn true;\n}\n\nfunction main(){\n}\n\nmain();"
+            "function get_true(){
+return true;
+}
+
+function main(){
+}
+
+main();"
         );
     }
 
@@ -672,7 +871,11 @@ mod tests {
         let result = JsGenerator::generate(m).unwrap();
         assert_eq!(
             user_code(&result),
-            "function main(){\nprint(\"hi\");\n}\n\nmain();"
+            "function main(){
+print(\"hi\");
+}
+
+main();"
         );
     }
 
