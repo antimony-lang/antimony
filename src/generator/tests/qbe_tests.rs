@@ -409,7 +409,6 @@ mod tests {
             @cond.3.else
                 %tmp.5 =w copy 20
                 ret %tmp.5
-            @cond.3.end
                 %tmp.6 =w copy 30
                 ret %tmp.6
             }
