@@ -4,6 +4,7 @@
 
 **Features**
 
+- QBE: Implement `len()` as a built-in intrinsic that reads the array-length header ([#171](https://github.com/antimony-lang/antimony/pull/171))
 - QBE: Support field access on function call results, e.g. `user_stub().first_name` ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - QBE: Auto-coerce `int` arguments to `string` parameters via `_int_to_str` ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - QBE: Implement for-in loops over arrays ([#152](https://github.com/antimony-lang/antimony/pull/152))
@@ -16,6 +17,8 @@
 
 - QBE: Fix expression-bodied functions with string concat (e.g. `fn greet(name: string) = "Hello " + name`) producing invalid SSA and being emitted as void functions ([#172](https://github.com/antimony-lang/antimony/pull/172))
 - QBE: Fix false "does not return in all code paths" error for complete `if/else if/else` chains where all branches return ([#170](https://github.com/antimony-lang/antimony/pull/170))
+- QBE: Fix type inference for `len()` and other cross-module function calls — inference now runs after module merge so the full symbol table is visible ([#171](https://github.com/antimony-lang/antimony/pull/171))
+- Type inference: recurse into nested blocks (while/if/for/match) and resolve array-access element types ([#171](https://github.com/antimony-lang/antimony/pull/171))
 - Parser: fix operator precedence — `a % b == 0` now correctly parses as `(a % b) == 0` ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - Parser: treat `_` in match arms as a catch-all else branch instead of a variable lookup ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - QBE: fix `_exit` infinite recursion by using `_Exit()` instead of `exit()` ([#161](https://github.com/antimony-lang/antimony/pull/161))

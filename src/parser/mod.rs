@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-pub mod infer;
+mod infer;
 // TODO: Resolve this lint by renaming the module
 #[allow(clippy::module_inception)]
 mod parser;
@@ -26,4 +26,9 @@ mod tests;
 pub fn parse(tokens: Vec<Token>, raw: Option<String>) -> Result<HModule, String> {
     let mut parser = parser::Parser::new(tokens, raw);
     parser.parse()
+}
+
+/// Run type inference on a merged module so the full symbol table is available.
+pub fn infer_types(program: &mut HModule) {
+    infer::infer(program);
 }

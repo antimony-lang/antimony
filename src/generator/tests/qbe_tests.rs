@@ -1438,4 +1438,43 @@ mod tests {
         );
         assert!(result.contains("loadl"), "should load array length");
     }
+
+    #[test]
+    fn test_len_intrinsic() {
+        // fn test_len(): int {
+        //     let arr: int[3] = [10, 20, 30]
+        //     let n: int = len(arr)
+        //     return n
+        // }
+        let array_expr = Expression::Array {
+            capacity: 3,
+            elements: vec![
+                create_int_expr(10),
+                create_int_expr(20),
+                create_int_expr(30),
+            ],
+        };
+        let decl_arr = create_declare_stmt(
+            "arr",
+            AstType::Array(Box::new(AstType::Int), Some(3)),
+            Some(array_expr),
+        );
+        let len_call = create_call_expr("len", vec![create_var_expr("arr")]);
+        let decl_n = create_declare_stmt("n", AstType::Int, Some(len_call));
+        let ret = create_return_stmt(Some(create_var_expr("n")));
+        let block = create_block_stmt(vec![decl_arr, decl_n, ret]);
+        let func = create_function("test_len", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+
+        // len() should load the Long from the array header (offset 0), then copy to Word
+        assert!(
+            result.contains("loadl"),
+            "should load array length from header"
+        );
+        assert!(
+            !result.contains("call $len"),
+            "should NOT emit a function call to len"
+        );
+    }
 }

@@ -18,7 +18,6 @@ use crate::ast::transform::AstTransformer;
 use crate::generator::{self, Generator, Target};
 use crate::lexer;
 use crate::parser;
-use crate::parser::infer;
 use crate::Lib;
 use crate::PathBuf;
 use std::env;
@@ -132,7 +131,7 @@ impl Builder {
         }
 
         // Infer types after all modules are merged so the full symbol table is available
-        infer::infer(&mut condensed);
+        parser::infer_types(&mut condensed);
 
         // Transform HAST to LLAST and then to Module for generators
         let module = AstTransformer::transform_module(condensed)?;

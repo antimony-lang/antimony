@@ -27,6 +27,14 @@ type RcTypeDef = Rc<qbe::TypeDef<'static>>;
 /// Information stored for each variable in scope
 type VarInfo = (qbe::Type<'static>, qbe::Value, Option<Type>);
 
+/// Built-in functions that the QBE backend handles as inline intrinsics
+/// rather than emitting a regular function call.
+#[derive(Clone)]
+enum Intrinsic {
+    /// Load the array length from the header at offset 0
+    ArrayLen,
+}
+
 pub struct QbeGenerator {
     /// Counter for unique temporary names
     tmp_counter: u32,
@@ -48,6 +56,8 @@ pub struct QbeGenerator {
     fn_ast_signatures: HashMap<String, Option<Type>>,
     /// Function name -> AST parameter types (populated by pre-pass before codegen)
     fn_param_ast_types: HashMap<String, Vec<Option<Type>>>,
+    /// Functions replaced by inline intrinsics
+    intrinsics: HashMap<String, Intrinsic>,
     /// Module being built
     module: qbe::Module<'static>,
 }
@@ -122,6 +132,9 @@ fn infer_expr_return_type(expr: &Expression, var_types: &HashMap<String, Type>) 
 
 impl Generator for QbeGenerator {
     fn generate(prog: Module) -> GeneratorResult<String> {
+        let mut intrinsics = HashMap::new();
+        intrinsics.insert("len".to_string(), Intrinsic::ArrayLen);
+
         let mut generator = QbeGenerator {
             tmp_counter: 0,
             scopes: Vec::new(),
@@ -133,6 +146,7 @@ impl Generator for QbeGenerator {
             fn_param_types: HashMap::new(),
             fn_ast_signatures: HashMap::new(),
             fn_param_ast_types: HashMap::new(),
+            intrinsics,
             module: qbe::Module::new(),
         };
 
@@ -582,6 +596,37 @@ impl QbeGenerator {
         Ok(())
     }
 
+    /// Generates code for a built-in intrinsic, replacing the normal function call.
+    fn generate_intrinsic(
+        &mut self,
+        func: &mut qbe::Function<'static>,
+        intrinsic: &Intrinsic,
+        args: &[Expression],
+    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+        match intrinsic {
+            Intrinsic::ArrayLen => {
+                let arr_arg = args
+                    .first()
+                    .ok_or_else(|| "len() requires one argument".to_string())?;
+                let (_, arr_ptr) = self.generate_expression(func, arr_arg)?;
+
+                // Load length (Long) from array header at offset 0
+                let len_tmp = self.new_temporary();
+                func.assign_instr(
+                    len_tmp.clone(),
+                    qbe::Type::Long,
+                    qbe::Instr::Load(qbe::Type::Long, arr_ptr),
+                );
+
+                // Truncate Long to Word (len() returns int)
+                let word_tmp = self.new_temporary();
+                func.assign_instr(word_tmp.clone(), qbe::Type::Word, qbe::Instr::Copy(len_tmp));
+
+                Ok((qbe::Type::Word, word_tmp))
+            }
+        }
+    }
+
     /// Generates an expression
     fn generate_expression(
         &mut self,
@@ -614,25 +659,8 @@ impl QbeGenerator {
                 self.generate_array(func, *capacity, elements)
             }
             Expression::FunctionCall { fn_name, args } => {
-                // Handle len() as a built-in intrinsic: load array length from header (offset 0)
-                if fn_name == "len" {
-                    let arr_arg = args
-                        .first()
-                        .ok_or_else(|| "len() requires one argument".to_string())?;
-                    let (_, arr_ptr) = self.generate_expression(func, arr_arg)?;
-
-                    let len_tmp = self.new_temporary();
-                    func.assign_instr(
-                        len_tmp.clone(),
-                        qbe::Type::Long,
-                        qbe::Instr::Load(qbe::Type::Long, arr_ptr),
-                    );
-
-                    // Truncate Long → Word (len() returns int)
-                    let word_tmp = self.new_temporary();
-                    func.assign_instr(word_tmp.clone(), qbe::Type::Word, qbe::Instr::Copy(len_tmp));
-
-                    return Ok((qbe::Type::Word, word_tmp));
+                if let Some(intrinsic) = self.intrinsics.get(fn_name).cloned() {
+                    return self.generate_intrinsic(func, &intrinsic, args);
                 }
 
                 // Collect arguments first to avoid multiple mutable borrows
