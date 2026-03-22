@@ -156,6 +156,7 @@ fn test_examples_qbe() -> Result<(), Error> {
         "sandbox.sb",
         "bubblesort.sb",
         "leapyear.sb",
+        "loops.sb",
     ];
 
     for name in &supported {
