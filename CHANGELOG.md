@@ -15,6 +15,7 @@
 **Fixes**
 
 - QBE: Fix expression-bodied functions with string concat (e.g. `fn greet(name: string) = "Hello " + name`) producing invalid SSA and being emitted as void functions ([#172](https://github.com/antimony-lang/antimony/pull/172))
+- QBE: Fix false "does not return in all code paths" error for complete `if/else if/else` chains where all branches return ([#170](https://github.com/antimony-lang/antimony/pull/170))
 - Parser: fix operator precedence — `a % b == 0` now correctly parses as `(a % b) == 0` ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - Parser: treat `_` in match arms as a catch-all else branch instead of a variable lookup ([#161](https://github.com/antimony-lang/antimony/pull/161))
 - QBE: fix `_exit` infinite recursion by using `_Exit()` instead of `exit()` ([#161](https://github.com/antimony-lang/antimony/pull/161))

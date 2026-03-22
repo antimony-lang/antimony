@@ -419,6 +419,64 @@ mod tests {
     }
 
     #[test]
+    fn test_if_else_all_branches_return() {
+        // Regression test for #164: complete if/else if/else chains
+        // where all branches return should not produce a false
+        // "does not return in all code paths" error.
+        let decl_m = create_declare_stmt("m", AstType::Int, Some(create_int_expr(1)));
+        let decl_n = create_declare_stmt("n", AstType::Int, Some(create_int_expr(2)));
+        let if_stmt = create_if_stmt(
+            create_binop_expr(create_var_expr("m"), BinOp::Equal, create_int_expr(0)),
+            create_return_stmt(Some(create_int_expr(1))),
+            Some(create_if_stmt(
+                create_binop_expr(create_var_expr("n"), BinOp::Equal, create_int_expr(0)),
+                create_return_stmt(Some(create_int_expr(2))),
+                Some(create_return_stmt(Some(create_int_expr(3)))),
+            )),
+        );
+        let block = create_block_stmt(vec![decl_m, decl_n, if_stmt]);
+        let func = create_function("test_all_return", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module);
+
+        assert!(result.is_ok(), "should not error when all branches return");
+
+        // Verify no end block exists (all branches return, so it's unnecessary)
+        let qbe = result.unwrap();
+        assert!(
+            !qbe.contains(".end"),
+            "end block should not exist when all branches return"
+        );
+    }
+
+    #[test]
+    fn test_if_else_partial_return_needs_end_block() {
+        // When only the if-branch returns but else does not,
+        // the end block must still be created for fallthrough.
+        let if_stmt = create_if_stmt(
+            create_var_expr("cond"),
+            create_return_stmt(Some(create_int_expr(10))),
+            Some(create_declare_stmt("x", AstType::Int, Some(create_int_expr(5)))),
+        );
+        let block = create_block_stmt(vec![
+            create_declare_stmt("cond", AstType::Int, Some(create_int_expr(1))),
+            if_stmt,
+            create_return_stmt(Some(create_int_expr(99))),
+        ]);
+        let func = create_function("test_partial_return", Some(AstType::Int), block);
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module);
+
+        assert!(result.is_ok(), "should succeed when fallthrough path returns");
+
+        let qbe = result.unwrap();
+        assert!(
+            qbe.contains("@cond.") && qbe.contains(".end"),
+            "end block should exist when else branch falls through"
+        );
+    }
+
+    #[test]
     fn test_while_loop() {
         let decl_i = create_declare_stmt("i", AstType::Int, Some(create_int_expr(0)));
         let decl_sum = create_declare_stmt("sum", AstType::Int, Some(create_int_expr(0)));
