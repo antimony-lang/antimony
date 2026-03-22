@@ -630,11 +630,7 @@ impl QbeGenerator {
 
                     // Truncate Long → Word (len() returns int)
                     let word_tmp = self.new_temporary();
-                    func.assign_instr(
-                        word_tmp.clone(),
-                        qbe::Type::Word,
-                        qbe::Instr::Copy(len_tmp),
-                    );
+                    func.assign_instr(word_tmp.clone(), qbe::Type::Word, qbe::Instr::Copy(len_tmp));
 
                     return Ok((qbe::Type::Word, word_tmp));
                 }

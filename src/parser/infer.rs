@@ -30,7 +30,11 @@ pub(super) fn infer(program: &mut HModule) {
     }
 }
 
-fn infer_statement(stmt: &mut HStatement, table: &SymbolTable, var_map: &mut HashMap<String, Type>) {
+fn infer_statement(
+    stmt: &mut HStatement,
+    table: &SymbolTable,
+    var_map: &mut HashMap<String, Type>,
+) {
     match stmt {
         HStatement::Block { statements, .. } => {
             for s in statements {
@@ -43,10 +47,7 @@ fn infer_statement(stmt: &mut HStatement, table: &SymbolTable, var_map: &mut Has
                     variable.ty = infer_expression(e, table, var_map);
                     #[cfg(debug_assertions)]
                     if variable.ty.is_none() {
-                        println!(
-                            "Type of {} could not be infered: {:?}",
-                            &variable.name, e
-                        );
+                        println!("Type of {} could not be infered: {:?}", &variable.name, e);
                     }
                 }
             }
@@ -78,7 +79,11 @@ fn infer_statement(stmt: &mut HStatement, table: &SymbolTable, var_map: &mut Has
 }
 
 /// Function table is needed to infer possible function calls
-fn infer_expression(expr: &HExpression, table: &SymbolTable, var_map: &HashMap<String, Type>) -> Option<Type> {
+fn infer_expression(
+    expr: &HExpression,
+    table: &SymbolTable,
+    var_map: &HashMap<String, Type>,
+) -> Option<Type> {
     match expr {
         HExpression::Int(_) => Some(Type::Int),
         HExpression::Bool(_) => Some(Type::Bool),
@@ -102,7 +107,11 @@ fn infer_expression(expr: &HExpression, table: &SymbolTable, var_map: &HashMap<S
     }
 }
 
-fn infer_array(elements: &[HExpression], table: &SymbolTable, var_map: &HashMap<String, Type>) -> Option<Type> {
+fn infer_array(
+    elements: &[HExpression],
+    table: &SymbolTable,
+    var_map: &HashMap<String, Type>,
+) -> Option<Type> {
     let types: Vec<Option<Type>> = elements
         .iter()
         .map(|el| infer_expression(el, table, var_map))
@@ -117,10 +126,8 @@ fn infer_array(elements: &[HExpression], table: &SymbolTable, var_map: &HashMap<
 }
 
 fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
-    // Built-in functions with known return types
-    match name {
-        "len" => return Some(Type::Int),
-        _ => {}
+    if name == "len" {
+        return Some(Type::Int);
     }
     match table.get(name) {
         Some(t) => t.to_owned(),
