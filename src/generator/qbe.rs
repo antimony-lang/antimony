@@ -549,6 +549,39 @@ impl QbeGenerator {
                 if let Some(expr) = value {
                     let (expr_type, expr_value) = self.generate_expression(func, expr)?;
                     func.assign_instr(tmp, expr_type, qbe::Instr::Copy(expr_value));
+                } else if let Type::Array(ref elem_ast_type, Some(size)) = variable
+                    .ty
+                    .as_ref()
+                    .ok_or_else(|| format!("Missing type for variable '{}'", &variable.name))?
+                {
+                    // Uninitialized sized arrays need memory allocated upfront,
+                    // since subsequent index assignments use the variable as a base pointer.
+                    let elem_qbe_type = self.get_type(*elem_ast_type.clone())?;
+                    let elem_size = self.type_size(&elem_qbe_type);
+                    let total_size = 8 + (*size as u64) * elem_size;
+
+                    func.assign_instr(
+                        tmp.clone(),
+                        qbe::Type::Long,
+                        qbe::Instr::Alloc8(total_size),
+                    );
+                    func.add_instr(qbe::Instr::Store(
+                        qbe::Type::Long,
+                        tmp,
+                        qbe::Value::Const(*size as u64),
+                    ));
+
+                    // Register a typedef for the array
+                    self.tmp_counter += 1;
+                    let name = format!("array.{}", self.tmp_counter);
+                    let typedef = qbe::TypeDef::Regular {
+                        ident: name.clone(),
+                        align: None,
+                        items: vec![(qbe::Type::Long, 1), (elem_qbe_type, *size)],
+                    };
+                    let typedef_rc = Rc::new(typedef);
+                    self.module.add_type((*typedef_rc).clone());
+                    self.typedefs.push(typedef_rc);
                 }
             }
             Statement::Assign { lhs, rhs } => {
