@@ -1393,11 +1393,8 @@ mod tests {
         // let arr: int[3]
         // arr[0] = 42
         // return arr[0]
-        let decl_arr = create_declare_stmt(
-            "arr",
-            AstType::Array(Box::new(AstType::Int), Some(3)),
-            None,
-        );
+        let decl_arr =
+            create_declare_stmt("arr", AstType::Array(Box::new(AstType::Int), Some(3)), None);
         let assign_stmt = create_assign_stmt(
             Expression::ArrayAccess {
                 name: "arr".to_string(),

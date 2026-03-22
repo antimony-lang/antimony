@@ -560,11 +560,7 @@ impl QbeGenerator {
                     let elem_size = self.type_size(&elem_qbe_type);
                     let total_size = 8 + (*size as u64) * elem_size;
 
-                    func.assign_instr(
-                        tmp.clone(),
-                        qbe::Type::Long,
-                        qbe::Instr::Alloc8(total_size),
-                    );
+                    func.assign_instr(tmp.clone(), qbe::Type::Long, qbe::Instr::Alloc8(total_size));
                     func.add_instr(qbe::Instr::Store(
                         qbe::Type::Long,
                         tmp,
