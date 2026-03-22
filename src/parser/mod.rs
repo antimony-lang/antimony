@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-mod infer;
+pub mod infer;
 // TODO: Resolve this lint by renaming the module
 #[allow(clippy::module_inception)]
 mod parser;

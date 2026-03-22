@@ -22,7 +22,7 @@ use std::collections::HashMap;
 ///
 /// TODO: Global symbol table is passed around randomly.
 /// This could probably be cleaned up.
-pub(super) fn infer(program: &mut HModule) {
+pub fn infer(program: &mut HModule) {
     let table = &program.get_symbol_table();
     for func in &mut program.func {
         let mut var_map: HashMap<String, Type> = HashMap::new();
@@ -126,9 +126,6 @@ fn infer_array(
 }
 
 fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
-    if name == "len" {
-        return Some(Type::Int);
-    }
     match table.get(name) {
         Some(t) => t.to_owned(),
         None => None,
