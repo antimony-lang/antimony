@@ -1,0 +1,20 @@
+// Returns the length of a string in bytes
+fn str_len(s: string): int {
+    return _strlen(s)
+}
+
+// Returns s repeated n times
+fn repeat(s: string, n: int): string {
+    let result: string = ""
+    let i: int = 0
+    while i < n {
+        result = result + s
+        i += 1
+    }
+    return result
+}
+
+// Parses a decimal integer string and returns its value
+fn to_int(s: string): int {
+    return _parse_int(s)
+}

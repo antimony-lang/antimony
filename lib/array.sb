@@ -1,27 +1,83 @@
-// Prints the size of an array
+// Returns the number of elements in an array
 fn len(arr: int[]): int {
     let c: int = 0
     while arr[c] {
         c += 1
     }
-
     return c
 }
 
-// Reverses an array
-// TODO: fix me!
+// Returns a reversed copy of an array
 fn rev(arr: int[]): int[] {
-
     let l: int = len(arr)
     let new_arr: int[] = []
-
     let i: int = 0
-    let j: int = l
     while i < l {
-        new_arr[i] = arr[j]
-        i = i - 1
-        j = j - 1
+        new_arr[i] = arr[l - 1 - i]
+        i += 1
     }
-
     return new_arr
+}
+
+// Returns the sum of all elements
+fn sum(arr: int[]): int {
+    let total: int = 0
+    let i: int = 0
+    let l: int = len(arr)
+    while i < l {
+        total += arr[i]
+        i += 1
+    }
+    return total
+}
+
+// Returns true if val is present in the array
+fn contains(arr: int[], val: int): bool {
+    let i: int = 0
+    let l: int = len(arr)
+    while i < l {
+        if arr[i] == val {
+            return true
+        }
+        i += 1
+    }
+    return false
+}
+
+// Returns the smallest element
+fn min_array(arr: int[]): int {
+    let m: int = arr[0]
+    let i: int = 1
+    let l: int = len(arr)
+    while i < l {
+        if arr[i] < m {
+            m = arr[i]
+        }
+        i += 1
+    }
+    return m
+}
+
+// Returns the largest element
+fn max_array(arr: int[]): int {
+    let m: int = arr[0]
+    let i: int = 1
+    let l: int = len(arr)
+    while i < l {
+        if arr[i] > m {
+            m = arr[i]
+        }
+        i += 1
+    }
+    return m
+}
+
+// Returns the first element
+fn first(arr: int[]): int {
+    return arr[0]
+}
+
+// Returns the last element
+fn last(arr: int[]): int {
+    return arr[len(arr) - 1]
 }

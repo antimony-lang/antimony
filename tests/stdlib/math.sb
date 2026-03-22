@@ -1,0 +1,43 @@
+fn stdlib_math_main() {
+    log_test_stage("Testing stdlib/math")
+    test_math_min()
+    test_math_max()
+    test_math_abs()
+    test_math_pow()
+    test_math_clamp()
+}
+
+fn test_math_min() {
+    assert(min(3, 5) == 3)
+    assert(min(5, 3) == 3)
+    assert(min(4, 4) == 4)
+    assert(min(0 - 1, 0) == 0 - 1)
+}
+
+fn test_math_max() {
+    assert(max(3, 5) == 5)
+    assert(max(5, 3) == 5)
+    assert(max(4, 4) == 4)
+    assert(max(0 - 1, 0) == 0)
+}
+
+fn test_math_abs() {
+    assert(abs(5) == 5)
+    assert(abs(0 - 5) == 5)
+    assert(abs(0) == 0)
+}
+
+fn test_math_pow() {
+    assert(pow(2, 0) == 1)
+    assert(pow(2, 1) == 2)
+    assert(pow(2, 10) == 1024)
+    assert(pow(3, 3) == 27)
+}
+
+fn test_math_clamp() {
+    assert(clamp(5, 1, 10) == 5)
+    assert(clamp(0, 1, 10) == 1)
+    assert(clamp(11, 1, 10) == 10)
+    assert(clamp(1, 1, 10) == 1)
+    assert(clamp(10, 1, 10) == 10)
+}

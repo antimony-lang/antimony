@@ -9,4 +9,23 @@ function _exit(code) {
   process.exit(code);
 }
 
+function _strlen(s) {
+  return s.length;
+}
+
+function _parse_int(s) {
+  return parseInt(s, 10);
+}
+
+function _read_line() {
+  const fs = require("fs");
+  const buf = Buffer.alloc(256);
+  let line = "";
+  try {
+    const n = fs.readSync(0, buf, 0, buf.length, null);
+    line = buf.slice(0, n).toString().replace(/\n$/, "");
+  } catch (_) {}
+  return line;
+}
+
 /* END builtins */

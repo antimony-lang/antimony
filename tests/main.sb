@@ -12,17 +12,25 @@ import "structs"
 import "types"
 import "unicode"
 
+import "stdlib/math"
+import "stdlib/array"
+import "stdlib/string"
+
 
 fn main() {
     log_test_stage("Running tests")
 
     conditionals_main()
     functions_main()
-    imports_main() 
+    imports_main()
     numbers_main()
     structs_main()
     types_main()
     unicode_main()
+
+    stdlib_math_main()
+    stdlib_array_main()
+    stdlib_string_main()
 
     log_test_stage("Done!")
 }
