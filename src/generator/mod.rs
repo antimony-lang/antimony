@@ -19,20 +19,15 @@ use std::str::FromStr;
 
 pub mod c;
 pub mod js;
-#[cfg(feature = "llvm")]
-pub mod llvm;
 pub mod qbe;
 #[cfg(test)]
 mod tests;
-pub mod x86;
 
 #[derive(Debug, Clone)]
 pub enum Target {
     C,
     JS,
-    Llvm,
     Qbe,
-    X86,
 }
 
 impl Target {
@@ -45,7 +40,6 @@ impl Target {
             "c" => Some(Self::C),
             "js" => Some(Self::JS),
             "ssa" => Some(Self::Qbe),
-            "s" => Some(Self::X86),
             _ => None,
         }
     }
@@ -60,9 +54,7 @@ impl FromStr for Target {
         match s.as_str() {
             "c" => Ok(Target::C),
             "js" => Ok(Target::JS),
-            "llvm" => Ok(Target::Llvm),
             "qbe" => Ok(Target::Qbe),
-            "x86" => Ok(Target::X86),
             _ => Err(format!("no target {} found", s)),
         }
     }

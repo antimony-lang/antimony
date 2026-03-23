@@ -59,7 +59,7 @@ struct Opt {
     #[command(subcommand)]
     command: Command,
 
-    /// Target language. Options: c, js, llvm, qbe, x86
+    /// Target language. Options: c, js, qbe
     #[arg(long, short)]
     target: Option<Target>,
 }
