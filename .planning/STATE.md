@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 Phase: 1 of 6 (QBE Stabilization and Audit)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
-Last activity: 2026-03-23 -- Quick task 260323-clu completed (docs/changelog updated for backend removal)
+Last activity: 2026-03-23 -- Quick task 260323-dht completed (SEED-001 expanded with QBE C interop note)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -81,6 +81,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260323-cfg | deprecate the x86 and llvm backends | 2026-03-23 | f846fff | [260323-cfg-deprecate-the-x86-and-llvm-backends](./quick/260323-cfg-deprecate-the-x86-and-llvm-backends/) |
 | 260323-clu | update docs and changelog for x86/LLVM removal | 2026-03-23 | 41c6bda | [260323-clu-update-docs-and-changelog-for-x86-llvm-r](./quick/260323-clu-update-docs-and-changelog-for-x86-llvm-r/) |
+| 260323-dht | update SEED-001 with QBE C interop note | 2026-03-23 | abd4521 | [260323-dht-update-seed-001-with-qbe-c-interop-note](./quick/260323-dht-update-seed-001-with-qbe-c-interop-note/) |
 
 ## Session Continuity
 
