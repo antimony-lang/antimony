@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-11993848.js";
+            window.path_to_searchindex_js = "searchindex-d2c2f215.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-aee83e08.js"></script>
@@ -1017,7 +1017,7 @@ if value == 1 {
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="backends"><a class="header" href="#backends">Backends</a></h1>
-<p>Antimony currently implements a JavaScript backend, but C and QBE backends are in development. WASM, ARM and x86 are planned.</p>
+<p>Antimony supports three compilation backends: JavaScript, C, and QBE. QBE is the primary systems-level target.</p>
 <p>Backend can be specified when running on building with <code>--target</code> (<code>-t</code>) option, default is <code>js</code>:</p>
 <pre><code class="language-sh">sb -t c build in.sb --out-file out
 </code></pre>
@@ -1029,15 +1029,11 @@ if value == 1 {
 </thead>
 <tbody>
 <tr><td style="text-align: left">Node.js</td><td style="text-align: left"><code>js</code></td><td style="text-align: left">mostly stable</td></tr>
-<tr><td style="text-align: left"><a href="https://c9x.me/compile">QBE</a></td><td style="text-align: left"><code>qbe</code></td><td style="text-align: left">work in progess</td></tr>
-<tr><td style="text-align: left">LLVM</td><td style="text-align: left"><code>llvm</code></td><td style="text-align: left">unstable</td></tr>
+<tr><td style="text-align: left"><a href="https://c9x.me/compile">QBE</a></td><td style="text-align: left"><code>qbe</code></td><td style="text-align: left">work in progress</td></tr>
 <tr><td style="text-align: left">C</td><td style="text-align: left"><code>c</code></td><td style="text-align: left">unstable</td></tr>
 </tbody>
 </table>
 </div>
-<p>LLVM also requires to enable <code>llvm</code> feature when building:</p>
-<pre><code class="language-sh">cargo build --features llvm
-</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="debugging"><a class="header" href="#debugging">Debugging</a></h1>
 <blockquote>
