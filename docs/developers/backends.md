@@ -1,6 +1,6 @@
 # Backends
 
-Antimony currently implements a JavaScript backend, but C and QBE backends are in development. WASM, ARM and x86 are planned.
+Antimony supports three compilation backends: JavaScript, C, and QBE. QBE is the primary systems-level target.
 
 Backend can be specified when running on building with `--target` (`-t`) option, default is `js`:
 
@@ -13,14 +13,7 @@ sb -t c build in.sb --out-file out
 | Target Language | Identifier     | Stability notice |
 | :-------------- | :------------- | :--------------- |
 | Node.js         | `js`           | mostly stable    |
-| [QBE]           | `qbe`          | work in progess  |
-| LLVM            | `llvm`         | unstable         |
+| [QBE]           | `qbe`          | work in progress |
 | C               | `c`            | unstable         |
 
 [QBE]: https://c9x.me/compile
-
-LLVM also requires to enable `llvm` feature when building:
-
-```sh
-cargo build --features llvm
-```
