@@ -204,7 +204,8 @@ dependencies = [
 [[package]]
 name = "qbe"
 version = "4.0.0"
-source = "git+https://github.com/garritfra/qbe-rs?tag=v4.0.0#56b6aca7b99d0e4c41709c2246b56e966ed7722a"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7a68eeaf824d0a6cf7acb46ce5015fc90dae1520126b18330957e65117d0107"
 
 [[package]]
 name = "quote"
