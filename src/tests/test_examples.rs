@@ -352,7 +352,7 @@ fn test_qbe_execution_tests() -> Result<(), Error> {
     for entry in tests {
         let entry = entry?;
         let path = entry.path();
-        if path.is_dir() || path.extension().map_or(true, |e| e != "sb") {
+        if path.is_dir() || path.extension().is_none_or(|e| e != "sb") {
             continue;
         }
         total += 1;
