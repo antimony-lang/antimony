@@ -7,7 +7,7 @@
 
 ### QBE Stabilization
 
-- [ ] **STAB-01**: End-to-end execution tests exist — programs are compiled via QBE, linked, and executed (not just IL text-checked)
+- [x] **STAB-01**: End-to-end execution tests exist — programs are compiled via QBE, linked, and executed (not just IL text-checked)
 - [ ] **STAB-02**: Unsafe transmute UB in QBE codegen is resolved
 - [ ] **STAB-03**: Formal gap inventory completed — every language feature is tested for correct QBE codegen and gaps are documented
 
@@ -61,7 +61,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAB-01 | Phase 1 | Pending |
+| STAB-01 | Phase 1 | Complete |
 | STAB-02 | Phase 1 | Pending |
 | STAB-03 | Phase 1 | Pending |
 | RUNTIME-01 | Phase 2 | Pending |
