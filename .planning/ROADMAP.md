@@ -97,3 +97,14 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 4. Self-Hosted Compiler Frontend | 0/TBD | Not started | - |
 | 5. Self-Hosted Compiler Backend and Builder | 0/TBD | Not started | - |
 | 6. Bootstrap Verification | 0/TBD | Not started | - |
+
+## Backlog
+
+### Phase 999.1: long-term runtime performance tracking and benchmark suite (BACKLOG)
+
+**Goal:** [Captured for future planning]
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd:review-backlog when ready)
