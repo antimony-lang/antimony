@@ -77,6 +77,19 @@ The compiler is written in Rust; bootstrapping requires Antimony to express:
 - `actions/checkout@v2` is two major versions behind (v4 is current)
 - `KyleMayes/install-llvm-action` pins LLVM 10 (released 2020); LLVM 18+ is current
 
+## Missing Language Features (Type System)
+Confirmed from `src/ast/types.rs` — the `Type` enum only has:
+`Any`, `Int`, `Str`, `Bool`, `Array(Box<Type>, Option<usize>)`, `Struct(String)`
+
+Notable absences relevant to the bootstrap goal:
+- **No float type** — rules out floating-point math
+- **No pointer/reference type** — no raw memory access, no C interop at the type level
+- **No function type / closures** — callbacks and higher-order functions not expressible
+- **No unsigned integer / sized integers** (no u8, u32, i64, etc.) — `Int` is untyped/single-width
+- **No void/unit type** — functions without return use `Option<Type> = None` implicitly
+
+These gaps are load-bearing for bootstrapping: the Rust compiler relies heavily on typed integers, pointers, and closures.
+
 ## Gaps & Unknowns
 - Standard library (`lib/`) contents not surveyed — unknown what primitives exist
 - `builtin/` contents not surveyed — unknown what built-in functions are implemented
