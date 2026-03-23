@@ -24,7 +24,7 @@ This seed should be presented during `/gsd:new-milestone` when the milestone sco
 
 ## Scope Estimate
 
-**Medium** — A phase or two. Needs design work for `extern` declaration syntax, parser support, type-checking of foreign signatures, and QBE IL emission for external symbol calls. Does not require a full milestone but is more than a quick task.
+**Medium** — A phase or two, though likely closer to one focused phase. Needs design work for `extern` declaration syntax, parser support, type-checking of foreign signatures, and a trivial generator change. Because QBE handles the interop layer natively (external symbol linkage works out of the box), the complexity is lower than a typical FFI implementation — the estimate of "a phase or two" may be conservative; a single focused phase is plausible.
 
 ## Breadcrumbs
 
@@ -37,4 +37,15 @@ Related code and decisions found in the current codebase:
 
 ## Notes
 
-The most natural design is an `extern` keyword for declaring C function signatures without a body, similar to Rust's `extern "C"` blocks. QBE IL already supports calling external symbols natively, so the generator changes should be straightforward once the AST and parser are extended.
+**QBE IL handles external symbol linkage natively.** QBE's `call $symbol(...)` syntax works for any external C symbol without special configuration — no ABI shim or linker script is needed. This is the hard part of FFI and QBE already solves it. The generator change is therefore minimal: emit `call $fn_name(...)` for `extern` calls the same way it does for internal calls, without emitting a function body for the extern-declared function.
+
+**Antimony's work is purely in the frontend.** The remaining implementation is confined to the parser/AST layer:
+
+1. `extern` keyword added to the lexer.
+2. `extern fn name(args) -> ret` declaration syntax in the parser — natural anchor: `parse_declare()` in `src/parser/rules.rs:785`.
+3. A new AST variant (e.g., `HStatement::ExternFn` or a flag on the existing function node) to represent a bodyless foreign declaration.
+4. The transformer must pass extern declarations through to LAST without requiring a body.
+5. The QBE generator skips emitting a function body for extern-flagged functions.
+6. The builder must skip trying to parse a source file for `extern` imports (no Antimony source exists for a C library).
+
+The most natural design is an `extern` keyword for declaring C function signatures without a body, similar to Rust's `extern "C"` blocks. Because QBE already solves the hard part (symbol linkage), the bulk of the effort lands in steps 1–4 above rather than in code generation.
