@@ -18,14 +18,10 @@ use crate::ast::types::Type;
 use crate::ast::*;
 use std::cmp;
 use std::collections::HashMap;
-use std::rc::Rc;
-
-// Use Rc to avoid lifetimes in some of the tricky spots
-// TODO: This should be fixed in the QBE library
-type RcTypeDef = Rc<qbe::TypeDef<'static>>;
+use std::sync::Arc;
 
 /// Information stored for each variable in scope
-type VarInfo = (qbe::Type<'static>, qbe::Value, Option<Type>);
+type VarInfo = (qbe::Type, qbe::Value, Option<Type>);
 
 /// Built-in functions that the QBE backend handles as inline intrinsics
 /// rather than emitting a regular function call.
@@ -41,17 +37,17 @@ pub struct QbeGenerator {
     /// Block-scoped variable -> (qbe_type, temporary, ast_type) mappings
     scopes: Vec<HashMap<String, VarInfo>>,
     /// Structure -> (type, meta data, size) mappings
-    struct_map: HashMap<String, (qbe::Type<'static>, StructMeta, u64)>,
+    struct_map: HashMap<String, (qbe::Type, StructMeta, u64)>,
     /// Label prefix of loop scopes
     loop_labels: Vec<String>,
     /// Data defintions collected during generation
-    datadefs: Vec<qbe::DataDef<'static>>,
+    datadefs: Vec<qbe::DataDef>,
     /// Type defintions collected during generation
-    typedefs: Vec<RcTypeDef>,
+    typedefs: Vec<Arc<qbe::TypeDef>>,
     /// Function name -> return type (populated by pre-pass before codegen)
-    fn_signatures: HashMap<String, Option<qbe::Type<'static>>>,
+    fn_signatures: HashMap<String, Option<qbe::Type>>,
     /// Function name -> parameter types (populated by pre-pass before codegen)
-    fn_param_types: HashMap<String, Vec<qbe::Type<'static>>>,
+    fn_param_types: HashMap<String, Vec<qbe::Type>>,
     /// Function name -> AST return type (populated by pre-pass before codegen)
     fn_ast_signatures: HashMap<String, Option<Type>>,
     /// Function name -> AST parameter types (populated by pre-pass before codegen)
@@ -59,11 +55,11 @@ pub struct QbeGenerator {
     /// Functions replaced by inline intrinsics
     intrinsics: HashMap<String, Intrinsic>,
     /// Module being built
-    module: qbe::Module<'static>,
+    module: qbe::Module,
 }
 
 /// Mapping of field -> (type, offset, ast_type)
-type StructMeta = HashMap<String, (qbe::Type<'static>, u64, Option<Type>)>;
+type StructMeta = HashMap<String, (qbe::Type, u64, Option<Type>)>;
 
 /// Infer the return type of a function from its body when no annotation is present.
 /// Scans declarations and parameters for typed variables, then looks for a matching return statement.
@@ -193,16 +189,12 @@ impl Generator for QbeGenerator {
                 // We can add debug comments to the module if needed
             }
 
-            let typedef_rc = Rc::new(structure);
-            generator.module.add_type((*typedef_rc).clone());
-            generator.typedefs.push(typedef_rc);
+            let typedef_arc = Arc::new(structure);
+            generator.module.add_type(Arc::clone(&typedef_arc));
+            generator.typedefs.push(typedef_arc);
 
             // Replace the Word placeholder in struct_map with the proper Aggregate type
-            let struct_type = unsafe {
-                std::mem::transmute::<qbe::Type<'_>, qbe::Type<'static>>(qbe::Type::Aggregate(
-                    generator.typedefs.last().unwrap(),
-                ))
-            };
+            let struct_type = qbe::Type::aggregate(generator.typedefs.last().unwrap());
             if let Some(entry) = generator.struct_map.get_mut(&def.name) {
                 entry.0 = struct_type;
             }
@@ -248,7 +240,7 @@ impl Generator for QbeGenerator {
                 .fn_ast_signatures
                 .insert(func.name.clone(), ast_ret);
 
-            let param_types: Vec<qbe::Type<'static>> = func
+            let param_types: Vec<qbe::Type> = func
                 .arguments
                 .iter()
                 .filter_map(|arg| arg.ty.as_ref())
@@ -309,7 +301,7 @@ impl QbeGenerator {
                 qbe::Type::Halfword | qbe::Type::SignedHalfword | qbe::Type::UnsignedHalfword => 2,
                 qbe::Type::Word | qbe::Type::Single => 4,
                 qbe::Type::Long | qbe::Type::Double => 8,
-                qbe::Type::Aggregate(td) => match td {
+                qbe::Type::Aggregate(td) => match &**td {
                     qbe::TypeDef::Regular { items, .. } => items
                         .iter()
                         .map(|(item_ty, _)| alignment_of(item_ty))
@@ -325,7 +317,7 @@ impl QbeGenerator {
     }
 
     /// Returns the wider of two QBE types (Byte < Word < Long).
-    fn wider_type(a: &qbe::Type<'static>, b: &qbe::Type<'static>) -> qbe::Type<'static> {
+    fn wider_type(a: &qbe::Type, b: &qbe::Type) -> qbe::Type {
         fn rank(ty: &qbe::Type) -> u8 {
             match ty {
                 qbe::Type::Byte | qbe::Type::SignedByte | qbe::Type::UnsignedByte => 1,
@@ -348,10 +340,10 @@ impl QbeGenerator {
     }
 
     /// Returns an aggregate type for a structure (note: has side effects)
-    fn generate_struct(&mut self, def: &StructDef) -> GeneratorResult<qbe::TypeDef<'static>> {
+    fn generate_struct(&mut self, def: &StructDef) -> GeneratorResult<qbe::TypeDef> {
         self.tmp_counter += 1;
         let ident = format!("struct.{}", self.tmp_counter);
-        let mut items: Vec<(qbe::Type<'static>, usize)> = Vec::new();
+        let mut items: Vec<(qbe::Type, usize)> = Vec::new();
         let mut meta = StructMeta::new();
         let mut offset = 0_u64;
         let mut max_align = 1_u64;
@@ -396,11 +388,11 @@ impl QbeGenerator {
         })
     }
 
-    fn generate_function(&mut self, func: &Function) -> GeneratorResult<qbe::Function<'static>> {
+    fn generate_function(&mut self, func: &Function) -> GeneratorResult<qbe::Function> {
         // Function argument scope
         self.scopes.push(HashMap::new());
 
-        let mut arguments: Vec<(qbe::Type<'static>, qbe::Value)> = Vec::new();
+        let mut arguments: Vec<(qbe::Type, qbe::Value)> = Vec::new();
         for arg in &func.arguments {
             let ast_type = arg
                 .ty
@@ -470,7 +462,7 @@ impl QbeGenerator {
         &mut self,
         struct_def: &StructDef,
         method: &Function,
-    ) -> GeneratorResult<qbe::Function<'static>> {
+    ) -> GeneratorResult<qbe::Function> {
         self.scopes.push(HashMap::new());
 
         // Prepend self as first argument (Long pointer to struct)
@@ -479,8 +471,7 @@ impl QbeGenerator {
             "self",
             Some(Type::Struct(struct_def.name.clone())),
         )?;
-        let mut arguments: Vec<(qbe::Type<'static>, qbe::Value)> =
-            vec![(qbe::Type::Long, self_tmp)];
+        let mut arguments: Vec<(qbe::Type, qbe::Value)> = vec![(qbe::Type::Long, self_tmp)];
 
         for arg in &method.arguments {
             let ast_type = arg
@@ -538,15 +529,15 @@ impl QbeGenerator {
     /// Generates a method call: `obj.method(args)` → `call StructName__methodName(obj_ptr, args...)`
     fn generate_method_call(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         obj: &Expression,
         method_name: &str,
         args: &[Expression],
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         let struct_name = self.get_struct_name_of(obj)?;
         let (_, obj_ptr) = self.generate_expression(func, obj)?;
 
-        let mut call_args: Vec<(qbe::Type<'static>, qbe::Value)> = vec![(qbe::Type::Long, obj_ptr)];
+        let mut call_args: Vec<(qbe::Type, qbe::Value)> = vec![(qbe::Type::Long, obj_ptr)];
         for arg in args {
             let result = self.generate_expression(func, arg)?;
             call_args.push(result);
@@ -578,7 +569,7 @@ impl QbeGenerator {
     /// Generates a statement
     fn generate_statement(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         stmt: &Statement,
     ) -> GeneratorResult<()> {
         match stmt {
@@ -630,9 +621,9 @@ impl QbeGenerator {
                         align: None,
                         items: vec![(qbe::Type::Long, 1), (elem_qbe_type, *size)],
                     };
-                    let typedef_rc = Rc::new(typedef);
-                    self.module.add_type((*typedef_rc).clone());
-                    self.typedefs.push(typedef_rc);
+                    let typedef_arc = Arc::new(typedef);
+                    self.module.add_type(Arc::clone(&typedef_arc));
+                    self.typedefs.push(typedef_arc);
                 }
             }
             Statement::Assign { lhs, rhs } => {
@@ -683,10 +674,10 @@ impl QbeGenerator {
     /// Generates code for a built-in intrinsic, replacing the normal function call.
     fn generate_intrinsic(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         intrinsic: &Intrinsic,
         args: &[Expression],
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         match intrinsic {
             Intrinsic::ArrayLen => {
                 let arr_arg = args
@@ -714,9 +705,9 @@ impl QbeGenerator {
     /// Generates an expression
     fn generate_expression(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         expr: &Expression,
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         match expr {
             Expression::Int(literal) => {
                 let tmp = self.new_temporary();
@@ -757,7 +748,7 @@ impl QbeGenerator {
                 // Widen arguments if the callee expects a larger type (e.g. Type::Any → Long)
                 let param_types_opt = self.fn_param_types.get(fn_name).cloned();
                 let param_ast_types_opt = self.fn_param_ast_types.get(fn_name).cloned();
-                let mut new_args: Vec<(qbe::Type<'static>, qbe::Value)> = Vec::new();
+                let mut new_args: Vec<(qbe::Type, qbe::Value)> = Vec::new();
                 for (i, (arg_ty, arg_val)) in arg_results.into_iter().enumerate() {
                     // int → string coercion: call _int_to_str when passing an int to a string param
                     if arg_ty == qbe::Type::Word {
@@ -906,7 +897,7 @@ impl QbeGenerator {
     /// Generates an `if` statement
     fn generate_if(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         cond: &Expression,
         if_clause: &Statement,
         else_clause: &Option<Box<Statement>>,
@@ -956,7 +947,7 @@ impl QbeGenerator {
     /// Generates a `while` statement
     fn generate_while(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         cond: &Expression,
         body: &Statement,
     ) -> GeneratorResult<()> {
@@ -991,14 +982,11 @@ impl QbeGenerator {
     }
 
     /// Generates a string
-    fn generate_string(
-        &mut self,
-        string: &str,
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+    fn generate_string(&mut self, string: &str) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         self.tmp_counter += 1;
         let name = format!("string.{}", self.tmp_counter);
 
-        let mut items: Vec<(qbe::Type<'static>, qbe::DataItem)> = Vec::new();
+        let mut items: Vec<(qbe::Type, qbe::DataItem)> = Vec::new();
         let mut buf = String::new();
         for ch in string.chars() {
             if ch.is_ascii() && !ch.is_ascii_control() && ch != '"' {
@@ -1033,11 +1021,11 @@ impl QbeGenerator {
     /// Returns the result of a binary operation (e.g. `+` or `*=`).
     fn generate_binop(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         lhs: &Expression,
         op: &BinOp,
         rhs: &Expression,
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         let (lhs_ty, lhs_val) = self.generate_expression(func, lhs)?;
         let (rhs_ty, rhs_val) = self.generate_expression(func, rhs)?;
         let tmp = self.new_temporary();
@@ -1151,7 +1139,7 @@ impl QbeGenerator {
     /// access
     fn generate_assignment(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         lhs: &Expression,
         rhs: qbe::Value,
     ) -> GeneratorResult<()> {
@@ -1231,10 +1219,10 @@ impl QbeGenerator {
     /// Generates struct initialization
     fn generate_struct_init(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         name: &str,
         fields: &HashMap<String, Box<Expression>>,
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         // Get the struct info first
         let (ty, meta, size) = self
             .struct_map
@@ -1287,10 +1275,10 @@ impl QbeGenerator {
     /// Retrieves the result of struct field access
     fn generate_field_access(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         obj: &Expression,
         field: &Expression,
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
         // Get the field info first
         let access_result = self.resolve_field_access(func, obj, field)?;
         let (src, ty, offset) = access_result;
@@ -1318,7 +1306,7 @@ impl QbeGenerator {
     /// returning `(source_value, struct_name, base_offset)`.
     fn resolve_struct_expr(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         expr: &Expression,
     ) -> GeneratorResult<(qbe::Value, String, u64)> {
         match expr {
@@ -1380,10 +1368,10 @@ impl QbeGenerator {
     /// Retrieves `(source, field_type, offset)` from field access expression
     fn resolve_field_access(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         obj: &Expression,
         field: &Expression,
-    ) -> GeneratorResult<(qbe::Value, qbe::Type<'static>, u64)> {
+    ) -> GeneratorResult<(qbe::Value, qbe::Type, u64)> {
         let (src, struct_name, base_off) = self.resolve_struct_expr(func, obj)?;
 
         let field_name = match field {
@@ -1410,7 +1398,7 @@ impl QbeGenerator {
     /// Generates a `for` loop (for-in over an array)
     fn generate_for_loop(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         ident: &Variable,
         expr: &Expression,
         body: &Statement,
@@ -1535,11 +1523,11 @@ impl QbeGenerator {
     /// Generates an array literal
     fn generate_array(
         &mut self,
-        func: &mut qbe::Function<'static>,
+        func: &mut qbe::Function,
         len: usize,
         items: &[Expression],
-    ) -> GeneratorResult<(qbe::Type<'static>, qbe::Value)> {
-        let mut first_type: Option<qbe::Type<'static>> = None;
+    ) -> GeneratorResult<(qbe::Type, qbe::Value)> {
+        let mut first_type: Option<qbe::Type> = None;
         let mut results: Vec<qbe::Value> = Vec::new();
 
         // First collect all item expressions to avoid borrowing issues
@@ -1624,17 +1612,12 @@ impl QbeGenerator {
         };
 
         // Create a reference to the registered typedef
-        let typedef_rc = Rc::new(typedef);
-        self.module.add_type((*typedef_rc).clone());
-        self.typedefs.push(typedef_rc);
+        let typedef_arc = Arc::new(typedef);
+        self.module.add_type(Arc::clone(&typedef_arc));
+        self.typedefs.push(typedef_arc);
 
         // Create an aggregate type using the typedef
-        let array_type = unsafe {
-            // SAFETY: Using Rc to ensure the TypeDef outlives the reference
-            std::mem::transmute::<qbe::Type<'_>, qbe::Type<'static>>(qbe::Type::Aggregate(
-                self.typedefs.last().unwrap(),
-            ))
-        };
+        let array_type = qbe::Type::aggregate(self.typedefs.last().unwrap());
 
         Ok((array_type, tmp))
     }
@@ -1648,7 +1631,7 @@ impl QbeGenerator {
     /// Returns a new temporary bound to a variable
     fn new_var(
         &mut self,
-        ty: &qbe::Type<'static>,
+        ty: &qbe::Type,
         name: &str,
         ast_type: Option<Type>,
     ) -> GeneratorResult<qbe::Value> {
@@ -1678,7 +1661,7 @@ impl QbeGenerator {
     }
 
     /// Returns a QBE type for the given AST type
-    fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type<'static>> {
+    fn get_type(&self, ty: Type) -> GeneratorResult<qbe::Type> {
         match ty {
             Type::Any => Ok(qbe::Type::Long),
             Type::Int => Ok(qbe::Type::Word),

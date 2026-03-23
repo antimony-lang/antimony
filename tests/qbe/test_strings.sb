@@ -1,0 +1,16 @@
+fn main() {
+    let s = "hello"
+    println(s)
+
+    let n = int_to_str(42)
+    println(n)
+
+    let len = strlen("world")
+    if len != 5 {
+        println("FAIL: strlen(world) should be 5")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

@@ -1,0 +1,34 @@
+fn main() {
+    let a = 1 + 2
+    if a != 3 {
+        println("FAIL: 1 + 2 should be 3")
+        exit(1)
+    }
+
+    let b = 10 - 7
+    if b != 3 {
+        println("FAIL: 10 - 7 should be 3")
+        exit(1)
+    }
+
+    let c = 4 * 5
+    if c != 20 {
+        println("FAIL: 4 * 5 should be 20")
+        exit(1)
+    }
+
+    let d = 15 / 3
+    if d != 5 {
+        println("FAIL: 15 / 3 should be 5")
+        exit(1)
+    }
+
+    let e = 17 % 5
+    if e != 2 {
+        println("FAIL: 17 % 5 should be 2")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

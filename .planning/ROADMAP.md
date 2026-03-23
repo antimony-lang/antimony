@@ -96,7 +96,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. QBE Stabilization and Audit | 0/3 | Planning complete | - |
+| 1. QBE Stabilization and Audit | 0/3 | Planned    |  |
 | 2. Runtime Primitives | 0/TBD | Not started | - |
 | 3. Standard Library | 0/TBD | Not started | - |
 | 4. Self-Hosted Compiler Frontend | 0/TBD | Not started | - |
@@ -109,7 +109,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 **Goal:** [Captured for future planning]
 **Requirements:** TBD
-**Plans:** 0 plans
+**Plans:** 0/3 plans executed
 
 Plans:
 - [ ] TBD (promote with /gsd:review-backlog when ready)
