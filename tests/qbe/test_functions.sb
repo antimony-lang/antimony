@@ -1,0 +1,49 @@
+fn forty_two(): int {
+    return 42
+}
+
+fn add(a: int, b: int): int {
+    return a + b
+}
+
+fn factorial(n: int): int {
+    if n <= 1 {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
+
+fn no_return() {
+    let x = 1
+}
+
+fn main() {
+    let v = forty_two()
+    if v != 42 {
+        println("FAIL: forty_two() should return 42")
+        exit(1)
+    }
+
+    let s = add(3, 4)
+    if s != 7 {
+        println("FAIL: add(3, 4) should return 7")
+        exit(1)
+    }
+
+    let f1 = factorial(1)
+    if f1 != 1 {
+        println("FAIL: factorial(1) should be 1")
+        exit(1)
+    }
+
+    let f5 = factorial(5)
+    if f5 != 120 {
+        println("FAIL: factorial(5) should be 120")
+        exit(1)
+    }
+
+    no_return()
+
+    println("PASS")
+    exit(0)
+}
