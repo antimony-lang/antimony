@@ -370,7 +370,11 @@ fn test_qbe_execution_tests() -> Result<(), Error> {
     if !failures.is_empty() {
         println!("Failed tests (gap data for Plan 02):");
         for (path, reason) in &failures {
-            println!("  - {:?}: {}", path.file_name().unwrap(), &reason[..reason.len().min(120)]);
+            println!(
+                "  - {:?}: {}",
+                path.file_name().unwrap(),
+                &reason[..reason.len().min(120)]
+            );
         }
     }
 
