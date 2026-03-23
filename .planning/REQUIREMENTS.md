@@ -61,20 +61,20 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAB-01 | TBD | Pending |
-| STAB-02 | TBD | Pending |
-| STAB-03 | TBD | Pending |
-| RUNTIME-01 | TBD | Pending |
-| RUNTIME-02 | TBD | Pending |
-| RUNTIME-03 | TBD | Pending |
-| RUNTIME-04 | TBD | Pending |
-| RUNTIME-05 | TBD | Pending |
-| RUNTIME-06 | TBD | Pending |
-| STDLIB-01 | TBD | Pending |
-| STDLIB-02 | TBD | Pending |
-| STDLIB-03 | TBD | Pending |
-| BOOT-01 | TBD | Pending |
-| BOOT-02 | TBD | Pending |
-| BOOT-03 | TBD | Pending |
-| BOOT-04 | TBD | Pending |
-| BOOT-05 | TBD | Pending |
+| STAB-01 | Phase 1 | Pending |
+| STAB-02 | Phase 1 | Pending |
+| STAB-03 | Phase 1 | Pending |
+| RUNTIME-01 | Phase 2 | Pending |
+| RUNTIME-02 | Phase 2 | Pending |
+| RUNTIME-03 | Phase 2 | Pending |
+| RUNTIME-04 | Phase 2 | Pending |
+| RUNTIME-05 | Phase 2 | Pending |
+| RUNTIME-06 | Phase 2 | Pending |
+| STDLIB-01 | Phase 3 | Pending |
+| STDLIB-02 | Phase 3 | Pending |
+| STDLIB-03 | Phase 3 | Pending |
+| BOOT-01 | Phase 4 | Pending |
+| BOOT-02 | Phase 4 | Pending |
+| BOOT-03 | Phase 5 | Pending |
+| BOOT-04 | Phase 5 | Pending |
+| BOOT-05 | Phase 6 | Pending |
