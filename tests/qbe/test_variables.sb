@@ -1,0 +1,30 @@
+fn main() {
+    let x = 42
+    if x != 42 {
+        println("FAIL: x should be 42")
+        exit(1)
+    }
+
+    let y: int = 10
+    if y != 10 {
+        println("FAIL: y should be 10")
+        exit(1)
+    }
+
+    x = 100
+    if x != 100 {
+        println("FAIL: x should be 100 after reassignment")
+        exit(1)
+    }
+
+    let a = 3
+    let b = 4
+    let c = a + b
+    if c != 7 {
+        println("FAIL: a + b should be 7")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

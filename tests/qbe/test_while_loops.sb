@@ -1,0 +1,54 @@
+fn main() {
+    let i = 0
+    while i < 5 {
+        i = i + 1
+    }
+    if i != 5 {
+        println("FAIL: while loop should count to 5")
+        exit(1)
+    }
+
+    let j = 0
+    while j < 10 {
+        if j == 3 {
+            break
+        }
+        j = j + 1
+    }
+    if j != 3 {
+        println("FAIL: while loop with break should stop at 3")
+        exit(1)
+    }
+
+    let odds = 0
+    let k = 0
+    while k < 10 {
+        k = k + 1
+        if k % 2 == 0 {
+            continue
+        }
+        odds = odds + 1
+    }
+    if odds != 5 {
+        println("FAIL: should count 5 odd numbers in 1..10")
+        exit(1)
+    }
+
+    let outer = 0
+    let p = 0
+    while p < 3 {
+        let q = 0
+        while q < 3 {
+            outer = outer + 1
+            q = q + 1
+        }
+        p = p + 1
+    }
+    if outer != 9 {
+        println("FAIL: nested while loops should iterate 9 times")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}
