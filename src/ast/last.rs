@@ -29,6 +29,7 @@ pub type SymbolTable = HashMap<String, Option<Type>>;
 pub struct Module {
     pub func: Vec<Function>,
     pub structs: Vec<StructDef>,
+    #[allow(dead_code)]
     pub globals: Vec<String>,
 }
 
