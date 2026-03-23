@@ -67,6 +67,88 @@ fn test_directory(dir_in: &str) -> Result<(), Error> {
 }
 
 /// Compile a single .sb file through the full QBE pipeline and execute it.
+/// Stricter variant: asserts exit code == 0 and that stdout does NOT contain "FAIL".
+/// Pipeline: .sb → (antimony) → .ssa → (qbe) → .s → (gcc) → binary → run
+fn compile_and_run_qbe_checked(
+    in_file: &std::path::Path,
+    dir_out: &std::path::Path,
+) -> Result<(), Error> {
+    let dir = std::env::current_dir().unwrap();
+
+    let base_name = in_file.file_stem().unwrap().to_string_lossy().into_owned();
+    let ssa_file = dir_out.join(format!("{}.ssa", base_name));
+    let asm_file = dir_out.join(format!("{}.s", base_name));
+    let bin_file = dir_out.join(&base_name);
+
+    // Compile .sb -> .ssa
+    let compile = Command::new("cargo")
+        .arg("run")
+        .arg("--")
+        .arg("--target")
+        .arg("qbe")
+        .arg("build")
+        .arg(in_file)
+        .arg("-o")
+        .arg(&ssa_file)
+        .output()?;
+    assert!(
+        compile.status.success(),
+        "QBE compile failed for {:?}: {}",
+        in_file,
+        String::from_utf8_lossy(&compile.stderr)
+    );
+
+    // .ssa -> .s via qbe
+    let qbe = Command::new("qbe")
+        .arg("-o")
+        .arg(&asm_file)
+        .arg(&ssa_file)
+        .output()?;
+    assert!(
+        qbe.status.success(),
+        "qbe failed for {:?}: {}",
+        &ssa_file,
+        String::from_utf8_lossy(&qbe.stderr)
+    );
+
+    // .s -> binary via gcc (link with builtin_qbe.c for runtime functions)
+    let builtin_c = dir.join("builtin/builtin_qbe.c");
+    let gcc = Command::new("gcc")
+        .arg("-o")
+        .arg(&bin_file)
+        .arg(&asm_file)
+        .arg(&builtin_c)
+        .output()?;
+    assert!(
+        gcc.status.success(),
+        "gcc failed for {:?}: {}",
+        &asm_file,
+        String::from_utf8_lossy(&gcc.stderr)
+    );
+
+    // Execute — assert exit code == 0 and stdout does not contain "FAIL".
+    let execution = Command::new(&bin_file).output()?;
+    let stdout = String::from_utf8_lossy(&execution.stdout);
+    let stderr = String::from_utf8_lossy(&execution.stderr);
+    assert!(
+        execution.status.success(),
+        "Binary exited with non-zero code for {:?}\nstdout: {}\nstderr: {}",
+        &bin_file,
+        stdout,
+        stderr
+    );
+    assert!(
+        !stdout.contains("FAIL"),
+        "Binary stdout contains FAIL for {:?}\nstdout: {}\nstderr: {}",
+        &bin_file,
+        stdout,
+        stderr
+    );
+
+    Ok(())
+}
+
+/// Compile a single .sb file through the full QBE pipeline and execute it.
 /// Pipeline: .sb → (antimony) → .ssa → (qbe) → .s → (gcc) → binary → run
 fn compile_and_run_qbe(in_file: &std::path::Path, dir_out: &std::path::Path) -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
@@ -240,5 +322,28 @@ fn test_inline_function_error() -> Result<(), Error> {
         .success();
 
     assert!(!success);
+    Ok(())
+}
+
+/// Discover and run all .sb files in tests/qbe/ through the full QBE pipeline.
+/// Each test program must self-check: print PASS/FAIL and call exit(0)/exit(1).
+/// The harness asserts exit code == 0 and that stdout does not contain "FAIL".
+#[test]
+fn test_qbe_execution_tests() -> Result<(), Error> {
+    let dir = std::env::current_dir().unwrap();
+    let dir_out = dir.join("tests_qbe_out");
+    let _ = fs::create_dir(&dir_out);
+
+    let test_dir = dir.join("tests/qbe");
+    let tests = std::fs::read_dir(&test_dir)?;
+
+    for entry in tests {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() || path.extension().map_or(true, |e| e != "sb") {
+            continue;
+        }
+        compile_and_run_qbe_checked(&path, &dir_out)?;
+    }
     Ok(())
 }
