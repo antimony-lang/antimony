@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 Phase: 1 of 6 (QBE Stabilization and Audit)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
-Last activity: 2026-03-23 -- Roadmap created
+Last activity: 2026-03-23 -- Quick task 260323-cfg completed (x86/LLVM backends removed)
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -45,6 +45,7 @@ Recent decisions affecting current work:
 - Bootstrap before Doom (from PROJECT.md)
 - Systematic gap audit first (from PROJECT.md)
 - Full compiler rewrite, not subset (from PROJECT.md)
+- Only C, JS, and QBE backends remain as compilation targets (quick-260323-cfg)
 
 ### Pending Todos
 
@@ -59,5 +60,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-23
-Stopped at: Roadmap created, ready to plan Phase 1
+Stopped at: Completed quick task 260323-cfg (deprecate x86 and LLVM backends), ready to plan Phase 1
 Resume file: None
