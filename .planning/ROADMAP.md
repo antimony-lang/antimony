@@ -29,7 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Programs compiled via QBE are linked and executed in CI, not just IL text-checked
   2. The unsafe transmute in QBE codegen is replaced with correct code or guarded with tests that prove it produces valid output for nested structs
   3. Every language feature has been tested against QBE codegen and gaps are catalogued in a document with severity and priority
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md -- Build QBE execution test harness and core test programs (types, arithmetic, control flow, functions)
+- [ ] 01-02-PLAN.md -- Complete language feature sweep (arrays, structs, methods, loops) and compile QBE-GAPS.md gap inventory
+- [ ] 01-03-PLAN.md -- Fix upstream qbe crate lifetime issue and remove unsafe transmutes from generator
 
 ### Phase 2: Runtime Primitives
 **Goal**: Antimony programs compiled via QBE can manipulate strings, read/write files, accept CLI arguments, and allocate heap memory
@@ -91,7 +96,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. QBE Stabilization and Audit | 0/TBD | Not started | - |
+| 1. QBE Stabilization and Audit | 0/3 | Planning complete | - |
 | 2. Runtime Primitives | 0/TBD | Not started | - |
 | 3. Standard Library | 0/TBD | Not started | - |
 | 4. Self-Hosted Compiler Frontend | 0/TBD | Not started | - |
