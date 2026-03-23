@@ -50,6 +50,7 @@
 - Bump dependency [qbe](https://crates.io/crates/qbe) from `2.5.1` to `3.0.0` ([#131](https://github.com/antimony-lang/antimony/pull/131))
 - Replace unmaintained `structopt` with `clap` ([#132](https://github.com/antimony-lang/antimony/pull/132))
 - Pin Rust toolchain to `1.93` in `rust-toolchain.toml` ([#133](https://github.com/antimony-lang/antimony/pull/133))
+- Remove x86 and LLVM backends -- only C, JS, and QBE compilation targets remain
 
 ## v0.9.0 (2025-04-18)
 
