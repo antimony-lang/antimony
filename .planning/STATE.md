@@ -57,6 +57,12 @@ None yet.
 - Research flagged: pointer type syntax is unresolved language design (affects Phase 2)
 - Research flagged: QBE generator port (Phase 5) is the largest and riskiest component (~1753 lines of Rust to port)
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260323-cfg | deprecate the x86 and llvm backends | 2026-03-23 | f846fff | [260323-cfg-deprecate-the-x86-and-llvm-backends](./quick/260323-cfg-deprecate-the-x86-and-llvm-backends/) |
+
 ## Session Continuity
 
 Last session: 2026-03-23
