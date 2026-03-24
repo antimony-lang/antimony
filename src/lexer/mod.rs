@@ -422,8 +422,7 @@ impl Cursor<'_> {
     }
 
     fn comment(&mut self) -> TokenKind {
-        // FIXME: Might lead to a bug, if End of file is encountered
-        while self.first() != '\n' {
+        while self.first() != '\n' && !self.is_eof() {
             self.bump();
         }
 
@@ -519,6 +518,9 @@ impl Cursor<'_> {
     fn eat_string(&mut self, end: char) -> Result<String, String> {
         let mut buf = String::new();
         loop {
+            if self.is_eof() {
+                return Err(self.make_error_msg("Unterminated string literal".into()));
+            }
             match self.first() {
                 '\n' => return Err(self.make_error_msg("String does not end on same line".into())),
                 '\\' => {

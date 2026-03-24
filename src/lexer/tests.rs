@@ -342,3 +342,56 @@ fn fib() {}
         }
     );
 }
+
+mod prop_tests {
+    use super::*;
+    use proptest::prelude::*;
+
+    fn decimal_literal() -> impl Strategy<Value = String> {
+        prop::string::string_regex("[1-9][0-9_]{0,9}|0").unwrap()
+    }
+
+    fn binary_literal() -> impl Strategy<Value = String> {
+        prop::string::string_regex("0b[01][01_]{0,15}").unwrap()
+    }
+
+    fn octal_literal() -> impl Strategy<Value = String> {
+        prop::string::string_regex("0o[0-7][0-7_]{0,10}").unwrap()
+    }
+
+    fn hex_literal() -> impl Strategy<Value = String> {
+        prop::string::string_regex("0x[0-9a-fA-F][0-9a-fA-F_]{0,7}").unwrap()
+    }
+
+    fn any_int_literal() -> impl Strategy<Value = String> {
+        prop_oneof![
+            decimal_literal(),
+            binary_literal(),
+            octal_literal(),
+            hex_literal(),
+        ]
+    }
+
+    proptest! {
+        #[test]
+        fn lexer_never_panics(input in any::<String>()) {
+            let _ = tokenize(&input);
+        }
+
+        #[test]
+        fn round_trip_raw_reconstruction(input in any::<String>()) {
+            if let Ok(tokens) = tokenize(&input) {
+                let reconstructed: String = tokens.iter().map(|t| t.raw.as_str()).collect();
+                prop_assert_eq!(reconstructed, input);
+            }
+        }
+
+        #[test]
+        fn int_literal_produces_single_token(input in any_int_literal()) {
+            let tokens = tokenize(&input).unwrap();
+            prop_assert_eq!(tokens.len(), 1, "Expected 1 token for {:?}, got {:?}", input, tokens);
+            prop_assert_eq!(&tokens[0].kind, &TokenKind::Literal(Value::Int));
+            prop_assert_eq!(&tokens[0].raw, &input);
+        }
+    }
+}
