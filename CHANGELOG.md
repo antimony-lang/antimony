@@ -20,6 +20,8 @@
 
 **Fixes**
 
+- Lexer: fix infinite loop in `comment()` when EOF is reached without a trailing newline ([#199](https://github.com/antimony-lang/antimony/pull/199))
+- Lexer: fix infinite loop in `eat_string()` on unterminated string literals at EOF ([#199](https://github.com/antimony-lang/antimony/pull/199))
 - QBE: Use native `blit` instruction instead of `memcpy` call for aggregate struct field copies ([#157](https://github.com/antimony-lang/antimony/issues/157))
 - QBE: Void function calls no longer assign to a temporary — `call $fn()` is now emitted instead of the invalid `%tmp =w call $fn()` ([#156](https://github.com/antimony-lang/antimony/issues/156))
 - QBE: Fix `Bool` type mapped to `Byte` (`b`) in `get_type()` — booleans now map to `Word` (`w`), consistent with how bool literals and comparisons are already emitted ([#155](https://github.com/antimony-lang/antimony/issues/155))
@@ -42,6 +44,7 @@
 
 **Maintenance**
 
+- Add property-based tests for the lexer using `proptest` — no-panic on arbitrary input, round-trip reconstruction, and integer literal tokenization ([#199](https://github.com/antimony-lang/antimony/pull/199))
 - QBE: Run all examples in QBE integration tests instead of a hardcoded subset ([#163](https://github.com/antimony-lang/antimony/issues/163))
 - QBE: Add integration tests and CI support — compile and run examples and test cases through the full QBE pipeline (compile → qbe → gcc → execute) ([#145](https://github.com/antimony-lang/antimony/issues/145))
 - Update deprecated GitHub Actions (`peaceiris/actions-mdbook@v1` → `v2`, `actions/setup-python@v2` → `v5`) to fix docs deployment ([#153](https://github.com/antimony-lang/antimony/pull/153))
