@@ -17,7 +17,6 @@
 - stdlib: Add `string` module with `str_len`, `repeat`, and `to_int` functions ([#160](https://github.com/antimony-lang/antimony/pull/160))
 - stdlib: Extend `array` module with `sum`, `contains`, `min_array`, `max_array`, `first`, and `last` functions ([#160](https://github.com/antimony-lang/antimony/pull/160))
 - stdlib: Add `read_line()` to `io` module for reading a line from stdin ([#160](https://github.com/antimony-lang/antimony/pull/160))
-- Add 15 unit tests for the type inference module (`infer.rs`) covering literals, variables, arrays, function calls, builtins, binary operators, structs, for-loops, array access, nested if/else, match arms, and explicit type preservation ([#186](https://github.com/antimony-lang/antimony/issues/186))
 
 **Fixes**
 
@@ -46,6 +45,7 @@
 **Maintenance**
 
 - Add property-based tests for the lexer using `proptest` — no-panic on arbitrary input, round-trip reconstruction, and integer literal tokenization ([#199](https://github.com/antimony-lang/antimony/pull/199))
+- Add 15 unit tests for the type inference module (`infer.rs`) covering literals, variables, arrays, function calls, builtins, binary operators, structs, for-loops, array access, nested if/else, match arms, and explicit type preservation ([#186](https://github.com/antimony-lang/antimony/issues/186))
 - QBE: Run all examples in QBE integration tests instead of a hardcoded subset ([#163](https://github.com/antimony-lang/antimony/issues/163))
 - QBE: Add integration tests and CI support — compile and run examples and test cases through the full QBE pipeline (compile → qbe → gcc → execute) ([#145](https://github.com/antimony-lang/antimony/issues/145))
 - Update deprecated GitHub Actions (`peaceiris/actions-mdbook@v1` → `v2`, `actions/setup-python@v2` → `v5`) to fix docs deployment ([#153](https://github.com/antimony-lang/antimony/pull/153))
