@@ -375,10 +375,7 @@ mod tests {
             None,
             Some(HExpression::StructInitialization {
                 name: "Point".into(),
-                fields: HashMap::from([(
-                    "x".to_string(),
-                    Box::new(HExpression::Int(1)),
-                )]),
+                fields: HashMap::from([("x".to_string(), Box::new(HExpression::Int(1)))]),
             }),
         )]);
         let mut m = module(vec![func("main", vec![], body, None)]);
@@ -397,10 +394,7 @@ mod tests {
             expr: HExpression::Variable("arr".into()),
             body: Box::new(block(vec![])),
         };
-        let body = block(vec![
-            declare("arr", Some(arr_ty), None),
-            for_stmt,
-        ]);
+        let body = block(vec![declare("arr", Some(arr_ty), None), for_stmt]);
         let mut m = module(vec![func("main", vec![], body, None)]);
         infer(&mut m);
         let stmts = match &m.func[0].body {
@@ -441,7 +435,11 @@ mod tests {
     #[test]
     fn test_infer_nested_if() {
         let if_body = block(vec![declare("x", None, Some(HExpression::Int(1)))]);
-        let else_body = block(vec![declare("y", None, Some(HExpression::Str("hi".into())))]);
+        let else_body = block(vec![declare(
+            "y",
+            None,
+            Some(HExpression::Str("hi".into())),
+        )]);
         let if_stmt = HStatement::If {
             condition: HExpression::Bool(true),
             body: Box::new(if_body),
@@ -494,21 +492,15 @@ mod tests {
         match &stmts[0] {
             HStatement::Match { arms, .. } => {
                 match &arms[0] {
-                    HMatchArm::Case(_, s) => match s {
-                        HStatement::Block { statements, .. } => {
-                            assert_eq!(get_declared_type(&statements[0]), Some(Type::Int));
-                        }
-                        _ => panic!(),
-                    },
+                    HMatchArm::Case(_, HStatement::Block { statements, .. }) => {
+                        assert_eq!(get_declared_type(&statements[0]), Some(Type::Int));
+                    }
                     _ => panic!(),
                 }
                 match &arms[1] {
-                    HMatchArm::Else(s) => match s {
-                        HStatement::Block { statements, .. } => {
-                            assert_eq!(get_declared_type(&statements[0]), Some(Type::Bool));
-                        }
-                        _ => panic!(),
-                    },
+                    HMatchArm::Else(HStatement::Block { statements, .. }) => {
+                        assert_eq!(get_declared_type(&statements[0]), Some(Type::Bool));
+                    }
                     _ => panic!(),
                 }
             }
