@@ -253,7 +253,15 @@ impl Parser {
                 Keyword::Struct => {
                     Err("Struct definitions inside functions are not allowed".to_string())
                 }
-                Keyword::Selff => Ok(HStatement::Exp(self.parse_expression()?)),
+                Keyword::Selff => {
+                    let expr = self.parse_expression()?;
+                    if self.has_more() {
+                        if let TokenKind::Assign = self.peek()?.kind {
+                            return self.parse_assignent(Some(expr));
+                        }
+                    }
+                    Ok(HStatement::Exp(expr))
+                }
                 _ => Ok(HStatement::Exp(self.parse_expression()?)),
             },
             TokenKind::BraceOpen => Ok(HStatement::Exp(self.parse_expression()?)),

@@ -11,30 +11,33 @@ fn main() {
         exit(1)
     }
 
-    if true && true == false {
+    if true && true {
+    } else {
         println("FAIL: true && true should be true")
         exit(1)
     }
-    if true && false == true {
+    if true && false {
         println("FAIL: true && false should be false")
         exit(1)
     }
-    if false && false == true {
+    if false && false {
         println("FAIL: false && false should be false")
         exit(1)
     }
 
-    if true || false == false {
+    if true || false {
+    } else {
         println("FAIL: true || false should be true")
         exit(1)
     }
-    if false || false == true {
+    if false || false {
         println("FAIL: false || false should be false")
         exit(1)
     }
 
-    if (true && true) || false == false {
-        println("FAIL: (true && true) || false should be true")
+    if true && true || false {
+    } else {
+        println("FAIL: true && true || false should be true")
         exit(1)
     }
 
