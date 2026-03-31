@@ -9,6 +9,8 @@ void _printf(char *msg)
 
 void _exit(int code)
 {
+    fflush(stdout);
+    fflush(stderr);
     _Exit(code);
 }
 
