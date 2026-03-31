@@ -1,0 +1,26 @@
+fn main() {
+    let arr = [1, 2, 3, 4, 5]
+    let total = 0
+
+    for x in arr {
+        total = total + x
+    }
+
+    if total != 15 {
+        println("FAIL: sum of [1,2,3,4,5] should be 15")
+        exit(1)
+    }
+
+    let count = 0
+    for item in [10, 20, 30] {
+        count = count + 1
+    }
+
+    if count != 3 {
+        println("FAIL: for-in over 3-element array should iterate 3 times")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

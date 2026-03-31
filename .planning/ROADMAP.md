@@ -32,8 +32,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Build QBE execution test harness and core test programs (types, arithmetic, control flow, functions)
-- [ ] 01-02-PLAN.md -- Complete language feature sweep (arrays, structs, methods, loops) and compile QBE-GAPS.md gap inventory
+- [x] 01-01-PLAN.md -- Build QBE execution test harness and core test programs (types, arithmetic, control flow, functions)
+- [x] 01-02-PLAN.md -- Complete language feature sweep (arrays, structs, methods, loops) and compile QBE-GAPS.md gap inventory
 - [ ] 01-03-PLAN.md -- Fix upstream qbe crate lifetime issue and remove unsafe transmutes from generator
 
 ### Phase 2: Runtime Primitives

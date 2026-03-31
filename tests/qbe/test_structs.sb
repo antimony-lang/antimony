@@ -1,0 +1,62 @@
+struct Point {
+    x: int
+    y: int
+}
+
+struct Rect {
+    origin: Point
+    width: int
+}
+
+fn main() {
+    let p = new Point {
+        x: 10
+        y: 20
+    }
+
+    if p.x != 10 {
+        println("FAIL: p.x should be 10")
+        exit(1)
+    }
+
+    if p.y != 20 {
+        println("FAIL: p.y should be 20")
+        exit(1)
+    }
+
+    let q = new Point {
+        x: 5
+        y: 15
+    }
+
+    if q.x != 5 {
+        println("FAIL: q.x should be 5")
+        exit(1)
+    }
+
+    let r = new Rect {
+        origin: new Point {
+            x: 3
+            y: 7
+        }
+        width: 100
+    }
+
+    if r.width != 100 {
+        println("FAIL: r.width should be 100")
+        exit(1)
+    }
+
+    if r.origin.x != 3 {
+        println("FAIL: r.origin.x should be 3")
+        exit(1)
+    }
+
+    if r.origin.y != 7 {
+        println("FAIL: r.origin.y should be 7")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

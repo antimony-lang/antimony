@@ -20,9 +20,15 @@ The QBE backend must become capable enough that real systems programs — includ
 - ✓ Basic QBE codegen for functions, control flow, arithmetic — existing
 - ✓ Integration tests: examples compiled and executed end-to-end — existing
 
+### Validated
+
+- ✓ QBE execution test harness — 15 test programs, 13/15 pass, regressions caught in CI — Validated in Phase 1: QBE Stabilization and Audit
+- ✓ Systematic gap audit complete — QBE-GAPS.md documents 43 features (37 pass, 5 fail, 1 partial), 5 bootstrap-blocking gaps mapped to Phase 2 — Validated in Phase 1
+- ✓ Zero unsafe transmutes in QBE generator — qbe crate migrated to v4.0.0 with Arc-based owned types — Validated in Phase 1
+
 ### Active
 
-- [ ] Systematic gap audit: identify all language features not yet working in QBE codegen
+- [ ] String operations, file I/O, CLI args, heap allocation in QBE (Phase 2: Runtime Primitives)
 - [ ] File I/O primitives in QBE (read source files, write output)
 - [ ] Pointer types and pointer arithmetic in QBE
 - [ ] Dynamic memory allocation (malloc/free) in QBE
@@ -59,7 +65,7 @@ The QBE backend must become capable enough that real systems programs — includ
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Bootstrap before Doom | Doom scope is unknown; bootstrap forces exactly the language features needed for real systems programs | — Pending |
-| Systematic gap audit first | JS→QBE transition left unknown gaps; auditing prevents building on broken foundations | — Pending |
+| Systematic gap audit first | JS→QBE transition left unknown gaps; auditing prevents building on broken foundations | ✓ Done — 43 features audited, 5 bootstrap-blockers in Phase 2 |
 | Full compiler rewrite (not subset) | Partial bootstrap doesn't prove the language is capable; full rewrite is the real milestone | — Pending |
 | Doom scope deferred | Bootstrap will reveal what the language can and can't do — scope Doom from that reality | — Pending |
 
@@ -83,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-23 after initialization*
+*Last updated: 2026-03-31 after Phase 1 completion (QBE Stabilization and Audit)*

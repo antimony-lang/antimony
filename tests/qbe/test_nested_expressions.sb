@@ -1,0 +1,43 @@
+fn add(a: int, b: int): int {
+    return a + b
+}
+
+fn main() {
+    let a = (1 + 2) * (3 + 4)
+    if a != 21 {
+        println("FAIL: (1 + 2) * (3 + 4) should be 21")
+        exit(1)
+    }
+
+    let b = 10 - 2 * 3
+    if b != 4 {
+        println("FAIL: 10 - 2 * 3 should be 4")
+        exit(1)
+    }
+
+    let c = add(1, 2) + add(3, 4)
+    if c != 10 {
+        println("FAIL: add(1,2) + add(3,4) should be 10")
+        exit(1)
+    }
+
+    let d = add(1, 2) * 3
+    if d != 9 {
+        println("FAIL: add(1,2) * 3 should be 9")
+        exit(1)
+    }
+
+    let e = 5 > 3
+    let f = 10 < 20
+    if e != true {
+        println("FAIL: 5 > 3 should be true")
+        exit(1)
+    }
+    if f != true {
+        println("FAIL: 10 < 20 should be true")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}
