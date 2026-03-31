@@ -20,6 +20,51 @@ use std::cmp;
 use std::collections::HashMap;
 use std::sync::Arc;
 
+/// SSA implementations of the four runtime helpers that previously lived in
+/// `builtin_qbe.c`.  Emitted verbatim at the top of every QBE output file so
+/// no C compilation step is needed for them.
+///
+/// * `_printf`    – write a string to stdout via `write(1, …)`
+/// * `_exit`      – flush all stdio streams then terminate via `_Exit`
+/// * `_strlen`    – thin word-width wrapper around libc `strlen`
+/// * `_parse_int` – thin wrapper around libc `atoi`
+///
+/// `_str_concat`, `_int_to_str`, and `_read_line` still live in
+/// `builtin_qbe.c` because they need `malloc`/`snprintf`/`fgets` logic that
+/// is awkward to express in QBE IL (variadic calls, multi-step allocation).
+const RUNTIME_PREAMBLE: &str = r#"
+# _printf(msg: l) — write string to stdout using write(2)
+function $_printf(l %msg) {
+@start
+    %len =l call $strlen(l %msg)
+    %_ =l call $write(w 1, l %msg, l %len)
+    ret
+}
+
+# _exit(code: w) — flush all stdio streams then hard-exit
+function $_exit(w %code) {
+@start
+    call $fflush(l 0)
+    call $_Exit(w %code)
+    ret
+}
+
+# _strlen(s: l): w — word-width strlen for Antimony's int return type
+export function w $_strlen(l %s) {
+@start
+    %n =l call $strlen(l %s)
+    %nw =w copy %n
+    ret %nw
+}
+
+# _parse_int(s: l): w — atoi wrapper
+export function w $_parse_int(l %s) {
+@start
+    %n =w call $atoi(l %s)
+    ret %n
+}
+"#;
+
 /// Information stored for each variable in scope
 type VarInfo = (qbe::Type, qbe::Value, Option<Type>);
 
@@ -287,7 +332,7 @@ impl Generator for QbeGenerator {
             generator.module.add_data(def.clone());
         }
 
-        Ok(generator.module.to_string())
+        Ok(format!("{}# --- user code ---\n{}", RUNTIME_PREAMBLE, generator.module.to_string()))
     }
 }
 

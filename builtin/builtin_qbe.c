@@ -2,24 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-void _printf(char *msg)
-{
-    printf("%s", msg);
-}
-
-void _exit(int code)
-{
-    fflush(stdout);
-    fflush(stderr);
-    _Exit(code);
-}
-
-char *_int_to_str(long n)
-{
-    char *buf = malloc(32);
-    snprintf(buf, 32, "%ld", n);
-    return buf;
-}
+/*
+ * QBE runtime helpers that cannot be expressed cleanly in QBE IL:
+ *
+ *   _str_concat  — heap-allocates a new string from two inputs
+ *   _int_to_str  — formats a long integer into a heap-allocated string
+ *   _read_line   — reads one line from stdin into a heap-allocated buffer
+ *
+ * _printf, _exit, _strlen, and _parse_int are implemented directly in QBE IL
+ * (see the RUNTIME_PREAMBLE in src/generator/qbe.rs) and are no longer here.
+ */
 
 char *_str_concat(char *a, char *b)
 {
@@ -31,14 +23,11 @@ char *_str_concat(char *a, char *b)
     return result;
 }
 
-int _strlen(char *s)
+char *_int_to_str(long n)
 {
-    return (int)strlen(s);
-}
-
-int _parse_int(char *s)
-{
-    return atoi(s);
+    char *buf = malloc(32);
+    snprintf(buf, 32, "%ld", n);
+    return buf;
 }
 
 char *_read_line()
