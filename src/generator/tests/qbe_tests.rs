@@ -10,9 +10,14 @@ mod tests {
 
     /// Helper function to parse the QBE output and get a normalized representation for comparison
     fn normalize_qbe(qbe_output: &str) -> String {
+        // Strip the runtime preamble (everything up to and including the sentinel comment)
+        // so unit tests can compare individual function output without the preamble.
+        let body = match qbe_output.find("# --- user code ---\n") {
+            Some(idx) => &qbe_output[idx + "# --- user code ---\n".len()..],
+            None => qbe_output,
+        };
         // Remove empty lines and trim whitespace to make comparison more robust
-        qbe_output
-            .lines()
+        body.lines()
             .filter(|line| !line.trim().is_empty())
             .map(|line| line.trim())
             .collect::<Vec<&str>>()

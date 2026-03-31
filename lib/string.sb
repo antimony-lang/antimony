@@ -18,3 +18,8 @@ fn repeat(s: string, n: int): string {
 fn to_int(s: string): int {
     return _parse_int(s)
 }
+
+// Converts an integer to its string representation
+fn int_to_str(n: int): string {
+    return _int_to_str(n)
+}
