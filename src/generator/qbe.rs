@@ -332,7 +332,10 @@ impl Generator for QbeGenerator {
             generator.module.add_data(def.clone());
         }
 
-        Ok(format!("{}# --- user code ---\n{}", RUNTIME_PREAMBLE, generator.module.to_string()))
+        Ok(format!(
+            "{}# --- user code ---\n{}",
+            RUNTIME_PREAMBLE, generator.module
+        ))
     }
 }
 
