@@ -1,0 +1,32 @@
+struct Counter {
+    value: int
+
+    fn get_value(): int {
+        return self.value
+    }
+
+    fn increment() {
+        // COMPILE_FAIL: self.value = self.value + 1 -- parser rejects direct assignment to self fields
+        self.value += 1
+    }
+}
+
+fn main() {
+    let c = new Counter { value: 10 }
+
+    let v: int = c.get_value()
+    if v != 10 {
+        println("FAIL: c.get_value() should be 10")
+        exit(1)
+    }
+
+    c.increment()
+    let v2: int = c.get_value()
+    if v2 != 11 {
+        println("FAIL: c.get_value() should be 11 after increment")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

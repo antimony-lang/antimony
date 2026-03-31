@@ -1,0 +1,46 @@
+fn main() {
+    let x = 2
+    let result = 0
+
+    match x {
+        1 => result = 10
+        2 => result = 20
+        3 => result = 30
+    }
+
+    if result != 20 {
+        println("FAIL: match x=2 should set result to 20")
+        exit(1)
+    }
+
+    let y = 42
+    let found = 0
+
+    match y {
+        1 => found = 1
+        42 => found = 42
+        else => found = 99
+    }
+
+    if found != 42 {
+        println("FAIL: match y=42 should set found to 42")
+        exit(1)
+    }
+
+    let z = 100
+    let fallback = 0
+
+    match z {
+        1 => fallback = 1
+        2 => fallback = 2
+        else => fallback = 99
+    }
+
+    if fallback != 99 {
+        println("FAIL: match z=100 should hit else branch, setting fallback to 99")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

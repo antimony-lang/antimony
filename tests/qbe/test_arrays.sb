@@ -1,0 +1,33 @@
+fn main() {
+    let arr = [10, 20, 30]
+
+    if arr[0] != 10 {
+        println("FAIL: arr[0] should be 10")
+        exit(1)
+    }
+
+    if arr[1] != 20 {
+        println("FAIL: arr[1] should be 20")
+        exit(1)
+    }
+
+    if arr[2] != 30 {
+        println("FAIL: arr[2] should be 30")
+        exit(1)
+    }
+
+    arr[1] = 99
+    if arr[1] != 99 {
+        println("FAIL: arr[1] should be 99 after assignment")
+        exit(1)
+    }
+
+    let size = len(arr)
+    if size != 3 {
+        println("FAIL: len(arr) should be 3")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}
