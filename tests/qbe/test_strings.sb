@@ -5,9 +5,9 @@ fn main() {
     let n = int_to_str(42)
     println(n)
 
-    let len = strlen("world")
+    let len = str_len("world")
     if len != 5 {
-        println("FAIL: strlen(world) should be 5")
+        println("FAIL: str_len(world) should be 5")
         exit(1)
     }
 
