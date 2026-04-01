@@ -78,6 +78,20 @@ export function l $_malloc(w %size) {
     %ptr =l call $malloc(l %sz)
     ret %ptr
 }
+
+# _fopen(path: l, mode: l): l — open file, return FILE* as opaque 64-bit pointer
+export function l $_fopen(l %path, l %mode) {
+@start
+    %fp =l call $fopen(l %path, l %mode)
+    ret %fp
+}
+
+# _fclose(fp: l): w — close file, return 0 on success
+export function w $_fclose(l %fp) {
+@start
+    %r =w call $fclose(l %fp)
+    ret %r
+}
 "#;
 
 /// Information stored for each variable in scope

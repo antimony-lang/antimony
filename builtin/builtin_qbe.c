@@ -61,3 +61,33 @@ char *_str_substr(char *s, long start, long len)
     buf[len] = '\0';
     return buf;
 }
+
+/* _fread_all(fp) — read entire file into a malloc'd string, return it */
+char *_fread_all(FILE *fp)
+{
+    size_t capacity = 4096;
+    size_t length = 0;
+    char *buf = malloc(capacity);
+    if (!buf) return "";
+    while (1) {
+        size_t n = fread(buf + length, 1, capacity - length - 1, fp);
+        if (n == 0) break;
+        length += n;
+        if (length + 1 >= capacity) {
+            capacity *= 2;
+            buf = realloc(buf, capacity);
+            if (!buf) return "";
+        }
+    }
+    buf[length] = '\0';
+    return buf;
+}
+
+/* _fwrite_str(fp, s) — write string s to file fp, return bytes written */
+long _fwrite_str(FILE *fp, char *s)
+{
+    size_t len = strlen(s);
+    size_t written = fwrite(s, 1, len, fp);
+    fflush(fp);
+    return (long)written;
+}

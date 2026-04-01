@@ -1,0 +1,18 @@
+fn main() {
+    let fp: string = file_open("/tmp/antimony_test_io.txt", "w")
+    file_write(fp, "hello from antimony")
+    file_close(fp)
+
+    let fp2: string = file_open("/tmp/antimony_test_io.txt", "r")
+    let content: string = file_read(fp2)
+    file_close(fp2)
+
+    let cmp: int = _strcmp(content, "hello from antimony")
+    if cmp != 0 {
+        println("FAIL: read content does not match written content")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}
