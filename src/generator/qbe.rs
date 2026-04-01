@@ -519,14 +519,8 @@ impl QbeGenerator {
         // $__argc / $__argv at entry so that the _argc() / _argv(i) builtins
         // (defined in the RUNTIME_PREAMBLE) can retrieve them later.
         if func.name == "main" {
-            arguments.push((
-                qbe::Type::Word,
-                qbe::Value::Temporary("argc".into()),
-            ));
-            arguments.push((
-                qbe::Type::Long,
-                qbe::Value::Temporary("argv".into()),
-            ));
+            arguments.push((qbe::Type::Word, qbe::Value::Temporary("argc".into())));
+            arguments.push((qbe::Type::Long, qbe::Value::Temporary("argv".into())));
         }
 
         let mut qfunc = qbe::Function::new(
@@ -1211,12 +1205,7 @@ impl QbeGenerator {
             func.assign_instr(
                 tmp.clone(),
                 qbe::Type::Word,
-                qbe::Instr::Cmp(
-                    qbe::Type::Word,
-                    cmp_op,
-                    strcmp_result,
-                    qbe::Value::Const(0),
-                ),
+                qbe::Instr::Cmp(qbe::Type::Word, cmp_op, strcmp_result, qbe::Value::Const(0)),
             );
             return Ok((qbe::Type::Word, tmp));
         }
