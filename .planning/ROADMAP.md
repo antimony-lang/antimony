@@ -48,9 +48,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Fix type inference (method returns, builtin return types) and implement string comparison via strcmp
-- [ ] 02-02-PLAN.md -- Add string operations (char_at, substr) and heap allocation (malloc) builtins
-- [ ] 02-03-PLAN.md -- Add file I/O primitives and CLI argument access (argc/argv)
+- [x] 02-01-PLAN.md -- Fix type inference (method returns, builtin return types) and implement string comparison via strcmp
+- [x] 02-02-PLAN.md -- Add string operations (char_at, substr) and heap allocation (malloc) builtins
+- [x] 02-03-PLAN.md -- Add file I/O primitives and CLI argument access (argc/argv)
 
 ### Phase 3: Standard Library
 **Goal**: The data structures needed to write a compiler (growable arrays, key-value lookup, efficient string building) are available as Antimony stdlib for QBE
@@ -102,7 +102,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. QBE Stabilization and Audit | 0/3 | Planned    |  |
-| 2. Runtime Primitives | 0/3 | Planned | - |
+| 2. Runtime Primitives | 0/3 | Planned    |  |
 | 3. Standard Library | 0/TBD | Not started | - |
 | 4. Self-Hosted Compiler Frontend | 0/TBD | Not started | - |
 | 5. Self-Hosted Compiler Backend and Builder | 0/TBD | Not started | - |

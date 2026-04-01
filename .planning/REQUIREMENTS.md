@@ -13,12 +13,12 @@
 
 ### Runtime Primitives
 
-- [ ] **RUNTIME-01**: String character access works in QBE (index into string by position)
-- [ ] **RUNTIME-02**: String comparison works in QBE (`==` on strings calls `strcmp`-equivalent)
-- [ ] **RUNTIME-03**: Substring extraction works in QBE
-- [ ] **RUNTIME-04**: File I/O primitives available in Antimony (open, read, write, close)
-- [ ] **RUNTIME-05**: CLI arguments accessible from Antimony programs (argc/argv)
-- [ ] **RUNTIME-06**: Heap allocation strategy decided and implemented (design deferred — resolved when first compiler rewrite use case demands it)
+- [x] **RUNTIME-01**: String character access works in QBE (index into string by position)
+- [x] **RUNTIME-02**: String comparison works in QBE (`==` on strings calls `strcmp`-equivalent)
+- [x] **RUNTIME-03**: Substring extraction works in QBE
+- [x] **RUNTIME-04**: File I/O primitives available in Antimony (open, read, write, close)
+- [x] **RUNTIME-05**: CLI arguments accessible from Antimony programs (argc/argv)
+- [x] **RUNTIME-06**: Heap allocation strategy decided and implemented (design deferred — resolved when first compiler rewrite use case demands it)
 
 ### Standard Library
 
@@ -64,12 +64,12 @@
 | STAB-01 | Phase 1 | Complete |
 | STAB-02 | Phase 1 | Pending |
 | STAB-03 | Phase 1 | Complete |
-| RUNTIME-01 | Phase 2 | Pending |
-| RUNTIME-02 | Phase 2 | Pending |
-| RUNTIME-03 | Phase 2 | Pending |
-| RUNTIME-04 | Phase 2 | Pending |
-| RUNTIME-05 | Phase 2 | Pending |
-| RUNTIME-06 | Phase 2 | Pending |
+| RUNTIME-01 | Phase 2 | Complete |
+| RUNTIME-02 | Phase 2 | Complete |
+| RUNTIME-03 | Phase 2 | Complete |
+| RUNTIME-04 | Phase 2 | Complete |
+| RUNTIME-05 | Phase 2 | Complete |
+| RUNTIME-06 | Phase 2 | Complete |
 | STDLIB-01 | Phase 3 | Pending |
 | STDLIB-02 | Phase 3 | Pending |
 | STDLIB-03 | Phase 3 | Pending |
