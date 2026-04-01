@@ -168,6 +168,7 @@ fn infer_builtin(name: &str) -> Option<Type> {
         "_str_char_at" => Some(Type::Str),
         "_str_substr" => Some(Type::Str),
         "_strcmp" => Some(Type::Int),
+        "_malloc" => Some(Type::Str),
         _ => None,
     }
 }

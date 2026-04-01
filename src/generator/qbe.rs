@@ -70,6 +70,14 @@ export function w $_strcmp(l %a, l %b) {
     %r =w call $strcmp(l %a, l %b)
     ret %r
 }
+
+# _malloc(size: w): l — allocate size bytes on the heap, return pointer as long
+export function l $_malloc(w %size) {
+@start
+    %sz =l extsw %size
+    %ptr =l call $malloc(l %sz)
+    ret %ptr
+}
 "#;
 
 /// Information stored for each variable in scope

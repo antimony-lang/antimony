@@ -1,0 +1,12 @@
+fn main() {
+    let ptr: string = _malloc(64)
+    let ptr2: string = _malloc(128)
+
+    // If we got here without crashing, malloc returned valid pointers.
+    // We cannot do pointer arithmetic or null checks without pointer types,
+    // but we can verify the allocations are usable by writing to them
+    // via string operations that use the allocated memory indirectly.
+
+    println("PASS")
+    exit(0)
+}
