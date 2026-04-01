@@ -133,6 +133,16 @@ fn infer_expression(
                 .or_else(|| infer_expression(rhs, table, var_map))
                 .or(Some(Type::Int)),
         },
+        HExpression::FieldAccess { expr, field } => {
+            if let HExpression::FunctionCall { fn_name, .. } = field.as_ref() {
+                // Method call: obj.method() — resolve receiver type, look up mangled name
+                if let Some(Type::Struct(struct_name)) = infer_expression(expr, table, var_map) {
+                    let mangled = format!("{}_{}", struct_name, fn_name);
+                    return infer_function_call(&mangled, table);
+                }
+            }
+            None
+        }
         _ => None,
     }
 }
@@ -164,7 +174,9 @@ fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
 
 fn infer_builtin(name: &str) -> Option<Type> {
     match name {
-        "len" => Some(Type::Int),
+        "len" | "_strlen" | "_parse_int" => Some(Type::Int),
+        "_str_concat" | "_int_to_str" | "_read_line" => Some(Type::Str),
+        "_printf" | "_exit" => None, // void return
         _ => None,
     }
 }
@@ -518,5 +530,40 @@ mod tests {
         let mut m = module(vec![func("main", vec![], body, None)]);
         let stmts = infer_and_get_stmts(&mut m);
         assert_eq!(get_declared_type(&stmts[0]), Some(Type::Str));
+    }
+
+    #[test]
+    fn test_infer_builtin_strlen() {
+        assert_eq!(infer_builtin("_strlen"), Some(Type::Int));
+    }
+
+    #[test]
+    fn test_infer_builtin_str_concat() {
+        assert_eq!(infer_builtin("_str_concat"), Some(Type::Str));
+    }
+
+    #[test]
+    fn test_infer_builtin_printf_void() {
+        assert_eq!(infer_builtin("_printf"), None);
+    }
+
+    #[test]
+    fn test_infer_builtin_parse_int() {
+        assert_eq!(infer_builtin("_parse_int"), Some(Type::Int));
+    }
+
+    #[test]
+    fn test_infer_builtin_int_to_str() {
+        assert_eq!(infer_builtin("_int_to_str"), Some(Type::Str));
+    }
+
+    #[test]
+    fn test_infer_builtin_read_line() {
+        assert_eq!(infer_builtin("_read_line"), Some(Type::Str));
+    }
+
+    #[test]
+    fn test_infer_builtin_exit_void() {
+        assert_eq!(infer_builtin("_exit"), None);
     }
 }

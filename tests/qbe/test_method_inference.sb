@@ -1,0 +1,24 @@
+struct Counter {
+    value: int
+
+    fn get_value(): int {
+        return self.value
+    }
+}
+
+fn main() {
+    let c = new Counter { value: 10 }
+
+    // No explicit type annotation -- method return type must be inferred
+    let v = c.get_value()
+
+    // Use v in arithmetic to prove it was inferred as int
+    let result = v + 10
+    if result != 20 {
+        println("FAIL: v + 10 should be 20")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}
