@@ -34,3 +34,13 @@ fn file_write(handle: string, content: string): int {
 fn file_close(handle: string): int {
     return _fclose(handle)
 }
+
+// Returns the number of command-line arguments
+fn argc(): int {
+    return _argc()
+}
+
+// Returns the i-th command-line argument as a string (0-indexed)
+fn argv(i: int): string {
+    return _argv(i)
+}

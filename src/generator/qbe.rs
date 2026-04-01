@@ -92,6 +92,28 @@ export function w $_fclose(l %fp) {
     %r =w call $fclose(l %fp)
     ret %r
 }
+
+# Global storage for argc/argv (stashed at main entry)
+data $__argc = { w 0 }
+data $__argv = { l 0 }
+
+# _argc(): w — return the number of CLI arguments
+export function w $_argc() {
+@start
+    %n =w loadw $__argc
+    ret %n
+}
+
+# _argv(i: w): l — return the i-th CLI argument as a C string pointer
+export function l $_argv(w %i) {
+@start
+    %base =l loadl $__argv
+    %offset =l extsw %i
+    %scaled =l mul %offset, 8
+    %addr =l add %base, %scaled
+    %ptr =l loadl %addr
+    ret %ptr
+}
 "#;
 
 /// Information stored for each variable in scope
@@ -492,6 +514,21 @@ impl QbeGenerator {
             None => None,
         };
 
+        // For main(), add argc (word) and argv (long) parameters so the OS
+        // can pass command-line arguments.  The values are stashed into globals
+        // $__argc / $__argv at entry so that the _argc() / _argv(i) builtins
+        // (defined in the RUNTIME_PREAMBLE) can retrieve them later.
+        if func.name == "main" {
+            arguments.push((
+                qbe::Type::Word,
+                qbe::Value::Temporary("argc".into()),
+            ));
+            arguments.push((
+                qbe::Type::Long,
+                qbe::Value::Temporary("argv".into()),
+            ));
+        }
+
         let mut qfunc = qbe::Function::new(
             qbe::Linkage::public(),
             func.name.clone(),
@@ -500,6 +537,20 @@ impl QbeGenerator {
         );
 
         qfunc.add_block("start".to_owned());
+
+        // Stash argc/argv into globals at main entry
+        if func.name == "main" {
+            qfunc.add_instr(qbe::Instr::Store(
+                qbe::Type::Word,
+                qbe::Value::Global("__argc".into()),
+                qbe::Value::Temporary("argc".into()),
+            ));
+            qfunc.add_instr(qbe::Instr::Store(
+                qbe::Type::Long,
+                qbe::Value::Global("__argv".into()),
+                qbe::Value::Temporary("argv".into()),
+            ));
+        }
 
         self.generate_statement(&mut qfunc, &func.body)?;
 

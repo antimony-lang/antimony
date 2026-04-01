@@ -1,0 +1,16 @@
+fn main() {
+    let n: int = argc()
+    if n < 1 {
+        println("FAIL: argc should be at least 1")
+        exit(1)
+    }
+
+    let prog: string = argv(0)
+    if str_len(prog) < 1 {
+        println("FAIL: argv(0) should be non-empty")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

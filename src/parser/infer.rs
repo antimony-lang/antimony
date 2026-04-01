@@ -174,9 +174,10 @@ fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
 
 fn infer_builtin(name: &str) -> Option<Type> {
     match name {
-        "len" | "_strlen" | "_parse_int" | "_strcmp" | "_fclose" | "_fwrite_str" => Some(Type::Int),
+        "len" | "_strlen" | "_parse_int" | "_strcmp" | "_fclose" | "_fwrite_str" | "_argc"
+        | "argc" => Some(Type::Int),
         "_str_concat" | "_int_to_str" | "_read_line" | "_str_char_at" | "_str_substr"
-        | "_malloc" | "_fopen" | "_fread_all" => Some(Type::Str),
+        | "_malloc" | "_fopen" | "_fread_all" | "_argv" | "argv" => Some(Type::Str),
         "_printf" | "_exit" => None, // void return
         _ => None,
     }
