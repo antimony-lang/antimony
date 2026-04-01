@@ -63,6 +63,13 @@ export function w $_parse_int(l %s) {
     %n =w call $atoi(l %s)
     ret %n
 }
+
+# _strcmp(a: l, b: l): w — compare two C strings via libc strcmp
+export function w $_strcmp(l %a, l %b) {
+@start
+    %r =w call $strcmp(l %a, l %b)
+    ret %r
+}
 "#;
 
 /// Information stored for each variable in scope

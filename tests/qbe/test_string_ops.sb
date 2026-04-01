@@ -1,0 +1,33 @@
+fn main() {
+    let cmp1: int = _strcmp(str_char_at("hello", 0), "h")
+    if cmp1 != 0 {
+        println("FAIL: char_at index 0")
+        exit(1)
+    }
+
+    let cmp2: int = _strcmp(str_char_at("hello", 4), "o")
+    if cmp2 != 0 {
+        println("FAIL: char_at index 4")
+        exit(1)
+    }
+
+    let cmp3: int = _strcmp(str_substr("hello world", 0, 5), "hello")
+    if cmp3 != 0 {
+        println("FAIL: substr 0,5")
+        exit(1)
+    }
+
+    let cmp4: int = _strcmp(str_substr("hello world", 6, 5), "world")
+    if cmp4 != 0 {
+        println("FAIL: substr 6,5")
+        exit(1)
+    }
+
+    if str_len("hello") != 5 {
+        println("FAIL: str_len")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

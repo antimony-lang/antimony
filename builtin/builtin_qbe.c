@@ -43,3 +43,21 @@ char *_read_line()
     }
     return buf;
 }
+
+/* _str_char_at(s, idx) — return the character at index idx as a 1-char string */
+char *_str_char_at(char *s, long idx)
+{
+    char *buf = malloc(2);
+    buf[0] = s[idx];
+    buf[1] = '\0';
+    return buf;
+}
+
+/* _str_substr(s, start, len) — extract a substring [start, start+len) */
+char *_str_substr(char *s, long start, long len)
+{
+    char *buf = malloc(len + 1);
+    memcpy(buf, s + start, len);
+    buf[len] = '\0';
+    return buf;
+}

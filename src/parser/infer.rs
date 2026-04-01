@@ -165,6 +165,9 @@ fn infer_function_call(name: &str, table: &SymbolTable) -> Option<Type> {
 fn infer_builtin(name: &str) -> Option<Type> {
     match name {
         "len" => Some(Type::Int),
+        "_str_char_at" => Some(Type::Str),
+        "_str_substr" => Some(Type::Str),
+        "_strcmp" => Some(Type::Int),
         _ => None,
     }
 }
