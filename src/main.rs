@@ -51,6 +51,9 @@ enum Command {
     },
     Run {
         in_file: PathBuf,
+        /// Arguments to pass to the compiled program
+        #[arg(last = true)]
+        args: Vec<String>,
     },
 }
 
@@ -88,7 +91,7 @@ fn run() -> Result<(), String> {
 
             command::build::build(&target, &in_file, &out_file)?
         }
-        Command::Run { in_file } => command::run::run(opts.target.unwrap_or(Target::JS), in_file)?,
+        Command::Run { in_file, args } => command::run::run(opts.target.unwrap_or(Target::JS), in_file, args)?,
     };
 
     Ok(())

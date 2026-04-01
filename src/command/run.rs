@@ -60,7 +60,7 @@ fn run_node(buf: &[u8]) -> Result<()> {
         .map_err(|e| format!("Could not write to stdout: {}", e))
 }
 
-fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
+fn run_qbe(buf: Vec<u8>, in_file: &Path, args: &[String]) -> Result<()> {
     let dir = std::env::temp_dir().join("antimony_qbe");
     std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create temp directory: {}", e))?;
 
@@ -100,18 +100,18 @@ fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
             .arg("-o")
             .arg(&exe_path),
     )?;
-    let result = run_command(&mut Command::new(&exe_path));
+    let result = run_command(Command::new(&exe_path).args(args));
     let _ = std::fs::remove_dir_all(&dir); // best-effort cleanup
     result
 }
 
-pub fn run(target: Target, in_file: PathBuf) -> Result<()> {
+pub fn run(target: Target, in_file: PathBuf, args: Vec<String>) -> Result<()> {
     let mut buf = Box::<Vec<u8>>::default();
     build::build_to_buffer(&target, &in_file, &mut buf)?;
 
     match target {
         Target::JS => run_node(&buf),
-        Target::Qbe => run_qbe(*buf, &in_file),
+        Target::Qbe => run_qbe(*buf, &in_file, &args),
         _ => Err("Unsupported target".to_string()),
     }
 }

@@ -4,6 +4,10 @@
 
 **Features**
 
+- stdlib: Move `argc()` and `argv(i)` from `io.sb` into a new `env.sb` module
+- CLI: `sb run` now forwards trailing arguments (after `--`) to the compiled program
+- examples: Add `args.sb` demonstrating `argc`/`argv` usage
+
 - QBE: Add `str_char_at(s, i)` and `str_substr(s, start, len)` string operations via C builtins and Antimony wrappers in `lib/string.sb` ([#205](https://github.com/antimony-lang/antimony/pull/205))
 - QBE: Add `_malloc(size)` builtin for heap allocation — returns a 64-bit pointer stored as `string` to avoid truncation ([#205](https://github.com/antimony-lang/antimony/pull/205))
 - QBE: Add file I/O builtins — `file_open`, `file_read`, `file_write`, `file_close` — backed by libc `fopen`/`fread`/`fwrite`/`fclose` ([#205](https://github.com/antimony-lang/antimony/pull/205))
