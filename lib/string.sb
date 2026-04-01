@@ -23,3 +23,13 @@ fn to_int(s: string): int {
 fn int_to_str(n: int): string {
     return _int_to_str(n)
 }
+
+// Returns the character at position i as a single-character string
+fn str_char_at(s: string, i: int): string {
+    return _str_char_at(s, i)
+}
+
+// Returns a substring starting at position start with the given length
+fn str_substr(s: string, start: int, length: int): string {
+    return _str_substr(s, start, length)
+}
