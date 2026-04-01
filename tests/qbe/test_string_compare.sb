@@ -1,0 +1,46 @@
+fn main() {
+    // Test 1: literal equality (true)
+    if "hello" == "hello" {
+    } else {
+        println("FAIL: hello == hello should be true")
+        exit(1)
+    }
+
+    // Test 2: literal equality (false)
+    if "hello" == "world" {
+        println("FAIL: hello == world should be false")
+        exit(1)
+    }
+
+    // Test 3: literal inequality (true)
+    if "hello" != "world" {
+    } else {
+        println("FAIL: hello != world should be true")
+        exit(1)
+    }
+
+    // Test 4: literal inequality (false)
+    if "hello" != "hello" {
+        println("FAIL: hello != hello should be false")
+        exit(1)
+    }
+
+    // Test 5: variable string comparison
+    let a: string = "test"
+    if a == "test" {
+    } else {
+        println("FAIL: a == test should be true")
+        exit(1)
+    }
+
+    // Test 6: concatenated string comparison
+    let b: string = "he" + "llo"
+    if b == "hello" {
+    } else {
+        println("FAIL: he + llo == hello should be true")
+        exit(1)
+    }
+
+    println("PASS")
+    exit(0)
+}

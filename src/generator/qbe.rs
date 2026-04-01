@@ -63,6 +63,13 @@ export function w $_parse_int(l %s) {
     %n =w call $atoi(l %s)
     ret %n
 }
+
+# _strcmp(a: l, b: l): w — compare two C strings via libc strcmp
+export function w $_strcmp(l %a, l %b) {
+@start
+    %r =w call $strcmp(l %a, l %b)
+    ret %r
+}
 "#;
 
 /// Information stored for each variable in scope
@@ -1106,6 +1113,39 @@ impl QbeGenerator {
             }
 
             return Ok((qbe::Type::Long, tmp));
+        }
+
+        // String comparison: use strcmp for == and != on string operands
+        if matches!(op, BinOp::Equal | BinOp::NotEqual) && self.is_string_expression(lhs) {
+            let strcmp_result = self.new_temporary();
+            func.assign_instr(
+                strcmp_result.clone(),
+                qbe::Type::Word,
+                qbe::Instr::Call(
+                    "_strcmp".into(),
+                    vec![
+                        (qbe::Type::Long, lhs_val.clone()),
+                        (qbe::Type::Long, rhs_val),
+                    ],
+                    None,
+                ),
+            );
+            let cmp_op = if matches!(op, BinOp::Equal) {
+                qbe::Cmp::Eq
+            } else {
+                qbe::Cmp::Ne
+            };
+            func.assign_instr(
+                tmp.clone(),
+                qbe::Type::Word,
+                qbe::Instr::Cmp(
+                    qbe::Type::Word,
+                    cmp_op,
+                    strcmp_result,
+                    qbe::Value::Const(0),
+                ),
+            );
+            return Ok((qbe::Type::Word, tmp));
         }
 
         // Use the wider of the two operand types for the result
