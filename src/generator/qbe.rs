@@ -63,6 +63,57 @@ export function w $_parse_int(l %s) {
     %n =w call $atoi(l %s)
     ret %n
 }
+
+# _strcmp(a: l, b: l): w — compare two C strings via libc strcmp
+export function w $_strcmp(l %a, l %b) {
+@start
+    %r =w call $strcmp(l %a, l %b)
+    ret %r
+}
+
+# _malloc(size: w): l — allocate size bytes on the heap, return pointer as long
+export function l $_malloc(w %size) {
+@start
+    %sz =l extsw %size
+    %ptr =l call $malloc(l %sz)
+    ret %ptr
+}
+
+# _fopen(path: l, mode: l): l — open file, return FILE* as opaque 64-bit pointer
+export function l $_fopen(l %path, l %mode) {
+@start
+    %fp =l call $fopen(l %path, l %mode)
+    ret %fp
+}
+
+# _fclose(fp: l): w — close file, return 0 on success
+export function w $_fclose(l %fp) {
+@start
+    %r =w call $fclose(l %fp)
+    ret %r
+}
+
+# Global storage for argc/argv (stashed at main entry)
+data $__argc = { w 0 }
+data $__argv = { l 0 }
+
+# _argc(): w — return the number of CLI arguments
+export function w $_argc() {
+@start
+    %n =w loadw $__argc
+    ret %n
+}
+
+# _argv(i: w): l — return the i-th CLI argument as a C string pointer
+export function l $_argv(w %i) {
+@start
+    %base =l loadl $__argv
+    %offset =l extsw %i
+    %scaled =l mul %offset, 8
+    %addr =l add %base, %scaled
+    %ptr =l loadl %addr
+    ret %ptr
+}
 "#;
 
 /// Information stored for each variable in scope
@@ -463,6 +514,15 @@ impl QbeGenerator {
             None => None,
         };
 
+        // For main(), add argc (word) and argv (long) parameters so the OS
+        // can pass command-line arguments.  The values are stashed into globals
+        // $__argc / $__argv at entry so that the _argc() / _argv(i) builtins
+        // (defined in the RUNTIME_PREAMBLE) can retrieve them later.
+        if func.name == "main" {
+            arguments.push((qbe::Type::Word, qbe::Value::Temporary("argc".into())));
+            arguments.push((qbe::Type::Long, qbe::Value::Temporary("argv".into())));
+        }
+
         let mut qfunc = qbe::Function::new(
             qbe::Linkage::public(),
             func.name.clone(),
@@ -471,6 +531,20 @@ impl QbeGenerator {
         );
 
         qfunc.add_block("start".to_owned());
+
+        // Stash argc/argv into globals at main entry
+        if func.name == "main" {
+            qfunc.add_instr(qbe::Instr::Store(
+                qbe::Type::Word,
+                qbe::Value::Global("__argc".into()),
+                qbe::Value::Temporary("argc".into()),
+            ));
+            qfunc.add_instr(qbe::Instr::Store(
+                qbe::Type::Long,
+                qbe::Value::Global("__argv".into()),
+                qbe::Value::Temporary("argv".into()),
+            ));
+        }
 
         self.generate_statement(&mut qfunc, &func.body)?;
 
@@ -1106,6 +1180,34 @@ impl QbeGenerator {
             }
 
             return Ok((qbe::Type::Long, tmp));
+        }
+
+        // String comparison: use strcmp for == and != on string operands
+        if matches!(op, BinOp::Equal | BinOp::NotEqual) && self.is_string_expression(lhs) {
+            let strcmp_result = self.new_temporary();
+            func.assign_instr(
+                strcmp_result.clone(),
+                qbe::Type::Word,
+                qbe::Instr::Call(
+                    "_strcmp".into(),
+                    vec![
+                        (qbe::Type::Long, lhs_val.clone()),
+                        (qbe::Type::Long, rhs_val),
+                    ],
+                    None,
+                ),
+            );
+            let cmp_op = if matches!(op, BinOp::Equal) {
+                qbe::Cmp::Eq
+            } else {
+                qbe::Cmp::Ne
+            };
+            func.assign_instr(
+                tmp.clone(),
+                qbe::Type::Word,
+                qbe::Instr::Cmp(qbe::Type::Word, cmp_op, strcmp_result, qbe::Value::Const(0)),
+            );
+            return Ok((qbe::Type::Word, tmp));
         }
 
         // Use the wider of the two operand types for the result

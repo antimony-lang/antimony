@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: "Phase 01 shipped — PR #202"
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-31T07:52:27.672Z"
+status: Ready to plan
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-04-01T12:53:57.549Z"
 progress:
   total_phases: 9
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
 ---
 
 # Project State
@@ -19,7 +19,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** The QBE backend must become capable enough that real systems programs -- including the compiler itself -- can be written in Antimony and compiled correctly.
-**Current focus:** Phase 01 — qbe-stabilization-and-audit
+**Current focus:** Phase 02 — runtime-primitives
 
 ## Current Position
 
@@ -48,6 +48,9 @@ Plan: Not started
 *Updated after each plan completion*
 | Phase 01 P01 | 8 | 2 tasks | 9 files |
 | Phase 01 P02 | 8min | 2 tasks | 8 files |
+| Phase 02 P01 | 4min | 2 tasks | 5 files |
+| Phase 02 P02 | 4min | 2 tasks | 6 files |
+| Phase 02 P03 | 5min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -64,6 +67,12 @@ Recent decisions affecting current work:
 - [Phase 01]: test_qbe_execution_tests always returns Ok(()) -- individual test program failures are printed as gap data for Plan 02, not treated as harness failures
 - [Phase 01]: Methods require explicit return type annotations on callers -- type inference does not propagate method return types
 - [Phase 01]: 13/15 QBE test programs pass; 5 bootstrap-blocking gaps identified, all mapped to Phase 2
+- [Phase 02]: Method names mangled as StructName_methodName in symbol table for inference
+- [Phase 02]: String comparison uses _strcmp wrapper calling libc strcmp in QBE codegen
+- [Phase 02]: malloc returns Type::Str (64-bit long) to prevent pointer truncation on 64-bit systems
+- [Phase 02]: Added _strcmp preamble wrapper in Plan 02 to unblock parallel execution with Plan 01
+- [Phase 02]: FILE* stored as string type (64-bit long) to prevent pointer truncation
+- [Phase 02]: argc/argv stashed into globals at main entry, retrieved by _argc()/_argv() builtins
 
 ### Pending Todos
 
@@ -85,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T07:42:37.257Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-04-01T12:46:53.105Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None

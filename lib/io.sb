@@ -13,3 +13,34 @@ fn println(msg: string) {
 fn read_line(): string {
     return _read_line()
 }
+
+// Opens a file at the given path with the given mode ("r", "w", "a", etc.)
+// Returns an opaque file handle (string holds 64-bit FILE* pointer). Returns 0 if open fails.
+fn file_open(path: string, mode: string): string {
+    return _fopen(path, mode)
+}
+
+// Reads the entire contents of an open file handle into a string
+fn file_read(handle: string): string {
+    return _fread_all(handle)
+}
+
+// Writes a string to an open file handle. Returns bytes written.
+fn file_write(handle: string, content: string): int {
+    return _fwrite_str(handle, content)
+}
+
+// Closes an open file handle. Returns 0 on success.
+fn file_close(handle: string): int {
+    return _fclose(handle)
+}
+
+// Returns the number of command-line arguments
+fn argc(): int {
+    return _argc()
+}
+
+// Returns the i-th command-line argument as a string (0-indexed)
+fn argv(i: int): string {
+    return _argv(i)
+}

@@ -26,9 +26,13 @@ The QBE backend must become capable enough that real systems programs — includ
 - ✓ Systematic gap audit complete — QBE-GAPS.md documents 43 features (37 pass, 5 fail, 1 partial), 5 bootstrap-blocking gaps mapped to Phase 2 — Validated in Phase 1
 - ✓ Zero unsafe transmutes in QBE generator — qbe crate migrated to v4.0.0 with Arc-based owned types — Validated in Phase 1
 
-### Active
+### Validated
 
-- [ ] String operations, file I/O, CLI args, heap allocation in QBE (Phase 2: Runtime Primitives)
+- ✓ String operations (`str_char_at`, `str_substr`), file I/O (`file_open`/`read`/`write`/`close`), CLI arg access (`argc`/`argv`), heap allocation (`_malloc`) in QBE — Validated in Phase 2: Runtime Primitives
+- ✓ Method return type inference without explicit annotations — Validated in Phase 2
+- ✓ Content-based string comparison (`==`/`!=` via strcmp) — Validated in Phase 2
+
+### Active
 - [ ] File I/O primitives in QBE (read source files, write output)
 - [ ] Pointer types and pointer arithmetic in QBE
 - [ ] Dynamic memory allocation (malloc/free) in QBE

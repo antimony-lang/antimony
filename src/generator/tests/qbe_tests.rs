@@ -872,8 +872,10 @@ mod tests {
                 %tmp.3 =w add %tmp.1, %tmp.2
                 ret %tmp.3
             }
-            export function w $main() {
+            export function w $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 %tmp.4 =w copy 5
                 %tmp.5 =w call $add_one(w %tmp.4)
                 ret %tmp.5
@@ -910,8 +912,10 @@ mod tests {
             @start
                 ret %tmp.1
             }
-            export function $main() {
+            export function $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 %tmp.4 =l call $greet(l $string.3)
                 %tmp.2 =l copy %tmp.4
                 ret
@@ -1078,8 +1082,10 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :struct.1 = align 4 { w }
-            export function $main() {
+            export function $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 ret
             }
             export function $Counter_reset(l %tmp.2) {
@@ -1184,8 +1190,10 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :struct.1 = align 4 { w }
-            export function $main() {
+            export function $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 ret
             }
             export function w $Point_get_x(l %tmp.2) {
@@ -1255,8 +1263,10 @@ mod tests {
             @start
                 ret
             }
-            export function $main() {
+            export function $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 %tmp.2 =w copy 5
                 %tmp.3 =l extuw %tmp.2
                 call $print_any(l %tmp.3)
@@ -1292,8 +1302,10 @@ mod tests {
             @start
                 ret
             }
-            export function $main() {
+            export function $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 call $print_any(l $string.2)
                 ret
             }
@@ -1529,8 +1541,10 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :array.9 = { l, l 3 }
-            export function $main() {
+            export function $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 %tmp.5 =l alloc8 32
                 storel 3, %tmp.5
                 %tmp.6 =l add %tmp.5, 8
@@ -1665,8 +1679,10 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :struct.1 = align 4 { w }
-            export function $main() {
+            export function $main(w %argc, l %argv) {
             @start
+                storew %argc, $__argc
+                storel %argv, $__argv
                 ret
             }
         "#,
