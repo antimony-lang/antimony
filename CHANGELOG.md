@@ -4,13 +4,13 @@
 
 **Features**
 
-- QBE: Add `str_char_at(s, i)` and `str_substr(s, start, len)` string operations via C builtins and Antimony wrappers in `lib/string.sb`
-- QBE: Add `_malloc(size)` builtin for heap allocation — returns a 64-bit pointer stored as `string` to avoid truncation
-- QBE: Add file I/O builtins — `file_open`, `file_read`, `file_write`, `file_close` — backed by libc `fopen`/`fread`/`fwrite`/`fclose`
-- QBE: Add `argc()` and `argv(i)` builtins for CLI argument access — `main` now receives and stashes `argc`/`argv` at entry
-- QBE: Fix method return type inference — `let v = obj.method()` now compiles without an explicit type annotation
-- QBE: Fix string `==` and `!=` to compare content via `strcmp` instead of pointer identity
-- QBE: Expand `infer_builtin` to cover all underscore-prefixed builtins (`_strlen`, `_str_concat`, `_int_to_str`, `_read_line`, `_str_char_at`, `_str_substr`, `_malloc`, `_strcmp`, `_fopen`, `_fclose`, `_fread_all`, `_fwrite_str`, `_argc`, `_argv`)
+- QBE: Add `str_char_at(s, i)` and `str_substr(s, start, len)` string operations via C builtins and Antimony wrappers in `lib/string.sb` ([#205](https://github.com/antimony-lang/antimony/pull/205))
+- QBE: Add `_malloc(size)` builtin for heap allocation — returns a 64-bit pointer stored as `string` to avoid truncation ([#205](https://github.com/antimony-lang/antimony/pull/205))
+- QBE: Add file I/O builtins — `file_open`, `file_read`, `file_write`, `file_close` — backed by libc `fopen`/`fread`/`fwrite`/`fclose` ([#205](https://github.com/antimony-lang/antimony/pull/205))
+- QBE: Add `argc()` and `argv(i)` builtins for CLI argument access — `main` now receives and stashes `argc`/`argv` at entry ([#205](https://github.com/antimony-lang/antimony/pull/205))
+- QBE: Fix method return type inference — `let v = obj.method()` now compiles without an explicit type annotation ([#205](https://github.com/antimony-lang/antimony/pull/205))
+- QBE: Fix string `==` and `!=` to compare content via `strcmp` instead of pointer identity ([#205](https://github.com/antimony-lang/antimony/pull/205))
+- QBE: Expand `infer_builtin` to cover all underscore-prefixed builtins (`_strlen`, `_str_concat`, `_int_to_str`, `_read_line`, `_str_char_at`, `_str_substr`, `_malloc`, `_strcmp`, `_fopen`, `_fclose`, `_fread_all`, `_fwrite_str`, `_argc`, `_argv`) ([#205](https://github.com/antimony-lang/antimony/pull/205))
 - QBE: Fix type inference for comparison (`==`, `!=`, `<`, `>`, `<=`, `>=`) and boolean (`&&`, `||`) operators ([#167](https://github.com/antimony-lang/antimony/issues/167))
 - QBE: Implement `len()` as a built-in intrinsic that reads the array-length header ([#171](https://github.com/antimony-lang/antimony/pull/171))
 - QBE: Support field access on function call results, e.g. `user_stub().first_name` ([#161](https://github.com/antimony-lang/antimony/pull/161))
