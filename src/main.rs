@@ -91,7 +91,9 @@ fn run() -> Result<(), String> {
 
             command::build::build(&target, &in_file, &out_file)?
         }
-        Command::Run { in_file, args } => command::run::run(opts.target.unwrap_or(Target::JS), in_file, args)?,
+        Command::Run { in_file, args } => {
+            command::run::run(opts.target.unwrap_or(Target::JS), in_file, args)?
+        }
     };
 
     Ok(())
