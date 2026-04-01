@@ -28,4 +28,12 @@ function _read_line() {
   return line;
 }
 
+function _argc() {
+  return process.argv.length - 1;
+}
+
+function _argv(i) {
+  return process.argv[i + 1];
+}
+
 /* END builtins */

@@ -1,0 +1,14 @@
+fn main() {
+    let n: int = argc()
+
+    if n < 2 {
+        println("Usage: args <arg1> <arg2> ...")
+        exit(0)
+    }
+
+    let i: int = 1
+    while i < n {
+        println(argv(i))
+        i = i + 1
+    }
+}
