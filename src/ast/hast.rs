@@ -48,6 +48,15 @@ impl HModule {
             table.insert(func.name, func.ret_type);
         }
 
+        // Include struct methods with mangled names (StructName_methodName)
+        // to match the QBE generator's method name mangling convention.
+        for struct_def in &self.structs {
+            for method in &struct_def.methods {
+                let mangled = format!("{}_{}", struct_def.name, method.name);
+                table.insert(mangled, method.ret_type.clone());
+            }
+        }
+
         table
     }
 }
