@@ -6,5 +6,6 @@ fn print(arg: string) {
 
 // Like print(), but with an extra newline ('\n') character
 fn println(msg: string) {
-    print(msg + "\n")
+    print(msg)
+    print("\n")
 }

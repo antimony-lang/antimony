@@ -9,4 +9,8 @@ function _exit(code) {
   process.exit(code);
 }
 
+function _array_len(arr) {
+  return arr.length;
+}
+
 /* END builtins */
