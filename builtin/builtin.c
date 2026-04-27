@@ -14,6 +14,7 @@ void _exit(int code)
     exit(code);
 }
 
+// Antimony array layout (QBE/C backends): { i64 length @ offset 0; elements @ offset 8.. }
 int64_t _array_len(int64_t *arr)
 {
     return arr[0];
