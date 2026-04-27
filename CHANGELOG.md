@@ -29,6 +29,8 @@
 - stdlib: Add `string` module with `str_len`, `repeat`, and `to_int` functions ([#160](https://github.com/antimony-lang/antimony/pull/160))
 - stdlib: Extend `array` module with `sum`, `contains`, `min_array`, `max_array`, `first`, and `last` functions ([#160](https://github.com/antimony-lang/antimony/pull/160))
 - stdlib: Add `read_line()` to `io` module for reading a line from stdin ([#160](https://github.com/antimony-lang/antimony/pull/160))
+- stdlib: Add `array_join(arr: int[], sep: string): string` to the `array` module — renders an int array as a delimited string ([#213](https://github.com/antimony-lang/antimony/pull/213))
+- builtin (JS): Add `_int_to_str` to the JS runtime so `int_to_str()` works on both the JS and QBE backends ([#213](https://github.com/antimony-lang/antimony/pull/213))
 
 **Fixes**
 
@@ -56,6 +58,8 @@
 - QBE: Fix function return types and struct aggregate types ([#148](https://github.com/antimony-lang/antimony/pull/148))
 - Fixed array access in member variable expressions ([#123](https://github.com/antimony-lang/antimony/pull/123))
 - stdlib: Fix `rev()` bug in `array` module (incorrect loop logic) ([#160](https://github.com/antimony-lang/antimony/pull/160))
+- QBE: Emit `ret 0` for void `main` so the OS-level exit code is deterministic instead of leaking `printf`'s last byte-count return ([#213](https://github.com/antimony-lang/antimony/pull/213))
+- examples: `bubblesort.sb` prints its result via explicit `array_join` so it produces correct output through the QBE backend (workaround for [#214](https://github.com/antimony-lang/antimony/issues/214)) ([#213](https://github.com/antimony-lang/antimony/pull/213))
 
 **Maintenance**
 
@@ -70,6 +74,7 @@
 - Replace unmaintained `structopt` with `clap` ([#132](https://github.com/antimony-lang/antimony/pull/132))
 - Pin Rust toolchain to `1.93` in `rust-toolchain.toml` ([#133](https://github.com/antimony-lang/antimony/pull/133))
 - Remove x86 and LLVM backends -- only C, JS, and QBE compilation targets remain ([#195](https://github.com/antimony-lang/antimony/pull/195))
+- QBE: Tighten `test_examples_qbe` to assert exit code 0 and exact stdout match against per-example golden files in `src/tests/test_examples/expected_qbe/`; `test_testcases_qbe` keeps the lax (signal-only) check for `tests/main.sb` ([#213](https://github.com/antimony-lang/antimony/pull/213))
 
 ## v0.9.0 (2025-04-18)
 

@@ -912,13 +912,13 @@ mod tests {
             @start
                 ret %tmp.1
             }
-            export function $main(w %argc, l %argv) {
+            export function w $main(w %argc, l %argv) {
             @start
                 storew %argc, $__argc
                 storel %argv, $__argv
                 %tmp.4 =l call $greet(l $string.3)
                 %tmp.2 =l copy %tmp.4
-                ret
+                ret 0
             }
             export data $string.3 = { b "World", b 0 }
         "#,
@@ -1082,11 +1082,11 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :struct.1 = align 4 { w }
-            export function $main(w %argc, l %argv) {
+            export function w $main(w %argc, l %argv) {
             @start
                 storew %argc, $__argc
                 storel %argv, $__argv
-                ret
+                ret 0
             }
             export function $Counter_reset(l %tmp.2) {
             @start
@@ -1190,11 +1190,11 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :struct.1 = align 4 { w }
-            export function $main(w %argc, l %argv) {
+            export function w $main(w %argc, l %argv) {
             @start
                 storew %argc, $__argc
                 storel %argv, $__argv
-                ret
+                ret 0
             }
             export function w $Point_get_x(l %tmp.2) {
             @start
@@ -1263,14 +1263,14 @@ mod tests {
             @start
                 ret
             }
-            export function $main(w %argc, l %argv) {
+            export function w $main(w %argc, l %argv) {
             @start
                 storew %argc, $__argc
                 storel %argv, $__argv
                 %tmp.2 =w copy 5
                 %tmp.3 =l extuw %tmp.2
                 call $print_any(l %tmp.3)
-                ret
+                ret 0
             }
         "#,
         );
@@ -1302,12 +1302,12 @@ mod tests {
             @start
                 ret
             }
-            export function $main(w %argc, l %argv) {
+            export function w $main(w %argc, l %argv) {
             @start
                 storew %argc, $__argc
                 storel %argv, $__argv
                 call $print_any(l $string.2)
-                ret
+                ret 0
             }
             export data $string.2 = { b "hello", b 0 }
         "#,
@@ -1541,7 +1541,7 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :array.9 = { l, l 3 }
-            export function $main(w %argc, l %argv) {
+            export function w $main(w %argc, l %argv) {
             @start
                 storew %argc, $__argc
                 storel %argv, $__argv
@@ -1566,9 +1566,9 @@ mod tests {
                 %tmp.17 =l add %tmp.1, %tmp.16
                 %tmp.18 =l loadl %tmp.17
                 %tmp.13 =l copy %tmp.18
-                ret
+                ret 0
             @loop.11.end
-                ret
+                ret 0
             }
             export data $string.2 = { b "One", b 0 }
             export data $string.3 = { b "Two", b 0 }
@@ -1679,11 +1679,11 @@ mod tests {
         let expected = normalize_qbe(
             r#"
             type :struct.1 = align 4 { w }
-            export function $main(w %argc, l %argv) {
+            export function w $main(w %argc, l %argv) {
             @start
                 storew %argc, $__argc
                 storel %argv, $__argv
-                ret
+                ret 0
             }
         "#,
         );
@@ -1849,6 +1849,24 @@ mod tests {
         );
 
         assert_eq!(normalize_qbe(&result), expected);
+    }
+
+    #[test]
+    fn test_void_main_returns_zero() {
+        let func = create_function("main", None, create_block_stmt(vec![]));
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+        let result_norm = normalize_qbe(&result);
+        assert!(
+            result_norm.contains("export function w $main("),
+            "void main should be declared 'function w $main(...)':\n{}",
+            result_norm
+        );
+        assert!(
+            result_norm.contains("ret 0"),
+            "void main should explicitly `ret 0`:\n{}",
+            result_norm
+        );
     }
 
     #[test]

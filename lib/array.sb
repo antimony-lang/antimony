@@ -81,3 +81,23 @@ fn first(arr: int[]): int {
 fn last(arr: int[]): int {
     return arr[len(arr) - 1]
 }
+
+// Renders an int array as a string by stringifying each element with
+// `int_to_str` and inserting `sep` between them. Produces e.g. "1,2,3"
+// for `array_join([1,2,3], ",")`. Returns "" for an empty array.
+//
+// Note: This is a stop-gap until issue #214 introduces a Stringify/Display
+// protocol that lets `println(arr)` work directly across all backends.
+fn array_join(arr: int[], sep: string): string {
+    let out: string = ""
+    let i: int = 0
+    let l: int = len(arr)
+    while i < l {
+        if i > 0 {
+            out = out + sep
+        }
+        out = out + int_to_str(arr[i])
+        i += 1
+    }
+    return out
+}
