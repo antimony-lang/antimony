@@ -17,6 +17,10 @@ function _parse_int(s) {
   return parseInt(s, 10);
 }
 
+function _int_to_str(n) {
+  return String(n);
+}
+
 function _read_line() {
   const fs = require("fs");
   const buf = Buffer.alloc(256);
