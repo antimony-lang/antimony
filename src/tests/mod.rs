@@ -14,3 +14,4 @@
  * limitations under the License.
  */
 mod test_examples;
+mod qbe_examples;
