@@ -60,18 +60,18 @@ fn run_node(buf: &[u8]) -> Result<()> {
 }
 
 fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
-    let dir_path = "./"; // TODO: Use this for changing build directory
     let filename = in_file
         .file_stem()
         .and_then(|s| s.to_str())
         .ok_or("Invalid filename")?;
 
-    // Create paths without array destructuring
-    let ssa_path = format!("{dir_path}{}.ssa", filename);
-    let asm_path = format!("{dir_path}{}.s", filename);
-    let exe_path = format!("{dir_path}{}.exe", filename);
+    let tmp = std::env::temp_dir().join(format!("antimony-qbe-{}", filename));
+    std::fs::create_dir_all(&tmp).map_err(|e| format!("Failed to create temp dir: {}", e))?;
 
-    // Write SSA file
+    let ssa_path = tmp.join(format!("{}.ssa", filename));
+    let asm_path = tmp.join(format!("{}.s", filename));
+    let exe_path = tmp.join(format!("{}.exe", filename));
+
     OpenOptions::new()
         .read(true)
         .write(true)
@@ -82,9 +82,19 @@ fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
         .write_all(&buf)
         .map_err(|e| format!("Failed to write SSA file: {}", e))?;
 
-    // Compile and run
     run_command(Command::new("qbe").arg(&ssa_path).arg("-o").arg(&asm_path))?;
-    run_command(Command::new("gcc").arg(&asm_path).arg("-o").arg(&exe_path))?;
+
+    // Locate builtin.c relative to CARGO_MANIFEST_DIR
+    let builtin_c = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("builtin/builtin.c");
+    let cc = std::env::var("CC").unwrap_or_else(|_| "cc".to_string());
+
+    run_command(
+        Command::new(&cc)
+            .arg(&asm_path)
+            .arg(&builtin_c)
+            .arg("-o")
+            .arg(&exe_path),
+    )?;
     run_command(&mut Command::new(&exe_path))
 }
 
