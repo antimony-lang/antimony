@@ -586,4 +586,22 @@ mod tests {
             assert!(result_norm.contains(&format!("{} %", op_name)));
         }
     }
+
+    #[test]
+    fn test_void_main_returns_zero() {
+        let func = create_function("main", None, create_block_stmt(vec![]));
+        let module = create_module(vec![func], Vec::new());
+        let result = QbeGenerator::generate(module).unwrap();
+        let result_norm = normalize_qbe(&result);
+        assert!(
+            result_norm.contains("export function w $main()"),
+            "main should be declared returning w (int):\n{}",
+            result_norm
+        );
+        assert!(
+            result_norm.contains("ret 0"),
+            "void main should explicitly `ret 0`:\n{}",
+            result_norm
+        );
+    }
 }

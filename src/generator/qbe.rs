@@ -184,7 +184,13 @@ impl QbeGenerator {
             arguments.push((ty.into_abi(), tmp));
         }
 
-        let return_ty = if let Some(ty) = &func.ret_type {
+        // Special-case `main`: always returns int and defaults to exit 0 when
+        // the source declared no return type.
+        let is_main = func.name == "main";
+
+        let return_ty = if is_main {
+            Some(qbe::Type::Word)
+        } else if let Some(ty) = &func.ret_type {
             Some(self.get_type(ty.to_owned())?.into_abi())
         } else {
             None
@@ -211,9 +217,14 @@ impl QbeGenerator {
             })
         });
 
-        // Automatically add return in void functions unless it already returns
+        // Automatically add return:
+        //   - for `main`, default to `ret 0`
+        //   - for other void functions, plain `ret`
+        //   - otherwise, error (will be replaced with proper analysis in Task 7)
         if !returns {
-            if func.ret_type.is_none() {
+            if is_main {
+                qfunc.add_instr(qbe::Instr::Ret(Some(qbe::Value::Const(0))));
+            } else if func.ret_type.is_none() {
                 qfunc.add_instr(qbe::Instr::Ret(None));
             } else {
                 return Err(format!(
