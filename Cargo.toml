@@ -15,7 +15,7 @@ name = "sb"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.6.0", features = ["derive"] }
+clap = { version = "4.6.1", features = ["derive"] }
 rust-embed = "8.11.0"
 qbe = "4.0.0"
 lazy_static = "1.5.0"
