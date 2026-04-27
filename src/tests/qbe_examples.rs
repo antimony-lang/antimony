@@ -12,6 +12,7 @@
 
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::Once;
 
 fn project_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -41,12 +42,15 @@ fn ensure_qbe_available() -> bool {
 }
 
 fn build_compiler() {
-    let status = Command::new("cargo")
-        .args(["build", "--bin", "sb"])
-        .current_dir(project_root())
-        .status()
-        .expect("cargo build failed to launch");
-    assert!(status.success(), "cargo build failed");
+    static BUILD: Once = Once::new();
+    BUILD.call_once(|| {
+        let status = Command::new("cargo")
+            .args(["build", "--bin", "sb"])
+            .current_dir(project_root())
+            .status()
+            .expect("cargo build failed to launch");
+        assert!(status.success(), "cargo build failed");
+    });
 }
 
 fn read_expected(name: &str) -> String {
