@@ -61,8 +61,8 @@ impl Builder {
         }
         self.build_module(self.in_file.clone(), &mut Vec::new())?;
 
-        // Append standard library
-        if matches!(target, Target::JS) {
+        // Append standard library for backends that don't already inline a stdlib
+        if matches!(target, Target::JS | Target::Qbe | Target::C) {
             self.build_stdlib()?;
         }
 
