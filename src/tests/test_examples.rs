@@ -156,6 +156,11 @@ fn compile_and_run_qbe_checked(
 }
 
 /// Compile a single .sb file through the full QBE pipeline and execute it.
+/// Asserts:
+///   - the binary exits with code 0,
+///   - if a golden file exists at src/tests/test_examples/expected_qbe/<name>.txt,
+///     stdout matches it exactly; otherwise stdout must not contain "FAIL".
+///
 /// Pipeline: .sb → (antimony) → .ssa → (qbe) → .s → (gcc) → binary → run
 fn compile_and_run_qbe(in_file: &std::path::Path, dir_out: &std::path::Path) -> Result<(), Error> {
     let dir = std::env::current_dir().unwrap();
@@ -211,17 +216,40 @@ fn compile_and_run_qbe(in_file: &std::path::Path, dir_out: &std::path::Path) -> 
         String::from_utf8_lossy(&gcc.stderr)
     );
 
-    // Execute — verify the binary runs without crashing.
-    // Note: void main() may return a non-zero exit code in QBE since
-    // the backend doesn't yet emit `ret 0` for void functions, so we
-    // only check that the process wasn't killed by a signal.
+    // Execute — assert exit code 0 and (if a golden exists) stdout matches it.
     let execution = Command::new(&bin_file).output()?;
-    assert!(
-        execution.status.code().is_some(),
-        "Binary crashed (signal) for {:?}: {}",
+    let stdout = String::from_utf8_lossy(&execution.stdout).into_owned();
+    let stderr = String::from_utf8_lossy(&execution.stderr).into_owned();
+
+    assert_eq!(
+        execution.status.code(),
+        Some(0),
+        "Binary {:?} exited with non-zero code {:?}\nstdout: {}\nstderr: {}",
         &bin_file,
-        String::from_utf8_lossy(&execution.stderr)
+        execution.status.code(),
+        stdout,
+        stderr
     );
+
+    let golden_path = dir
+        .join("src/tests/test_examples/expected_qbe")
+        .join(format!("{}.txt", base_name));
+    if golden_path.exists() {
+        let expected = std::fs::read_to_string(&golden_path)?;
+        assert_eq!(
+            stdout, expected,
+            "stdout mismatch for {:?}\n--- expected ---\n{}\n--- actual ---\n{}\n",
+            &bin_file, expected, stdout,
+        );
+    } else {
+        assert!(
+            !stdout.contains("FAIL"),
+            "Binary stdout contains FAIL for {:?}\nstdout: {}\nstderr: {}",
+            &bin_file,
+            stdout,
+            stderr
+        );
+    }
 
     Ok(())
 }
