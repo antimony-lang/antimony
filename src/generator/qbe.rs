@@ -567,9 +567,9 @@ impl QbeGenerator {
         if is_void_main {
             for block in qfunc.blocks.iter_mut() {
                 for item in block.items.iter_mut() {
-                    if let qbe::BlockItem::Statement(qbe::Statement::Volatile(
-                        qbe::Instr::Ret(val),
-                    )) = item
+                    if let qbe::BlockItem::Statement(qbe::Statement::Volatile(qbe::Instr::Ret(
+                        val,
+                    ))) = item
                     {
                         if val.is_none() {
                             *val = Some(qbe::Value::Const(0));
