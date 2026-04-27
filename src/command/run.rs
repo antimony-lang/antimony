@@ -82,7 +82,7 @@ fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
         .write_all(&buf)
         .map_err(|e| format!("Failed to write SSA file: {}", e))?;
 
-    run_command(Command::new("qbe").arg(&ssa_path).arg("-o").arg(&asm_path))?;
+    run_command(Command::new("qbe").arg("-o").arg(&asm_path).arg(&ssa_path))?;
 
     // Extract embedded builtin.c so the `sb` binary is self-contained and
     // doesn't depend on the build-host's CARGO_MANIFEST_DIR at runtime.
