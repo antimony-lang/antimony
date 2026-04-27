@@ -5,6 +5,11 @@ fn print(arg: string) {
 }
 
 // Like print(), but with an extra newline ('\n') character
+//
+// TODO(qbe): Once Task 11 of the QBE backend hardening plan lands string
+// concatenation via `_strcat`, collapse the body back to a single
+// `print(msg + "\n")` call. The two-`print` form here is a workaround for
+// the QBE backend's missing string concatenation.
 fn println(msg: string) {
     print(msg)
     print("\n")

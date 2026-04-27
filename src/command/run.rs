@@ -84,8 +84,15 @@ fn run_qbe(buf: Vec<u8>, in_file: &Path) -> Result<()> {
 
     run_command(Command::new("qbe").arg(&ssa_path).arg("-o").arg(&asm_path))?;
 
-    // Locate builtin.c relative to CARGO_MANIFEST_DIR
-    let builtin_c = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("builtin/builtin.c");
+    // Extract embedded builtin.c so the `sb` binary is self-contained and
+    // doesn't depend on the build-host's CARGO_MANIFEST_DIR at runtime.
+    let builtin_c = tmp.join("builtin.c");
+    let builtin_bytes = crate::Builtins::get("builtin.c")
+        .ok_or("Could not locate embedded builtin.c")?
+        .data;
+    std::fs::write(&builtin_c, &builtin_bytes)
+        .map_err(|e| format!("Failed to write builtin.c: {}", e))?;
+
     let cc = std::env::var("CC").unwrap_or_else(|_| "cc".to_string());
 
     run_command(
