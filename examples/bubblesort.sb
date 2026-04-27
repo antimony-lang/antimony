@@ -20,5 +20,17 @@ fn main() {
         c += 1
     }
 
-    println(arr)
+    // Note: the JS backend supports `println(arr)` directly because JS coerces
+    // arrays via `Array.prototype.toString`. The QBE backend's `println` only
+    // accepts string, so we format the result explicitly with `int_to_str`.
+    let i = 0
+    let out = ""
+    while i < n {
+        if i > 0 {
+            out = out + ","
+        }
+        out = out + int_to_str(arr[i])
+        i += 1
+    }
+    println(out)
 }
