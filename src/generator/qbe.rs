@@ -508,10 +508,23 @@ impl QbeGenerator {
             .ret_type
             .clone()
             .or_else(|| infer_fn_return_type(&func.body, &func.arguments));
-        let return_ty = match &effective_ret {
-            Some(Type::Struct(_)) => Some(qbe::Type::Long),
-            Some(ty) => Some(self.get_type(ty.to_owned())?.into_abi()),
-            None => None,
+
+        // Special-case `main`: when the source declared no return type, the
+        // OS-level exit code must still be deterministic. We declare the QBE
+        // function with Word return and force `ret 0` on every implicit and
+        // explicit-no-value return path. Without this, main()'s exit code is
+        // whatever was in w0 from the last call (typically `printf`'s
+        // byte-count return).
+        let is_void_main = func.name == "main" && effective_ret.is_none();
+
+        let return_ty = if is_void_main {
+            Some(qbe::Type::Word)
+        } else {
+            match &effective_ret {
+                Some(Type::Struct(_)) => Some(qbe::Type::Long),
+                Some(ty) => Some(self.get_type(ty.to_owned())?.into_abi()),
+                None => None,
+            }
         };
 
         // For main(), add argc (word) and argv (long) parameters so the OS
@@ -548,6 +561,24 @@ impl QbeGenerator {
 
         self.generate_statement(&mut qfunc, &func.body)?;
 
+        // For void main, rewrite every explicit `ret` (no value) inside the
+        // function body to `ret 0` so the OS exit code is deterministic
+        // regardless of which return path is taken.
+        if is_void_main {
+            for block in qfunc.blocks.iter_mut() {
+                for item in block.items.iter_mut() {
+                    if let qbe::BlockItem::Statement(qbe::Statement::Volatile(
+                        qbe::Instr::Ret(val),
+                    )) = item
+                    {
+                        if val.is_none() {
+                            *val = Some(qbe::Value::Const(0));
+                        }
+                    }
+                }
+            }
+        }
+
         // Check if the function properly returns
         let last_block_empty = qfunc.blocks.last().is_some_and(|b| b.items.is_empty());
         let returns = qfunc.blocks.last().is_some_and(|b| {
@@ -560,7 +591,11 @@ impl QbeGenerator {
         });
 
         if !returns {
-            if func.ret_type.is_none() || last_block_empty {
+            if is_void_main {
+                // Void main needs a deterministic 0 exit code on the
+                // fall-through path.
+                qfunc.add_instr(qbe::Instr::Ret(Some(qbe::Value::Const(0))));
+            } else if func.ret_type.is_none() || last_block_empty {
                 // For void functions, add an implicit return.
                 // For typed functions where the last block is empty, all
                 // reachable paths already return — add a dummy ret for QBE.
