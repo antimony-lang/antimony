@@ -17,7 +17,7 @@ use crate::command::build;
 use crate::generator::Target;
 use crate::Builtins;
 use std::fs::OpenOptions;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -32,32 +32,35 @@ fn run_command(cmd: &mut Command) -> Result<()> {
 }
 
 fn run_node(buf: &[u8]) -> Result<()> {
-    let process = Command::new("node")
+    let mut process = Command::new("node")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| format!("Could not spawn Node.js process: {}", e))?;
 
-    // Write to stdin
-    process
-        .stdin
-        .ok_or("Failed to open stdin")?
+    let mut stdin = process.stdin.take().ok_or("Failed to open stdin")?;
+    stdin
         .write_all(buf)
         .map_err(|e| format!("Could not write to Node.js process: {}", e))?;
+    drop(stdin);
 
-    // Read from stdout
-    let mut output = Vec::new();
-    process
-        .stdout
-        .ok_or("Failed to open stdout")?
-        .read_to_end(&mut output)
-        .map_err(|e| format!("Could not read from child process: {}", e))?;
+    let output = process
+        .wait_with_output()
+        .map_err(|e| format!("Failed to wait for Node.js process: {}", e))?;
 
-    // Write to stdout
     std::io::stdout()
-        .write_all(&output)
-        .map_err(|e| format!("Could not write to stdout: {}", e))
+        .write_all(&output.stdout)
+        .map_err(|e| format!("Could not write to stdout: {}", e))?;
+    std::io::stderr()
+        .write_all(&output.stderr)
+        .map_err(|e| format!("Could not write to stderr: {}", e))?;
+
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(format!("Node.js process exited with {}", output.status))
+    }
 }
 
 fn run_qbe(buf: Vec<u8>, in_file: &Path, args: &[String]) -> Result<()> {
@@ -113,5 +116,24 @@ pub fn run(target: Target, in_file: PathBuf, args: Vec<String>) -> Result<()> {
         Target::JS => run_node(&buf),
         Target::Qbe => run_qbe(*buf, &in_file, &args),
         _ => Err("Unsupported target".to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::run_node;
+    use std::io::ErrorKind;
+
+    #[test]
+    fn run_node_reports_nonzero_exit_status() {
+        match std::process::Command::new("node").arg("--version").output() {
+            Ok(output) => assert!(output.status.success(), "Node.js --version failed"),
+            Err(error) if error.kind() == ErrorKind::NotFound => return,
+            Err(error) => panic!("Could not check Node.js availability: {}", error),
+        }
+
+        let error = run_node(b"process.exitCode = 7;")
+            .expect_err("run_node should report a non-zero Node.js exit status");
+        assert!(error.contains('7'), "unexpected error: {}", error);
     }
 }
